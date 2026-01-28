@@ -44,21 +44,8 @@
     
     .container {
       padding: 16px;
-      max-width: 1200px;
+      max-width: 800px;
       margin: 0 auto;
-    }
-    
-    .filter-bar {
-      margin-bottom: 16px;
-    }
-    
-    .filter-bar select {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 16px;
-      background: white;
     }
     
     .stats-row {
@@ -77,7 +64,7 @@
     }
     
     .stat-value {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
       color: #ed8936;
     }
@@ -88,7 +75,16 @@
       margin-top: 4px;
     }
     
-    /* Lista de estudiantes pendientes - cards */
+    .section-title {
+      font-size: 16px;
+      color: #2d3748;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* Lista de pendientes */
     .pending-list {
       display: flex;
       flex-direction: column;
@@ -100,13 +96,14 @@
       border-radius: 12px;
       padding: 16px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-left: 4px solid #ed8936;
     }
     
     .pending-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
     
     .pending-student {
@@ -121,33 +118,35 @@
     }
     
     .pending-code {
-      font-size: 13px;
+      font-size: 14px;
       color: #ed8936;
+      font-weight: 600;
+    }
+    
+    .pending-grado {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
       font-weight: 600;
     }
     
     .pending-activity {
       font-size: 13px;
-      color: #718096;
-      margin-top: 4px;
+      color: #4a5568;
+      margin-top: 6px;
     }
     
-    .pending-date {
+    .pending-time {
       font-size: 11px;
       color: #a0aec0;
-      margin-top: 2px;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
-    
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    
-    .badge-pending { background: #feebc8; color: #744210; }
-    .badge-graded { background: #c6f6d5; color: #22543d; }
     
     .btn-calificar {
       width: 100%;
@@ -164,10 +163,15 @@
     
     .empty-state {
       text-align: center;
-      padding: 40px 20px;
+      padding: 60px 20px;
       color: #718096;
       background: white;
       border-radius: 12px;
+    }
+    
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
     }
     
     /* Modal responsive */
@@ -242,8 +246,7 @@
     }
     
     .form-group input,
-    .form-group textarea,
-    .form-group select {
+    .form-group textarea {
       width: 100%;
       padding: 14px 16px;
       border: 1px solid #e2e8f0;
@@ -260,10 +263,17 @@
     }
     
     .grade-input {
-      font-size: 32px !important;
+      font-size: 36px !important;
       text-align: center;
       font-weight: 700;
       color: #ed8936;
+    }
+    
+    .grade-hint {
+      text-align: center;
+      color: #718096;
+      font-size: 12px;
+      margin-top: 4px;
     }
     
     .form-actions {
@@ -288,7 +298,7 @@
     }
     
     .btn-primary {
-      background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
       color: white;
     }
     
@@ -300,14 +310,28 @@
     }
     
     .student-info h3 {
-      font-size: 16px;
+      font-size: 18px;
       color: #2d3748;
       margin-bottom: 4px;
     }
     
-    .student-info p {
+    .student-info .info-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    
+    .student-info .info-item {
+      font-size: 13px;
+    }
+    
+    .student-info .info-label {
       color: #718096;
-      font-size: 14px;
+    }
+    
+    .student-info .info-value {
+      font-weight: 600;
+      color: #2d3748;
     }
     
     .hidden { display: none !important; }
@@ -326,14 +350,7 @@
         padding: 24px;
       }
       
-      .filter-bar select {
-        width: auto;
-        min-width: 250px;
-      }
-      
       .pending-list {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
         gap: 16px;
       }
       
@@ -346,12 +363,6 @@
         max-width: 500px;
       }
     }
-    
-    @media (min-width: 1024px) {
-      .pending-list {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
   </style>
 </head>
 <body>
@@ -361,12 +372,6 @@
   </header>
   
   <div class="container">
-    <div class="filter-bar">
-      <select id="filtroGrado" onchange="cargarPendientes()">
-        <option value="">Seleccionar grado...</option>
-      </select>
-    </div>
-    
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-value" id="pendientesCount">0</div>
@@ -378,8 +383,13 @@
       </div>
     </div>
     
+    <h3 class="section-title">📋 Estudiantes en espera de calificación</h3>
+    
     <div class="pending-list" id="pendingList">
-      <div class="empty-state">Selecciona un grado para ver los trabajos pendientes</div>
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <p>Cargando...</p>
+      </div>
     </div>
   </div>
   
@@ -387,31 +397,47 @@
   <div id="modalCalificar" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>✏️ Calificar</h2>
+        <h2>✏️ Asignar Calificación</h2>
         <button class="btn-close" onclick="cerrarModal()">&times;</button>
       </div>
       
       <div class="student-info" id="studentInfo">
         <h3 id="studentName">-</h3>
-        <p id="activityName">-</p>
+        <div class="info-row">
+          <div class="info-item">
+            <span class="info-label">Código:</span>
+            <span class="info-value" id="studentCode">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Grado:</span>
+            <span class="info-value" id="studentGrado">-</span>
+          </div>
+        </div>
+        <div class="info-row" style="margin-top: 8px;">
+          <div class="info-item">
+            <span class="info-label">Actividad:</span>
+            <span class="info-value" id="activityName">-</span>
+          </div>
+        </div>
       </div>
       
       <form id="formCalificar">
         <input type="hidden" id="sesionId">
         
         <div class="form-group">
-          <label>Calificación (0-100%)</label>
+          <label>Calificación</label>
           <input type="number" id="calificacion" class="grade-input" min="0" max="100" step="1" required placeholder="0">
+          <p class="grade-hint">Ingresa un valor entre 0 y 100</p>
         </div>
         
         <div class="form-group">
           <label>Comentario (opcional)</label>
-          <textarea id="comentario" rows="3" placeholder="Observaciones sobre el trabajo..."></textarea>
+          <textarea id="comentario" rows="3" placeholder="Observaciones sobre el trabajo del estudiante..."></textarea>
         </div>
         
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar</button>
+          <button type="submit" class="btn btn-primary">✓ Guardar</button>
         </div>
       </form>
     </div>
@@ -419,7 +445,8 @@
 
   <script type="module">
     import { getUser } from '../auth/auth.core.js';
-    import { SesionesCreatividadAPI, GRADOS } from './creatividad.api.js';
+    import { SesionesCreatividadAPI } from './creatividad.api.js';
+    import { CONFIG } from '../config/supabase.config.js';
     
     const user = getUser();
     
@@ -436,66 +463,81 @@
     
     // Inicializar
     document.addEventListener('DOMContentLoaded', () => {
-      cargarSelectGrados();
+      cargarPendientes();
+      cargarCalificadosHoy();
       document.getElementById('formCalificar').addEventListener('submit', guardarCalificacion);
     });
     
-    function cargarSelectGrados() {
-      const select = document.getElementById('filtroGrado');
-      GRADOS.forEach(grado => {
-        const option = document.createElement('option');
-        option.value = grado.value;
-        option.textContent = grado.label;
-        select.appendChild(option);
-      });
-    }
-    
-    window.cargarPendientes = async function() {
-      const grado = document.getElementById('filtroGrado').value;
+    async function cargarPendientes() {
       const container = document.getElementById('pendingList');
       
-      if (!grado) {
-        container.innerHTML = '<div class="empty-state">Selecciona un grado</div>';
-        return;
-      }
-      
-      container.innerHTML = '<div class="empty-state">Cargando...</div>';
-      
       try {
-        const pendientes = await SesionesCreatividadAPI.obtenerPendientesRevision(grado);
-        
-        // Filtrar por grado del ciclo
-        const filtrados = pendientes.filter(s => 
-          s.ciclos_creatividad && s.ciclos_creatividad.grado === grado
+        // Obtener TODOS los pendientes de revisión, sin filtrar por grado
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_creatividad?estado=eq.pendiente_revision&select=*,usuarios:estudiante_id(id,nombre,apellidos,codigo_estudiante,grado),ciclos_creatividad:ciclo_id(titulo,grado)&order=fecha_solicitud_revision.asc.nullslast`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
         );
         
-        document.getElementById('pendientesCount').textContent = filtrados.length;
+        if (!response.ok) throw new Error('Error cargando pendientes');
         
-        if (filtrados.length === 0) {
-          container.innerHTML = '<div class="empty-state">🎉 No hay trabajos pendientes para este grado</div>';
+        const pendientes = await response.json();
+        
+        document.getElementById('pendientesCount').textContent = pendientes.length;
+        
+        if (pendientes.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">🎉</div>
+              <p><strong>¡Todo al día!</strong></p>
+              <p style="margin-top: 8px; font-size: 14px;">No hay trabajos pendientes de calificación.</p>
+            </div>
+          `;
           return;
         }
         
-        container.innerHTML = filtrados.map(s => {
+        container.innerHTML = pendientes.map((s, index) => {
           const estudiante = s.usuarios || {};
           const ciclo = s.ciclos_creatividad || {};
           const nombreCompleto = `${estudiante.nombre || ''} ${estudiante.apellidos || ''}`.trim();
-          const fechaSolicitud = s.fecha_solicitud_revision 
-            ? new Date(s.fecha_solicitud_revision).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
-            : '';
+          
+          // Calcular tiempo desde la solicitud
+          let tiempoEspera = '';
+          if (s.fecha_solicitud_revision) {
+            const ahora = new Date();
+            const solicitud = new Date(s.fecha_solicitud_revision);
+            const diffMs = ahora - solicitud;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHoras = Math.floor(diffMins / 60);
+            const diffDias = Math.floor(diffHoras / 24);
+            
+            if (diffDias > 0) {
+              tiempoEspera = `Hace ${diffDias} día(s)`;
+            } else if (diffHoras > 0) {
+              tiempoEspera = `Hace ${diffHoras} hora(s)`;
+            } else if (diffMins > 0) {
+              tiempoEspera = `Hace ${diffMins} min`;
+            } else {
+              tiempoEspera = 'Recién solicitado';
+            }
+          }
           
           return `
             <div class="pending-card">
               <div class="pending-header">
                 <div class="pending-student">
-                  <div class="pending-name">${nombreCompleto}</div>
+                  <div class="pending-name">${nombreCompleto || 'Sin nombre'}</div>
                   <div class="pending-code">${estudiante.codigo_estudiante || '-'}</div>
-                  <div class="pending-activity">${ciclo.titulo || '-'}</div>
-                  ${fechaSolicitud ? `<div class="pending-date">Solicitud: ${fechaSolicitud}</div>` : ''}
                 </div>
-                <span class="badge badge-pending">Pendiente</span>
+                <span class="pending-grado">${estudiante.grado || ciclo.grado || '-'}</span>
               </div>
-              <button class="btn-calificar" onclick="abrirCalificar('${s.id}', '${nombreCompleto}', '${ciclo.titulo || ''}')">
+              <div class="pending-activity">📝 ${ciclo.titulo || 'Actividad de creatividad'}</div>
+              ${tiempoEspera ? `<div class="pending-time">⏱️ ${tiempoEspera}</div>` : ''}
+              <button class="btn-calificar" onclick="abrirCalificar('${s.id}', '${nombreCompleto}', '${estudiante.codigo_estudiante || ''}', '${estudiante.grado || ciclo.grado || ''}', '${ciclo.titulo || ''}')">
                 Calificar
               </button>
             </div>
@@ -504,14 +546,42 @@
         
       } catch (error) {
         console.error('Error cargando pendientes:', error);
-        container.innerHTML = `<div class="empty-state" style="color: #e53e3e;">Error: ${error.message}</div>`;
+        container.innerHTML = `
+          <div class="empty-state" style="color: #e53e3e;">
+            <p>Error al cargar: ${error.message}</p>
+          </div>
+        `;
       }
-    };
+    }
     
-    window.abrirCalificar = function(sesionId, nombreEstudiante, actividad) {
+    async function cargarCalificadosHoy() {
+      try {
+        const hoy = new Date().toISOString().split('T')[0];
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_creatividad?estado=eq.calificada&fecha_calificacion=gte.${hoy}&select=id`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const calificados = await response.json();
+          document.getElementById('calificadosCount').textContent = calificados.length;
+        }
+      } catch (error) {
+        console.error('Error cargando calificados:', error);
+      }
+    }
+    
+    window.abrirCalificar = function(sesionId, nombre, codigo, grado, actividad) {
       document.getElementById('sesionId').value = sesionId;
-      document.getElementById('studentName').textContent = nombreEstudiante;
-      document.getElementById('activityName').textContent = actividad;
+      document.getElementById('studentName').textContent = nombre;
+      document.getElementById('studentCode').textContent = codigo || '-';
+      document.getElementById('studentGrado').textContent = grado || '-';
+      document.getElementById('activityName').textContent = actividad || '-';
       document.getElementById('calificacion').value = '';
       document.getElementById('comentario').value = '';
       document.getElementById('modalCalificar').classList.add('active');
@@ -546,9 +616,10 @@
           comentario || null
         );
         
-        alert('✅ Calificación guardada');
+        alert('✅ Calificación guardada correctamente');
         cerrarModal();
         cargarPendientes();
+        cargarCalificadosHoy();
         
       } catch (error) {
         console.error('Error guardando calificación:', error);

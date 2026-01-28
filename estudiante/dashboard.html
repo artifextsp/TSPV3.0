@@ -322,19 +322,24 @@
       try {
         let tabla = '';
         let tablaCiclos = '';
+        let estadosValidos = [];
         
         switch(modulo) {
           case 'lectura':
             tablaCiclos = 'ciclos_lectura';
             tabla = 'sesiones_lectura';
+            estadosValidos = ['finalizada'];
             break;
           case 'creatividad':
             tablaCiclos = 'ciclos_creatividad';
             tabla = 'sesiones_creatividad';
+            // Creatividad se considera completada cuando está calificada por el docente
+            estadosValidos = ['calificada'];
             break;
           case 'ejercicios':
             tablaCiclos = 'ciclos_ejercicios';
             tabla = 'sesiones_ejercicios';
+            estadosValidos = ['finalizada'];
             break;
           default:
             return false;
@@ -357,9 +362,10 @@
         
         const cicloId = cicloData[0].id;
         
-        // Verificar si hay sesión completada
+        // Verificar si hay sesión completada con alguno de los estados válidos
+        const estadoQuery = estadosValidos.map(e => `estado.eq.${e}`).join(',');
         const sesionResponse = await fetch(
-          `${CONFIG.SUPABASE_URL}/rest/v1/${tabla}?ciclo_id=eq.${cicloId}&estudiante_id=eq.${user.id}&estado=eq.finalizada&select=id`,
+          `${CONFIG.SUPABASE_URL}/rest/v1/${tabla}?ciclo_id=eq.${cicloId}&estudiante_id=eq.${user.id}&or=(${estadoQuery})&select=id`,
           {
             headers: {
               'apikey': CONFIG.SUPABASE_ANON_KEY,
