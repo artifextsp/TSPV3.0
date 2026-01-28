@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Estudiante - Thinking Skills Program</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    
+    .header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .welcome-card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+    }
+    
+    .welcome-card h2 {
+      color: #1a202c;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    
+    .btn-logout {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    
+    .btn-logout:hover {
+      background: #c53030;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #718096;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+    
+    .module-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    
+    .module-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-color: #667eea;
+    }
+    
+    .module-card.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .module-card.disabled:hover {
+      transform: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-color: transparent;
+    }
+    
+    .module-title {
+      font-size: 18px;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+    
+    .module-description {
+      color: #718096;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .module-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+    
+    .badge-active {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .badge-coming {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingState" class="loading">
+    Verificando sesión...
+  </div>
+  
+  <div id="dashboardContent" class="hidden">
+    <header class="header">
+      <h1>👨‍🎓 Dashboard Estudiante</h1>
+      <p>Thinking Skills Program</p>
+    </header>
+    
+    <main class="main-content">
+      <div class="welcome-card">
+        <h2>¡Bienvenido, <span id="welcomeName">Estudiante</span>!</h2>
+        <p style="color: #718096; margin-top: 8px;">
+          Selecciona un módulo para comenzar tu entrenamiento.
+        </p>
+        <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+      </div>
+      
+      <div class="modules-grid">
+        <!-- 1. Lectura Crítica -->
+        <div class="module-card" id="moduloLectura" onclick="irAModulo('lectura')">
+          <h3 class="module-title">Lectura Crítica</h3>
+          <p class="module-description">
+            Mejora tu velocidad y comprensión lectora con textos seleccionados para tu grado.
+          </p>
+          <span class="module-badge badge-active" id="badgeLectura">Disponible</span>
+        </div>
+        
+        <!-- 2. Creatividad -->
+        <div class="module-card disabled" id="moduloCreatividad" onclick="irAModulo('creatividad')">
+          <h3 class="module-title">Creatividad</h3>
+          <p class="module-description">
+            Desarrolla tu pensamiento creativo con actividades visuales y reflexivas.
+          </p>
+          <span class="module-badge badge-coming" id="badgeCreatividad">Bloqueado</span>
+        </div>
+        
+        <!-- 3. Ejercicios Digitales -->
+        <div class="module-card disabled" id="moduloEjercicios" onclick="irAModulo('ejercicios')">
+          <h3 class="module-title">Ejercicios Digitales</h3>
+          <p class="module-description">
+            Practica y refuerza tus conocimientos con ejercicios interactivos.
+          </p>
+          <span class="module-badge badge-coming" id="badgeEjercicios">Bloqueado</span>
+        </div>
+        
+        <!-- 4. Mi Historial (siempre activo) -->
+        <div class="module-card" id="moduloHistorial" onclick="irAModulo('historial')">
+          <h3 class="module-title">Mi Historial</h3>
+          <p class="module-description">
+            Revisa tus resultados anteriores y observa tu progreso en todos los módulos.
+          </p>
+          <span class="module-badge badge-active">Ver Resultados</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireRole, getUser, logout } from '../auth/auth.core.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    
+    const loadingState = document.getElementById('loadingState');
+    const dashboardContent = document.getElementById('dashboardContent');
+    const welcomeName = document.getElementById('welcomeName');
+    const btnLogout = document.getElementById('btnLogout');
+    
+    // Estado de módulos
+    let estadoModulos = {
+      lectura: false,
+      creatividad: false,
+      ejercicios: false
+    };
+    
+    // Solo estudiantes pueden acceder
+    const user = requireRole('estudiante');
+    
+    if (!user) {
+      loadingState.textContent = 'Redirigiendo al login...';
+    } else {
+      loadingState.classList.add('hidden');
+      dashboardContent.classList.remove('hidden');
+      
+      welcomeName.textContent = user.nombre || 'Estudiante';
+      
+      btnLogout.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+          logout();
+        }
+      });
+      
+      // Verificar estado de módulos para activar secuencialmente
+      verificarEstadoModulos();
+    }
+    
+    // Verificar si el estudiante ha completado cada módulo del ciclo actual
+    async function verificarEstadoModulos() {
+      try {
+        const grado = await obtenerGradoUsuario();
+        if (!grado) return;
+        
+        // 1. Verificar lectura crítica
+        const lecturaCompletada = await verificarModuloCompletado('lectura', grado);
+        estadoModulos.lectura = lecturaCompletada;
+        
+        // 2. Si lectura está completada, habilitar creatividad y verificar si está completada
+        if (lecturaCompletada) {
+          habilitarModulo('creatividad');
+          const creatividadCompletada = await verificarModuloCompletado('creatividad', grado);
+          estadoModulos.creatividad = creatividadCompletada;
+          
+          // 3. Si creatividad está completada, habilitar ejercicios
+          if (creatividadCompletada) {
+            habilitarModulo('ejercicios');
+            estadoModulos.ejercicios = await verificarModuloCompletado('ejercicios', grado);
+          }
+        }
+        
+      } catch (error) {
+        console.error('Error verificando estado de módulos:', error);
+      }
+    }
+    
+    // Obtener grado del usuario (de sesión o BD)
+    async function obtenerGradoUsuario() {
+      let grado = user.grado;
+      
+      if (!grado) {
+        // Obtener de la BD
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}&select=grado`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data[0]) {
+            grado = data[0].grado;
+          }
+        }
+      }
+      
+      return mapearGrado(grado);
+    }
+    
+    // Mapear grado a formato estándar
+    function mapearGrado(gradoRaw) {
+      if (!gradoRaw) return null;
+      const gradoStr = String(gradoRaw).toLowerCase().replace('°', '').trim();
+      const mapa = {
+        '3': 'tercero', 'tercero': 'tercero',
+        '4': 'cuarto', 'cuarto': 'cuarto',
+        '5': 'quinto', 'quinto': 'quinto',
+        '6': 'sexto', 'sexto': 'sexto',
+        '7': 'septimo', 'séptimo': 'septimo', 'septimo': 'septimo',
+        '8': 'octavo', 'octavo': 'octavo',
+        '9': 'noveno', 'noveno': 'noveno',
+        '10': 'decimo', 'décimo': 'decimo', 'decimo': 'decimo',
+        '11': 'undecimo', 'undécimo': 'undecimo', 'undecimo': 'undecimo'
+      };
+      return mapa[gradoStr] || gradoStr;
+    }
+    
+    // Verificar si un módulo específico está completado
+    async function verificarModuloCompletado(modulo, grado) {
+      try {
+        let tabla = '';
+        let tablaCiclos = '';
+        
+        switch(modulo) {
+          case 'lectura':
+            tablaCiclos = 'ciclos_lectura';
+            tabla = 'sesiones_lectura';
+            break;
+          case 'creatividad':
+            tablaCiclos = 'ciclos_creatividad';
+            tabla = 'sesiones_creatividad';
+            break;
+          case 'ejercicios':
+            tablaCiclos = 'ciclos_ejercicios';
+            tabla = 'sesiones_ejercicios';
+            break;
+          default:
+            return false;
+        }
+        
+        // Obtener ciclo activo del grado
+        const cicloResponse = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/${tablaCiclos}?grado=eq.${grado}&activo=eq.true&select=id&limit=1`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!cicloResponse.ok) return false;
+        const cicloData = await cicloResponse.json();
+        if (!cicloData || cicloData.length === 0) return false;
+        
+        const cicloId = cicloData[0].id;
+        
+        // Verificar si hay sesión completada
+        const sesionResponse = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/${tabla}?ciclo_id=eq.${cicloId}&estudiante_id=eq.${user.id}&estado=eq.finalizada&select=id`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!sesionResponse.ok) return false;
+        const sesionData = await sesionResponse.json();
+        return sesionData && sesionData.length > 0;
+        
+      } catch (error) {
+        console.error(`Error verificando módulo ${modulo}:`, error);
+        return false;
+      }
+    }
+    
+    // Habilitar un módulo en la UI
+    function habilitarModulo(modulo) {
+      const card = document.getElementById(`modulo${capitalizar(modulo)}`);
+      const badge = document.getElementById(`badge${capitalizar(modulo)}`);
+      
+      if (card) {
+        card.classList.remove('disabled');
+      }
+      if (badge) {
+        badge.textContent = 'Disponible';
+        badge.classList.remove('badge-coming');
+        badge.classList.add('badge-active');
+      }
+    }
+    
+    // Capitalizar primera letra
+    function capitalizar(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    
+    // Función para navegar a los módulos
+    window.irAModulo = function(modulo) {
+      const card = document.getElementById(`modulo${capitalizar(modulo)}`);
+      
+      // Si el módulo está deshabilitado (y no es historial), mostrar mensaje
+      if (card && card.classList.contains('disabled')) {
+        alert('Debes completar el módulo anterior primero.');
+        return;
+      }
+      
+      switch(modulo) {
+        case 'lectura':
+          window.location.href = '../lectura-critica/entrenamiento.html';
+          break;
+        case 'creatividad':
+          window.location.href = '../creatividad/entrenamiento.html';
+          break;
+        case 'ejercicios':
+          window.location.href = '../ejercicios/entrenamiento.html';
+          break;
+        case 'historial':
+          window.location.href = '../historial/index.html';
+          break;
+      }
+    };
+  </script>
+</body>
+</html>

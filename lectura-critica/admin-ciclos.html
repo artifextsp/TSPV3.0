@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Ciclos - Lectura Crítica | TSP</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .btn-light {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .btn-light:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #5a67d8;
+    }
+    
+    .btn-success {
+      background: #48bb78;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #38a169;
+    }
+    
+    .btn-warning {
+      background: #ed8936;
+      color: white;
+    }
+    
+    .btn-warning:hover {
+      background: #dd6b20;
+    }
+    
+    .btn-danger {
+      background: #e53e3e;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #c53030;
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    
+    .main-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .card-header h2 {
+      color: #1a202c;
+      font-size: 20px;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .toolbar select {
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    thead {
+      background: #f7fafc;
+    }
+    
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 14px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    td {
+      padding: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #4a5568;
+      font-size: 14px;
+    }
+    
+    tbody tr:hover {
+      background: #f7fafc;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .badge-success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .badge-secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+    
+    .badge-info {
+      background: #bee3f8;
+      color: #2a4365;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #718096;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .modal-header h2 {
+      color: #1a202c;
+      font-size: 20px;
+    }
+    
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #718096;
+      line-height: 1;
+    }
+    
+    .btn-close:hover {
+      color: #2d3748;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #2d3748;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+    
+    .file-upload {
+      border: 2px dashed #e2e8f0;
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .file-upload:hover {
+      border-color: #667eea;
+      background: #f7fafc;
+    }
+    
+    .file-upload.dragover {
+      border-color: #667eea;
+      background: #ebf4ff;
+    }
+    
+    .file-upload input {
+      display: none;
+    }
+    
+    .file-upload-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    
+    .file-upload-text {
+      color: #4a5568;
+      margin-bottom: 8px;
+    }
+    
+    .file-upload-hint {
+      color: #a0aec0;
+      font-size: 12px;
+    }
+    
+    .file-name {
+      background: #ebf4ff;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 12px;
+      color: #667eea;
+      font-weight: 500;
+    }
+    
+    .json-preview {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    
+    .json-preview h4 {
+      color: #2d3748;
+      margin-bottom: 12px;
+    }
+    
+    .json-preview p {
+      color: #4a5568;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
+    .json-preview strong {
+      color: #2d3748;
+    }
+    
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    
+    .alert-success {
+      background: #c6f6d5;
+      color: #22543d;
+      border: 1px solid #9ae6b4;
+    }
+    
+    .alert-error {
+      background: #fed7d7;
+      color: #742a2a;
+      border: 1px solid #fc8181;
+    }
+    
+    .alert-warning {
+      background: #feebc8;
+      color: #7c2d12;
+      border: 1px solid #f6ad55;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #718096;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingState" class="loading">
+    Verificando sesión...
+  </div>
+  
+  <div id="mainContent" class="hidden">
+    <header class="header">
+      <h1>📚 Gestión de Ciclos - Lectura Crítica</h1>
+      <div class="header-actions">
+        <a href="../admin/dashboard.html" class="btn btn-light">← Volver al Dashboard</a>
+        <button class="btn btn-light" id="btnLogout">Cerrar Sesión</button>
+      </div>
+    </header>
+    
+    <main class="main-content">
+      <div class="card">
+        <div class="card-header">
+          <h2>Ciclos de Entrenamiento</h2>
+          <button class="btn btn-primary" onclick="abrirModalNuevoCiclo()">+ Nuevo Ciclo</button>
+        </div>
+        
+        <div class="toolbar">
+          <select id="filterGrado" onchange="cargarCiclos()">
+            <option value="">Todos los grados</option>
+          </select>
+          <select id="filterEstado" onchange="cargarCiclos()">
+            <option value="">Todos los estados</option>
+            <option value="true">Activos</option>
+            <option value="false">Inactivos</option>
+          </select>
+        </div>
+        
+        <div id="alertCiclos"></div>
+        
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Ciclo</th>
+                <th>Título</th>
+                <th>Grado</th>
+                <th>Autor</th>
+                <th>Palabras</th>
+                <th>Lexile</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyCiclos">
+              <tr><td colspan="8" class="empty-state">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Modal: Nuevo Ciclo -->
+  <div id="modalNuevoCiclo" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Nuevo Ciclo de Lectura</h2>
+        <button class="btn-close" onclick="cerrarModal('modalNuevoCiclo')">&times;</button>
+      </div>
+      <form id="formNuevoCiclo">
+        <div class="form-group">
+          <label>Grado *</label>
+          <select id="cicloGrado" required>
+            <option value="">Selecciona un grado</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Archivo JSON *</label>
+          <div class="file-upload" id="fileUploadArea">
+            <input type="file" id="jsonFile" accept=".json" required>
+            <div class="file-upload-icon">📄</div>
+            <div class="file-upload-text">Arrastra tu archivo JSON aquí o haz clic para seleccionar</div>
+            <div class="file-upload-hint">Solo archivos .json</div>
+          </div>
+          <div id="fileName" class="file-name hidden"></div>
+        </div>
+        
+        <div id="jsonPreview" class="json-preview hidden">
+          <h4>Vista previa del contenido</h4>
+          <p><strong>Título:</strong> <span id="previewTitulo"></span></p>
+          <p><strong>Autor:</strong> <span id="previewAutor"></span></p>
+          <p><strong>Palabras:</strong> <span id="previewPalabras"></span></p>
+          <p><strong>Lexile:</strong> <span id="previewLexile"></span></p>
+          <p><strong>Vocabulario:</strong> <span id="previewVocabulario"></span> términos</p>
+          <p><strong>Evaluación:</strong> <span id="previewEvaluacion"></span> preguntas</p>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="cerrarModal('modalNuevoCiclo')">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btnGuardarCiclo" disabled>Crear Ciclo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Modal: Ver Detalles -->
+  <div id="modalDetalles" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 id="modalDetallesTitulo">Detalles del Ciclo</h2>
+        <button class="btn-close" onclick="cerrarModal('modalDetalles')">&times;</button>
+      </div>
+      <div id="modalDetallesContent">
+        <!-- Contenido dinámico -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Gestionar Sesiones -->
+  <div id="modalSesiones" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header">
+        <h2 id="modalSesionesTitulo">Sesiones de Estudiantes</h2>
+        <button class="btn-close" onclick="cerrarModal('modalSesiones')">&times;</button>
+      </div>
+      <div id="alertSesiones" style="padding: 0 24px;"></div>
+      <div style="padding: 24px; max-height: 60vh; overflow-y: auto;">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Estudiante</th>
+              <th>Estado</th>
+              <th>Comprensión</th>
+              <th>Vel. Efectiva</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbodySesiones">
+            <tr><td colspan="6" class="empty-state">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Editar Ciclo -->
+  <div id="modalEditarCicloLectura" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Editar Ciclo</h2>
+        <button class="btn-close" onclick="cerrarModal('modalEditarCicloLectura')">&times;</button>
+      </div>
+      <div style="padding: 24px;">
+        <input type="hidden" id="editarCicloLecturaId">
+        <div class="form-group">
+          <label>Título *</label>
+          <input type="text" id="editarCicloLecturaTitulo" placeholder="Título" required style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:6px;">
+        </div>
+        <div class="form-group">
+          <label>Grado *</label>
+          <select id="editarCicloLecturaGrado" required style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:6px;">
+            <option value="">Seleccionar...</option>
+          </select>
+        </div>
+        <div class="form-actions" style="margin-top:16px;">
+          <button type="button" class="btn" onclick="cerrarModal('modalEditarCicloLectura')">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="guardarEditarCicloLectura()">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Copiar a otro grado -->
+  <div id="modalCopiarCicloLectura" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Copiar ciclo a otro grado</h2>
+        <button class="btn-close" onclick="cerrarModal('modalCopiarCicloLectura')">&times;</button>
+      </div>
+      <div style="padding: 24px;">
+        <input type="hidden" id="copiarCicloLecturaId">
+        <p style="margin-bottom:16px;color:#4a5568;">Se creará un nuevo ciclo con el mismo contenido (lectura, vocabulario, evaluación) en el grado seleccionado.</p>
+        <div class="form-group">
+          <label>Copiar a grado *</label>
+          <select id="copiarCicloLecturaGradoDestino" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:6px;">
+            <option value="">Seleccionar grado...</option>
+          </select>
+        </div>
+        <div class="form-actions" style="margin-top:16px;">
+          <button type="button" class="btn" onclick="cerrarModal('modalCopiarCicloLectura')">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="ejecutarCopiarCicloLectura()">Copiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getUser, logout } from '../auth/auth.core.js';
+    import { CiclosAPI, SesionesAPI, GRADOS } from './lectura.api.js';
+    
+    const loadingState = document.getElementById('loadingState');
+    const mainContent = document.getElementById('mainContent');
+    
+    // Variables para el archivo JSON
+    let jsonContent = null;
+    
+    // Verificar autenticación
+    const user = getUser();
+    
+    if (!user) {
+      window.location.href = '../index.html';
+    } else {
+      // Verificar si es administrador
+      const isAdmin = user.tipo_usuario === 'admin' || 
+                     user.tipo_usuario === 'super_admin' ||
+                     user.tipo_usuario === 'administrador' ||
+                     (user.email && user.email.includes('hansel'));
+      
+      if (!isAdmin) {
+        alert('Acceso denegado. Solo administradores pueden acceder a esta página.');
+        window.location.href = '../index.html';
+      } else {
+        loadingState.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        
+        // Cargar grados en los selects
+        cargarGrados();
+        
+        // Cargar ciclos
+        cargarCiclos();
+        
+        // Configurar eventos
+        configurarEventos();
+      }
+    }
+    
+    function cargarGrados() {
+      const filterGrado = document.getElementById('filterGrado');
+      const cicloGrado = document.getElementById('cicloGrado');
+      
+      GRADOS.forEach(grado => {
+        filterGrado.innerHTML += `<option value="${grado.value}">${grado.label}</option>`;
+        cicloGrado.innerHTML += `<option value="${grado.value}">${grado.label}</option>`;
+      });
+    }
+    
+    async function cargarCiclos() {
+      const tbody = document.getElementById('tbodyCiclos');
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Cargando...</td></tr>';
+      
+      try {
+        const filtros = {};
+        const grado = document.getElementById('filterGrado').value;
+        const estado = document.getElementById('filterEstado').value;
+        
+        if (grado) filtros.grado = grado;
+        if (estado !== '') filtros.activo = estado === 'true';
+        
+        const ciclos = await CiclosAPI.listar(filtros);
+        
+        if (!ciclos || ciclos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No hay ciclos registrados</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = ciclos.map(ciclo => {
+          const gradoLabel = GRADOS.find(g => g.value === ciclo.grado)?.label || ciclo.grado;
+          
+          return `
+            <tr>
+              <td><strong>#${ciclo.numero_ciclo}</strong></td>
+              <td>${ciclo.titulo}</td>
+              <td><span class="badge badge-info">${gradoLabel}</span></td>
+              <td>${ciclo.autor || '-'}</td>
+              <td>${ciclo.conteo_palabras || '-'}</td>
+              <td>${ciclo.lexile || '-'}</td>
+              <td>
+                <span class="badge ${ciclo.activo ? 'badge-success' : 'badge-secondary'}">
+                  ${ciclo.activo ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td>
+                <div class="actions">
+                  <button class="btn btn-sm ${ciclo.activo ? 'btn-warning' : 'btn-success'}" 
+                          onclick="toggleActivoCiclo('${ciclo.id}', '${ciclo.grado}', ${ciclo.activo})">
+                    ${ciclo.activo ? 'Desactivar' : 'Activar'}
+                  </button>
+                  <button class="btn btn-sm btn-primary" onclick="verDetalles('${ciclo.id}')">Ver</button>
+                  <button class="btn btn-sm" style="background:#805ad5;color:white;" onclick="abrirEditarCicloLectura('${ciclo.id}')">Editar</button>
+                  <button class="btn btn-sm" style="background:#3182ce;color:white;" onclick="abrirCopiarCicloLectura('${ciclo.id}','${ciclo.grado}')">Copiar</button>
+                  <button class="btn btn-sm" style="background:#38b2ac;color:white;" onclick="verSesiones('${ciclo.id}', '${ciclo.titulo}')">Sesiones</button>
+                  <button class="btn btn-sm btn-danger" onclick="eliminarCiclo('${ciclo.id}', '${ciclo.titulo}')">Eliminar</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Error cargando ciclos:', error);
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Error: ${error.message}</td></tr>`;
+      }
+    }
+    window.cargarCiclos = cargarCiclos;
+    
+    function configurarEventos() {
+      // Logout
+      document.getElementById('btnLogout').addEventListener('click', () => {
+        if (confirm('¿Cerrar sesión?')) {
+          logout();
+        }
+      });
+      
+      // File upload
+      const fileUploadArea = document.getElementById('fileUploadArea');
+      const jsonFileInput = document.getElementById('jsonFile');
+      
+      fileUploadArea.addEventListener('click', () => jsonFileInput.click());
+      
+      fileUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.add('dragover');
+      });
+      
+      fileUploadArea.addEventListener('dragleave', () => {
+        fileUploadArea.classList.remove('dragover');
+      });
+      
+      fileUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          processFile(files[0]);
+        }
+      });
+      
+      jsonFileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          processFile(e.target.files[0]);
+        }
+      });
+      
+      // Form submit
+      document.getElementById('formNuevoCiclo').addEventListener('submit', guardarCiclo);
+    }
+    
+    function processFile(file) {
+      if (!file.name.endsWith('.json')) {
+        alert('Por favor selecciona un archivo JSON válido');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          jsonContent = JSON.parse(e.target.result);
+          
+          // Mostrar nombre del archivo
+          document.getElementById('fileName').textContent = `📄 ${file.name}`;
+          document.getElementById('fileName').classList.remove('hidden');
+          
+          // Mostrar preview
+          const reading = jsonContent.reading || {};
+          document.getElementById('previewTitulo').textContent = reading.title || 'Sin título';
+          document.getElementById('previewAutor').textContent = reading.author || 'Sin autor';
+          document.getElementById('previewPalabras').textContent = reading.word_count_text || '0';
+          document.getElementById('previewLexile').textContent = reading.lexile || 'N/A';
+          document.getElementById('previewVocabulario').textContent = (jsonContent.vocabulary_questions || []).length;
+          document.getElementById('previewEvaluacion').textContent = (jsonContent.questions || []).length;
+          
+          document.getElementById('jsonPreview').classList.remove('hidden');
+          document.getElementById('btnGuardarCiclo').disabled = false;
+          
+        } catch (error) {
+          alert('Error al leer el archivo JSON: ' + error.message);
+          jsonContent = null;
+        }
+      };
+      reader.readAsText(file);
+    }
+    
+    window.abrirModalNuevoCiclo = function() {
+      jsonContent = null;
+      document.getElementById('formNuevoCiclo').reset();
+      document.getElementById('fileName').classList.add('hidden');
+      document.getElementById('jsonPreview').classList.add('hidden');
+      document.getElementById('btnGuardarCiclo').disabled = true;
+      document.getElementById('modalNuevoCiclo').classList.add('active');
+    };
+    
+    async function guardarCiclo(e) {
+      e.preventDefault();
+      
+      const grado = document.getElementById('cicloGrado').value;
+      
+      if (!grado) {
+        alert('Por favor selecciona un grado');
+        return;
+      }
+      
+      if (!jsonContent) {
+        alert('Por favor carga un archivo JSON');
+        return;
+      }
+      
+      try {
+        document.getElementById('btnGuardarCiclo').disabled = true;
+        document.getElementById('btnGuardarCiclo').textContent = 'Guardando...';
+        
+        await CiclosAPI.crear(jsonContent, grado);
+        
+        mostrarAlerta('alertCiclos', 'Ciclo creado correctamente', 'success');
+        cerrarModal('modalNuevoCiclo');
+        cargarCiclos();
+        
+      } catch (error) {
+        console.error('Error guardando ciclo:', error);
+        alert('Error al guardar el ciclo: ' + error.message);
+      } finally {
+        document.getElementById('btnGuardarCiclo').disabled = false;
+        document.getElementById('btnGuardarCiclo').textContent = 'Crear Ciclo';
+      }
+    }
+    
+    window.toggleActivoCiclo = async function(id, grado, estadoActual) {
+      try {
+        if (!estadoActual) {
+          // Si vamos a activar, desactivar los demás del mismo grado
+          if (confirm('¿Activar este ciclo? Los demás ciclos de este grado se desactivarán.')) {
+            await CiclosAPI.activarCiclo(id, grado);
+            mostrarAlerta('alertCiclos', 'Ciclo activado correctamente', 'success');
+          }
+        } else {
+          await CiclosAPI.toggleActivo(id, false);
+          mostrarAlerta('alertCiclos', 'Ciclo desactivado correctamente', 'success');
+        }
+        cargarCiclos();
+      } catch (error) {
+        console.error('Error cambiando estado:', error);
+        mostrarAlerta('alertCiclos', 'Error: ' + error.message, 'error');
+      }
+    };
+    
+    window.verDetalles = async function(id) {
+      try {
+        const ciclo = await CiclosAPI.obtener(id);
+        
+        if (!ciclo) {
+          alert('Ciclo no encontrado');
+          return;
+        }
+        
+        const reading = ciclo.contenido?.reading || {};
+        const vocabQuestions = ciclo.contenido?.vocabulary_questions || [];
+        const evalQuestions = ciclo.contenido?.questions || [];
+        
+        document.getElementById('modalDetallesTitulo').textContent = reading.title || 'Sin título';
+        
+        document.getElementById('modalDetallesContent').innerHTML = `
+          <div class="json-preview">
+            <h4>Información General</h4>
+            <p><strong>Ciclo:</strong> #${ciclo.numero_ciclo}</p>
+            <p><strong>Grado:</strong> ${ciclo.grado}</p>
+            <p><strong>Autor:</strong> ${reading.author || 'N/A'}</p>
+            <p><strong>Año:</strong> ${reading.year || 'N/A'}</p>
+            <p><strong>Palabras:</strong> ${reading.word_count_text || 0}</p>
+            <p><strong>Lexile:</strong> ${reading.lexile || 'N/A'}</p>
+          </div>
+          
+          <div class="json-preview" style="margin-top: 16px;">
+            <h4>Resumen</h4>
+            <p>${reading.summary || 'Sin resumen'}</p>
+          </div>
+          
+          <div class="json-preview" style="margin-top: 16px;">
+            <h4>Vocabulario (${vocabQuestions.length} términos)</h4>
+            <ul style="margin-left: 20px; color: #4a5568;">
+              ${(reading.keywords || []).slice(0, 5).map(k => `<li><strong>${k.word}:</strong> ${k.meaning}</li>`).join('')}
+              ${(reading.keywords || []).length > 5 ? `<li>...y ${(reading.keywords || []).length - 5} más</li>` : ''}
+            </ul>
+          </div>
+          
+          <div class="json-preview" style="margin-top: 16px;">
+            <h4>Cuestionarios</h4>
+            <p><strong>Vocabulario:</strong> ${vocabQuestions.length} preguntas</p>
+            <p><strong>Evaluación:</strong> ${evalQuestions.length} preguntas</p>
+          </div>
+        `;
+        
+        document.getElementById('modalDetalles').classList.add('active');
+      } catch (error) {
+        console.error('Error cargando detalles:', error);
+        alert('Error al cargar detalles: ' + error.message);
+      }
+    };
+    
+    window.abrirEditarCicloLectura = async function(id) {
+      try {
+        const ciclo = await CiclosAPI.obtener(id);
+        if (!ciclo) { alert('Ciclo no encontrado'); return; }
+        const titulo = (ciclo.contenido && ciclo.contenido.reading && ciclo.contenido.reading.title) ? ciclo.contenido.reading.title : ciclo.titulo || '';
+        document.getElementById('editarCicloLecturaId').value = id;
+        document.getElementById('editarCicloLecturaTitulo').value = titulo;
+        const sel = document.getElementById('editarCicloLecturaGrado');
+        sel.innerHTML = '<option value="">Seleccionar...</option>';
+        GRADOS.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.value;
+          opt.textContent = g.label;
+          if (g.value === ciclo.grado) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        document.getElementById('modalEditarCicloLectura').classList.add('active');
+      } catch (e) {
+        console.error(e);
+        alert('Error al cargar: ' + e.message);
+      }
+    };
+    window.guardarEditarCicloLectura = async function() {
+      const id = document.getElementById('editarCicloLecturaId').value;
+      const titulo = document.getElementById('editarCicloLecturaTitulo').value.trim();
+      const grado = document.getElementById('editarCicloLecturaGrado').value;
+      if (!titulo || !grado) { alert('Completa título y grado'); return; }
+      try {
+        await CiclosAPI.actualizar(id, { titulo, grado });
+        mostrarAlerta('alertCiclos', 'Ciclo actualizado', 'success');
+        cerrarModal('modalEditarCicloLectura');
+        cargarCiclos();
+      } catch (e) {
+        console.error(e);
+        alert('Error: ' + e.message);
+      }
+    };
+    window.abrirCopiarCicloLectura = function(id, gradoActual) {
+      document.getElementById('copiarCicloLecturaId').value = id;
+      const sel = document.getElementById('copiarCicloLecturaGradoDestino');
+      sel.innerHTML = '<option value="">Seleccionar grado...</option>';
+      GRADOS.forEach(g => {
+        if (g.value === gradoActual) return;
+        const opt = document.createElement('option');
+        opt.value = g.value;
+        opt.textContent = g.label;
+        sel.appendChild(opt);
+      });
+      document.getElementById('modalCopiarCicloLectura').classList.add('active');
+    };
+    window.ejecutarCopiarCicloLectura = async function() {
+      const id = document.getElementById('copiarCicloLecturaId').value;
+      const gradoDestino = document.getElementById('copiarCicloLecturaGradoDestino').value;
+      if (!gradoDestino) { alert('Selecciona el grado destino'); return; }
+      try {
+        await CiclosAPI.copiarAOtroGrado(id, gradoDestino);
+        mostrarAlerta('alertCiclos', 'Ciclo copiado correctamente', 'success');
+        cerrarModal('modalCopiarCicloLectura');
+        cargarCiclos();
+      } catch (e) {
+        console.error(e);
+        alert('Error al copiar: ' + e.message);
+      }
+    };
+    
+    window.eliminarCiclo = async function(id, titulo) {
+      if (!confirm(`¿Estás seguro de eliminar el ciclo "${titulo}"? Esta acción no se puede deshacer.`)) {
+        return;
+      }
+      
+      try {
+        await CiclosAPI.eliminar(id);
+        mostrarAlerta('alertCiclos', 'Ciclo eliminado correctamente', 'success');
+        cargarCiclos();
+      } catch (error) {
+        console.error('Error eliminando ciclo:', error);
+        mostrarAlerta('alertCiclos', 'Error: ' + error.message, 'error');
+      }
+    };
+    
+    window.cerrarModal = function(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    };
+    
+    function mostrarAlerta(containerId, mensaje, tipo) {
+      const container = document.getElementById(containerId);
+      const alertClass = tipo === 'success' ? 'alert-success' : tipo === 'error' ? 'alert-error' : 'alert-warning';
+      container.innerHTML = `<div class="alert ${alertClass}">${mensaje}</div>`;
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 5000);
+    }
+    
+    // Variable para guardar el ciclo actual de sesiones
+    let cicloSesionesActual = null;
+    
+    // Ver sesiones de un ciclo
+    window.verSesiones = async function(cicloId, tituloCliclo) {
+      cicloSesionesActual = cicloId;
+      document.getElementById('modalSesionesTitulo').textContent = `Sesiones: ${tituloCliclo}`;
+      document.getElementById('modalSesiones').classList.add('active');
+      
+      await cargarSesiones(cicloId);
+    };
+    
+    async function cargarSesiones(cicloId) {
+      const tbody = document.getElementById('tbodySesiones');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+      
+      try {
+        const sesiones = await SesionesAPI.listarPorCiclo(cicloId);
+        
+        if (!sesiones || sesiones.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay sesiones registradas</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = sesiones.map(sesion => {
+          const estudiante = sesion.usuarios;
+          const nombre = estudiante ? `${estudiante.nombre} ${estudiante.apellidos || ''}` : 'Desconocido';
+          const codigo = estudiante?.codigo_estudiante || '-';
+          
+          const estadoBadge = {
+            'finalizada': '<span class="badge badge-success">Completada</span>',
+            'en_progreso': '<span class="badge badge-info">En progreso</span>',
+            'lectura_completada': '<span class="badge badge-info">Lectura OK</span>',
+            'vocabulario_completado': '<span class="badge badge-info">Vocabulario OK</span>',
+            'abandonada': '<span class="badge badge-secondary">Abandonada</span>'
+          };
+          
+          return `
+            <tr>
+              <td>${codigo}</td>
+              <td>${nombre}</td>
+              <td>${estadoBadge[sesion.estado] || sesion.estado}</td>
+              <td>${sesion.porcentaje_comprension ? sesion.porcentaje_comprension.toFixed(0) + '%' : '-'}</td>
+              <td>${sesion.velocidad_efectiva ? sesion.velocidad_efectiva.toFixed(0) : '-'}</td>
+              <td>
+                ${sesion.estado === 'finalizada' 
+                  ? `<button class="btn btn-sm btn-warning" onclick="permitirRepetir('${cicloId}', '${sesion.estudiante_id}', '${nombre}')">
+                      Permitir Repetir
+                     </button>`
+                  : '-'
+                }
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+      } catch (error) {
+        console.error('Error cargando sesiones:', error);
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${error.message}</td></tr>`;
+      }
+    }
+    
+    // Permitir que un estudiante repita la lectura
+    window.permitirRepetir = async function(cicloId, estudianteId, nombreEstudiante) {
+      if (!confirm(`¿Permitir que ${nombreEstudiante} repita esta lectura? Se eliminarán sus resultados anteriores.`)) {
+        return;
+      }
+      
+      try {
+        await SesionesAPI.permitirRepetir(cicloId, estudianteId);
+        mostrarAlerta('alertSesiones', `${nombreEstudiante} ahora puede repetir la lectura`, 'success');
+        await cargarSesiones(cicloId);
+      } catch (error) {
+        console.error('Error permitiendo repetir:', error);
+        mostrarAlerta('alertSesiones', 'Error: ' + error.message, 'error');
+      }
+    };
+    
+    // Cerrar modales al hacer clic fuera
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

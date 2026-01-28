@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Ejercicios Digitales</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 { font-size: 24px; }
+    
+    .btn-back {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+    }
+    
+    .btn-primary { background: #38b2ac; color: white; }
+    .btn-primary:hover { background: #319795; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    
+    .filter-group select {
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    
+    .card-header {
+      background: #f7fafc;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-header h2 { font-size: 18px; color: #2d3748; }
+    
+    table { width: 100%; border-collapse: collapse; }
+    
+    th, td {
+      padding: 14px 20px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    th {
+      background: #f7fafc;
+      font-weight: 600;
+      color: #4a5568;
+      font-size: 13px;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .badge-active { background: #c6f6d5; color: #22543d; }
+    .badge-inactive { background: #fed7d7; color: #822727; }
+    .badge-skill { background: #bee3f8; color: #2a4365; }
+    
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #718096;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active { display: flex; }
+    
+    /* Modales encima del de ver juegos */
+    #modalJuego { z-index: 1100; }
+    #modalJuego .modal-content { z-index: 1101; }
+    #modalEditarJuego { z-index: 1100; }
+    #modalEditarJuego .modal-content { z-index: 1101; }
+    
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h2 { font-size: 20px; color: #2d3748; }
+    
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #718096;
+    }
+    
+    .modal-body { padding: 24px; }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #2d3748;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    
+    .btn-secondary { background: #e2e8f0; color: #4a5568; }
+    
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    
+    .alert-success { background: #c6f6d5; color: #22543d; }
+    .alert-error { background: #fed7d7; color: #822727; }
+    
+    /* Games list inside cycle */
+    .games-list {
+      padding: 16px 24px;
+    }
+    
+    .game-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #f7fafc;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .game-info h4 {
+      font-size: 14px;
+      color: #2d3748;
+      margin-bottom: 4px;
+    }
+    
+    .game-info p {
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Gestión de Ejercicios Digitales</h1>
+    <a href="../admin/dashboard.html" class="btn-back">← Volver al Dashboard</a>
+  </header>
+  
+  <div class="container">
+    <div id="alertContainer"></div>
+    
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="abrirModalCiclo()">+ Nuevo Ciclo</button>
+      
+      <div class="filter-group">
+        <select id="filtroGrado" onchange="cargarCiclos()">
+          <option value="">Todos los grados</option>
+        </select>
+      </div>
+    </div>
+    
+    <div id="ciclosContainer">
+      <div class="card">
+        <div class="card-header">
+          <h2>Ciclos de Ejercicios</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Ciclo</th>
+              <th>Grado</th>
+              <th>Título</th>
+              <th>Juegos</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCiclos">
+            <tr><td colspan="6" class="empty-state">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Crear Ciclo -->
+  <div id="modalCiclo" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Nuevo Ciclo de Ejercicios</h2>
+        <button class="btn-close" onclick="cerrarModal('modalCiclo')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formCiclo">
+          <div class="form-group">
+            <label>Grado *</label>
+            <select id="cicloGrado" required>
+              <option value="">Seleccionar...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Título *</label>
+            <input type="text" id="cicloTitulo" placeholder="Ej: Ejercicios de Atención y Memoria" required>
+          </div>
+          <div class="form-group">
+            <label>Descripción (opcional)</label>
+            <textarea id="cicloDescripcion" rows="2" placeholder="Descripción del ciclo..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalCiclo')">Cancelar</button>
+        <button class="btn btn-primary" onclick="crearCiclo()">Crear Ciclo</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Agregar Juego -->
+  <div id="modalJuego" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Agregar Juego</h2>
+        <button class="btn-close" onclick="cerrarModal('modalJuego')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="alertJuego"></div>
+        <form id="formJuego">
+          <input type="hidden" id="juegoCicloId">
+          
+          <div class="form-group">
+            <label>Nombre del Juego *</label>
+            <input type="text" id="juegoNombre" placeholder="Ej: Memory Match" required>
+          </div>
+          
+          <div class="form-group">
+            <label>URL del Juego *</label>
+            <input type="url" id="juegoUrl" placeholder="https://..." required>
+          </div>
+          
+          <div class="form-group">
+            <label>Habilidad que Estimula *</label>
+            <select id="juegoHabilidad" required>
+              <option value="">Seleccionar...</option>
+            </select>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tipo de Meta *</label>
+              <select id="juegoTipoMeta" required>
+                <option value="">Seleccionar...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Meta Objetivo *</label>
+              <input type="number" id="juegoMeta" placeholder="Ej: 1000" min="1" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Instrucciones (opcional)</label>
+            <textarea id="juegoInstrucciones" rows="2" placeholder="Instrucciones para el estudiante..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalJuego')">Cancelar</button>
+        <button class="btn btn-primary" onclick="agregarJuego()">Agregar Juego</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Editar metas del juego -->
+  <div id="modalEditarJuego" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Editar metas del juego</h2>
+        <button class="btn-close" onclick="cerrarModal('modalEditarJuego')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="alertEditarJuego"></div>
+        <input type="hidden" id="editarJuegoId">
+        <div class="form-group">
+          <label>Nombre del juego</label>
+          <input type="text" id="editarJuegoNombre" placeholder="Nombre" readonly style="background:#f7fafc;">
+        </div>
+        <div class="form-group">
+          <label>Habilidad que estimula *</label>
+          <select id="editarJuegoHabilidad" required>
+            <option value="">Seleccionar...</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo de meta *</label>
+            <select id="editarJuegoTipoMeta" required>
+              <option value="">Seleccionar...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Meta objetivo *</label>
+            <input type="number" id="editarJuegoMeta" placeholder="Ej: 16" min="1" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Instrucciones (opcional)</label>
+          <textarea id="editarJuegoInstrucciones" rows="2" placeholder="Instrucciones para el estudiante..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalEditarJuego')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarEditarJuego()">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Ver Juegos del Ciclo -->
+  <div id="modalVerJuegos" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 id="modalJuegosTitulo">Juegos del Ciclo</h2>
+        <button class="btn-close" onclick="cerrarModal('modalVerJuegos')">&times;</button>
+      </div>
+      <div class="games-list" id="listaJuegos">
+        <div class="empty-state">Cargando...</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnAgregarJuego">+ Agregar Juego</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Editar Ciclo -->
+  <div id="modalEditarCiclo" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Editar Ciclo</h2>
+        <button class="btn-close" onclick="cerrarModal('modalEditarCiclo')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editarCicloId">
+        <div class="form-group">
+          <label>Título *</label>
+          <input type="text" id="editarCicloTitulo" placeholder="Título del ciclo" required>
+        </div>
+        <div class="form-group">
+          <label>Descripción (opcional)</label>
+          <textarea id="editarCicloDescripcion" rows="2" placeholder="Descripción..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalEditarCiclo')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarEditarCiclo()">Guardar</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Copiar a otro grado -->
+  <div id="modalCopiarCiclo" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Copiar ciclo a otro grado</h2>
+        <button class="btn-close" onclick="cerrarModal('modalCopiarCiclo')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="copiarCicloId">
+        <p style="margin-bottom:16px;color:#4a5568;">Se creará un nuevo ciclo con el mismo título, descripción y juegos en el grado seleccionado.</p>
+        <div class="form-group">
+          <label>Copiar a grado *</label>
+          <select id="copiarCicloGradoDestino">
+            <option value="">Seleccionar grado...</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalCopiarCiclo')">Cancelar</button>
+        <button class="btn btn-primary" onclick="ejecutarCopiarCiclo()">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { CiclosEjerciciosAPI, JuegosAPI, GRADOS, HABILIDADES, TIPOS_META } from './ejercicios.api.js';
+    
+    let cicloActualId = null;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarSelectGrados();
+      cargarSelectHabilidades();
+      cargarSelectTiposMeta();
+      cargarCiclos();
+    });
+    
+    function cargarSelectGrados() {
+      const selects = ['filtroGrado', 'cicloGrado'];
+      selects.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        
+        GRADOS.forEach(grado => {
+          const option = document.createElement('option');
+          option.value = grado.value;
+          option.textContent = grado.label;
+          select.appendChild(option);
+        });
+      });
+    }
+    
+    function cargarSelectHabilidades() {
+      const select = document.getElementById('juegoHabilidad');
+      HABILIDADES.forEach(h => {
+        const option = document.createElement('option');
+        option.value = h.value;
+        option.textContent = h.label;
+        select.appendChild(option);
+      });
+    }
+    
+    function cargarSelectTiposMeta() {
+      const select = document.getElementById('juegoTipoMeta');
+      TIPOS_META.forEach(t => {
+        const option = document.createElement('option');
+        option.value = t.value;
+        option.textContent = t.label;
+        select.appendChild(option);
+      });
+    }
+    
+    window.cargarCiclos = async function() {
+      const tbody = document.getElementById('tablaCiclos');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+      
+      try {
+        const filtros = {};
+        const grado = document.getElementById('filtroGrado').value;
+        if (grado) filtros.grado = grado;
+        
+        const ciclos = await CiclosEjerciciosAPI.listar(filtros);
+        
+        if (!ciclos || ciclos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay ciclos registrados</td></tr>';
+          return;
+        }
+        
+        // Obtener conteo de juegos por ciclo
+        const ciclosConJuegos = await Promise.all(ciclos.map(async (ciclo) => {
+          const juegos = await JuegosAPI.listarPorCiclo(ciclo.id);
+          return { ...ciclo, juegosCount: juegos ? juegos.length : 0 };
+        }));
+        
+        tbody.innerHTML = ciclosConJuegos.map(ciclo => {
+          const gradoLabel = GRADOS.find(g => g.value === ciclo.grado)?.label || ciclo.grado;
+          
+          return `
+            <tr>
+              <td><strong>Ciclo ${ciclo.numero_ciclo}</strong></td>
+              <td>${gradoLabel}</td>
+              <td>${ciclo.titulo}</td>
+              <td>${ciclo.juegosCount} juego(s)</td>
+              <td>
+                <span class="badge ${ciclo.activo ? 'badge-active' : 'badge-inactive'}">
+                  ${ciclo.activo ? 'Activo' : 'Inactivo'}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="btn btn-sm btn-primary" onclick="verJuegos('${ciclo.id}', '${ciclo.titulo}')">Ver Juegos</button>
+                <button class="btn btn-sm" style="background:#805ad5;color:white;" onclick="abrirEditarCiclo('${ciclo.id}')">Editar</button>
+                <button class="btn btn-sm" style="background:#3182ce;color:white;" onclick="abrirCopiarCiclo('${ciclo.id}','${ciclo.grado}')">Copiar</button>
+                ${ciclo.activo ?
+                  `<button class="btn btn-sm" style="background:#e53e3e;color:white;" onclick="desactivarCiclo('${ciclo.id}')">Desactivar</button>` :
+                  `<button class="btn btn-sm" style="background:#38a169;color:white;" onclick="activarCiclo('${ciclo.id}', '${ciclo.grado}')">Activar</button>`
+                }
+                <button class="btn btn-sm" style="background:#e53e3e;color:white;" onclick="eliminarCiclo('${ciclo.id}')">Eliminar</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+      } catch (error) {
+        console.error('Error cargando ciclos:', error);
+        let mensaje = error.message;
+        if (mensaje.includes('ciclos_ejercicios') || mensaje.includes('404')) {
+          mensaje = 'La tabla "ciclos_ejercicios" no existe. Ejecuta el script SQL "crear_modulo_ejercicios.sql" primero.';
+        }
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color: #e53e3e;">${mensaje}</td></tr>`;
+      }
+    };
+    
+    window.abrirModalCiclo = function() {
+      document.getElementById('formCiclo').reset();
+      document.getElementById('modalCiclo').classList.add('active');
+    };
+    
+    window.crearCiclo = async function() {
+      const grado = document.getElementById('cicloGrado').value;
+      const titulo = document.getElementById('cicloTitulo').value.trim();
+      const descripcion = document.getElementById('cicloDescripcion').value.trim();
+      
+      if (!grado || !titulo) {
+        alert('Completa los campos obligatorios');
+        return;
+      }
+      
+      try {
+        await CiclosEjerciciosAPI.crear({ grado, titulo, descripcion });
+        mostrarAlerta('alertContainer', 'Ciclo creado exitosamente', 'success');
+        cerrarModal('modalCiclo');
+        cargarCiclos();
+      } catch (error) {
+        console.error('Error creando ciclo:', error);
+        alert('Error: ' + error.message);
+      }
+    };
+    
+    window.abrirEditarCiclo = async function(id) {
+      try {
+        const ciclo = await CiclosEjerciciosAPI.obtener(id);
+        if (!ciclo) { alert('Ciclo no encontrado'); return; }
+        document.getElementById('editarCicloId').value = id;
+        document.getElementById('editarCicloTitulo').value = ciclo.titulo || '';
+        document.getElementById('editarCicloDescripcion').value = ciclo.descripcion || '';
+        document.getElementById('modalEditarCiclo').classList.add('active');
+      } catch (e) {
+        console.error(e);
+        alert('Error al cargar ciclo: ' + e.message);
+      }
+    };
+    
+    window.guardarEditarCiclo = async function() {
+      const id = document.getElementById('editarCicloId').value;
+      const titulo = document.getElementById('editarCicloTitulo').value.trim();
+      const descripcion = document.getElementById('editarCicloDescripcion').value.trim();
+      if (!titulo) { alert('El título es obligatorio'); return; }
+      try {
+        await CiclosEjerciciosAPI.actualizar(id, { titulo, descripcion });
+        mostrarAlerta('alertContainer', 'Ciclo actualizado', 'success');
+        cerrarModal('modalEditarCiclo');
+        cargarCiclos();
+      } catch (e) {
+        console.error(e);
+        alert('Error: ' + e.message);
+      }
+    };
+    
+    window.abrirCopiarCiclo = function(id, gradoActual) {
+      document.getElementById('copiarCicloId').value = id;
+      const sel = document.getElementById('copiarCicloGradoDestino');
+      sel.innerHTML = '<option value="">Seleccionar grado...</option>';
+      GRADOS.forEach(g => {
+        if (g.value === gradoActual) return;
+        const opt = document.createElement('option');
+        opt.value = g.value;
+        opt.textContent = g.label;
+        sel.appendChild(opt);
+      });
+      document.getElementById('modalCopiarCiclo').classList.add('active');
+    };
+    
+    window.ejecutarCopiarCiclo = async function() {
+      const id = document.getElementById('copiarCicloId').value;
+      const gradoDestino = document.getElementById('copiarCicloGradoDestino').value;
+      if (!gradoDestino) { alert('Selecciona el grado destino'); return; }
+      try {
+        await CiclosEjerciciosAPI.copiarAOtroGrado(id, gradoDestino);
+        mostrarAlerta('alertContainer', 'Ciclo copiado correctamente', 'success');
+        cerrarModal('modalCopiarCiclo');
+        cargarCiclos();
+      } catch (e) {
+        console.error(e);
+        alert('Error al copiar: ' + e.message);
+      }
+    };
+    
+    window.verJuegos = async function(cicloId, titulo) {
+      cicloActualId = cicloId;
+      document.getElementById('modalJuegosTitulo').textContent = `Juegos: ${titulo}`;
+      document.getElementById('btnAgregarJuego').onclick = () => abrirModalJuego(cicloId);
+      document.getElementById('modalVerJuegos').classList.add('active');
+      
+      await cargarJuegos(cicloId);
+    };
+    
+    async function cargarJuegos(cicloId) {
+      const container = document.getElementById('listaJuegos');
+      container.innerHTML = '<div class="empty-state">Cargando...</div>';
+      
+      try {
+        const juegos = await JuegosAPI.listarPorCiclo(cicloId);
+        
+        if (!juegos || juegos.length === 0) {
+          container.innerHTML = '<div class="empty-state">No hay juegos en este ciclo. Agrega uno.</div>';
+          return;
+        }
+        
+        container.innerHTML = juegos.map(j => {
+          const habilidad = HABILIDADES.find(h => h.value === j.habilidad_estimulada)?.label || j.habilidad_estimulada;
+          const tipoMeta = TIPOS_META.find(t => t.value === j.tipo_meta)?.label || j.tipo_meta;
+          
+          return `
+            <div class="game-item">
+              <div class="game-info">
+                <h4>${j.nombre}</h4>
+                <p>
+                  <span class="badge badge-skill">${habilidad}</span>
+                  Meta: ${j.meta_objetivo} ${tipoMeta}
+                </p>
+              </div>
+              <div class="actions">
+                <a href="${j.url_juego}" target="_blank" class="btn btn-sm btn-primary">Abrir</a>
+                <button class="btn btn-sm" style="background:#805ad5;color:white;" onclick="abrirEditarJuego('${j.id}')">Editar metas</button>
+                <button class="btn btn-sm" style="background:#e53e3e;color:white;" onclick="eliminarJuego('${j.id}')">Eliminar</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+      } catch (error) {
+        console.error('Error cargando juegos:', error);
+        container.innerHTML = `<div class="empty-state" style="color: #e53e3e;">Error: ${error.message}</div>`;
+      }
+    }
+    
+    window.abrirModalJuego = function(cicloId) {
+      document.getElementById('juegoCicloId').value = cicloId;
+      document.getElementById('formJuego').reset();
+      document.getElementById('alertJuego').innerHTML = ''; // Limpiar alertas previas
+      document.getElementById('modalJuego').classList.add('active');
+    };
+    
+    window.agregarJuego = async function() {
+      const cicloId = document.getElementById('juegoCicloId').value;
+      const nombre = document.getElementById('juegoNombre').value.trim();
+      const url = document.getElementById('juegoUrl').value.trim();
+      const habilidad = document.getElementById('juegoHabilidad').value;
+      const tipoMeta = document.getElementById('juegoTipoMeta').value;
+      const meta = parseInt(document.getElementById('juegoMeta').value);
+      const instrucciones = document.getElementById('juegoInstrucciones').value.trim();
+      
+      if (!nombre || !url || !habilidad || !tipoMeta || !meta) {
+        mostrarAlerta('alertJuego', 'Completa todos los campos obligatorios', 'error');
+        return;
+      }
+      
+      try {
+        await JuegosAPI.crear({
+          ciclo_id: cicloId,
+          nombre: nombre,
+          url_juego: url,
+          habilidad_estimulada: habilidad,
+          tipo_meta: tipoMeta,
+          meta_objetivo: meta,
+          instrucciones: instrucciones || null
+        });
+        
+        // Cerrar modal de agregar juego
+        cerrarModal('modalJuego');
+        
+        // Recargar lista de juegos
+        await cargarJuegos(cicloId);
+        cargarCiclos();
+        
+        // Mostrar mensaje de éxito brevemente
+        alert('Juego agregado correctamente');
+        
+      } catch (error) {
+        console.error('Error agregando juego:', error);
+        mostrarAlerta('alertJuego', 'Error: ' + error.message, 'error');
+      }
+    };
+    
+    window.abrirEditarJuego = async function(juegoId) {
+      try {
+        const juego = await JuegosAPI.obtener(juegoId);
+        if (!juego) { alert('Juego no encontrado'); return; }
+        document.getElementById('editarJuegoId').value = juegoId;
+        document.getElementById('editarJuegoNombre').value = juego.nombre || '';
+        document.getElementById('editarJuegoMeta').value = juego.meta_objetivo ?? '';
+        document.getElementById('editarJuegoInstrucciones').value = juego.instrucciones || '';
+        const selH = document.getElementById('editarJuegoHabilidad');
+        const selT = document.getElementById('editarJuegoTipoMeta');
+        if (selH.options.length <= 1) {
+          selH.innerHTML = '<option value="">Seleccionar...</option>';
+          HABILIDADES.forEach(h => { const o = document.createElement('option'); o.value = h.value; o.textContent = h.label; selH.appendChild(o); });
+        }
+        if (selT.options.length <= 1) {
+          selT.innerHTML = '<option value="">Seleccionar...</option>';
+          TIPOS_META.forEach(t => { const o = document.createElement('option'); o.value = t.value; o.textContent = t.label; selT.appendChild(o); });
+        }
+        selH.value = juego.habilidad_estimulada || '';
+        selT.value = juego.tipo_meta || '';
+        document.getElementById('alertEditarJuego').innerHTML = '';
+        document.getElementById('modalEditarJuego').classList.add('active');
+      } catch (e) {
+        console.error(e);
+        alert('Error al cargar juego: ' + e.message);
+      }
+    };
+    
+    window.guardarEditarJuego = async function() {
+      const id = document.getElementById('editarJuegoId').value;
+      const habilidad = document.getElementById('editarJuegoHabilidad').value;
+      const tipoMeta = document.getElementById('editarJuegoTipoMeta').value;
+      const meta = parseInt(document.getElementById('editarJuegoMeta').value, 10);
+      const instrucciones = document.getElementById('editarJuegoInstrucciones').value.trim();
+      if (!habilidad || !tipoMeta || isNaN(meta) || meta < 1) {
+        document.getElementById('alertEditarJuego').innerHTML = '<div class="alert alert-error">Completa tipo de meta y meta objetivo (número mayor a 0).</div>';
+        return;
+      }
+      try {
+        await JuegosAPI.actualizar(id, { habilidad_estimulada: habilidad, tipo_meta: tipoMeta, meta_objetivo: meta, instrucciones: instrucciones || null });
+        cerrarModal('modalEditarJuego');
+        await cargarJuegos(cicloActualId);
+        cargarCiclos();
+        alert('Metas actualizadas correctamente');
+      } catch (e) {
+        console.error(e);
+        document.getElementById('alertEditarJuego').innerHTML = '<div class="alert alert-error">Error: ' + e.message + '</div>';
+      }
+    };
+    
+    window.eliminarJuego = async function(juegoId) {
+      if (!confirm('¿Eliminar este juego?')) return;
+      
+      try {
+        await JuegosAPI.eliminar(juegoId);
+        await cargarJuegos(cicloActualId);
+        cargarCiclos();
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    };
+    
+    window.activarCiclo = async function(id, grado) {
+      if (!confirm('¿Activar este ciclo? Se desactivarán los demás del mismo grado.')) return;
+      
+      try {
+        await CiclosEjerciciosAPI.activarCiclo(id, grado);
+        mostrarAlerta('alertContainer', 'Ciclo activado', 'success');
+        cargarCiclos();
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    };
+    
+    window.desactivarCiclo = async function(id) {
+      if (!confirm('¿Desactivar este ciclo?')) return;
+      
+      try {
+        await CiclosEjerciciosAPI.desactivar(id);
+        mostrarAlerta('alertContainer', 'Ciclo desactivado', 'success');
+        cargarCiclos();
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    };
+    
+    window.eliminarCiclo = async function(id) {
+      if (!confirm('¿Eliminar este ciclo y todos sus juegos?')) return;
+      
+      try {
+        await CiclosEjerciciosAPI.eliminar(id);
+        mostrarAlerta('alertContainer', 'Ciclo eliminado', 'success');
+        cargarCiclos();
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    };
+    
+    window.cerrarModal = function(id) {
+      document.getElementById(id).classList.remove('active');
+      // Limpiar alertas si existen
+      const alertJuego = document.getElementById('alertJuego');
+      if (alertJuego) alertJuego.innerHTML = '';
+    };
+    
+    function mostrarAlerta(containerId, mensaje, tipo) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+      if (tipo === 'success') setTimeout(() => { container.innerHTML = ''; }, 3000);
+    }
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modalEditarJuego = document.getElementById('modalEditarJuego');
+        if (modalEditarJuego && modalEditarJuego.classList.contains('active')) {
+          cerrarModal('modalEditarJuego');
+          return;
+        }
+        const modalJuego = document.getElementById('modalJuego');
+        if (modalJuego && modalJuego.classList.contains('active')) {
+          cerrarModal('modalJuego');
+          return;
+        }
+        const modalVerJuegos = document.getElementById('modalVerJuegos');
+        if (modalVerJuegos.classList.contains('active')) {
+          cerrarModal('modalVerJuegos');
+          return;
+        }
+        const modalCiclo = document.getElementById('modalCiclo');
+        if (modalCiclo.classList.contains('active')) {
+          cerrarModal('modalCiclo');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

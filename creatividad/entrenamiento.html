@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creatividad - Thinking Skills Program</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      min-height: 100vh;
+      color: #e2e8f0;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .header-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.2);
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+    
+    .zoom-btn {
+      background: rgba(255,255,255,0.3);
+      color: white;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .zoom-btn:hover {
+      background: rgba(255,255,255,0.4);
+    }
+    
+    .zoom-value {
+      min-width: 50px;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    /* Estado de carga */
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+    }
+    
+    .loading-state p {
+      font-size: 18px;
+      color: #a0aec0;
+    }
+    
+    /* Estado sin ciclo */
+    .no-cycle-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+    }
+    
+    .no-cycle-state h2 {
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+    }
+    
+    .no-cycle-state p {
+      color: #a0aec0;
+      margin-bottom: 24px;
+    }
+    
+    .btn-back-dashboard {
+      background: #ed8936;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    
+    .btn-back-dashboard:hover {
+      background: #dd6b20;
+    }
+    
+    /* Estado completado */
+    .completed-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+    }
+    
+    .completed-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 48px;
+      max-width: 500px;
+    }
+    
+    .completed-icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+    }
+    
+    .completed-card h2 {
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: #48bb78;
+    }
+    
+    .completed-card p {
+      color: #a0aec0;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    
+    .btn-completed {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .btn-completed:hover {
+      transform: translateY(-2px);
+    }
+    
+    .btn-request-review {
+      background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 12px;
+      width: 100%;
+      max-width: 300px;
+    }
+    
+    .btn-request-review:hover {
+      transform: translateY(-2px);
+    }
+    
+    .btn-secondary-action {
+      background: rgba(255,255,255,0.1);
+      color: #a0aec0;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    .btn-secondary-action:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .grade-display {
+      background: rgba(72, 187, 120, 0.2);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .grade-value {
+      font-size: 48px;
+      font-weight: 700;
+      color: #48bb78;
+    }
+    
+    .grade-label {
+      font-size: 14px;
+      color: #a0aec0;
+      margin-top: 8px;
+    }
+    
+    .grade-comment {
+      background: rgba(255,255,255,0.05);
+      border-left: 3px solid #ed8936;
+      padding: 12px 16px;
+      margin: 16px 0;
+      border-radius: 0 8px 8px 0;
+      text-align: left;
+    }
+    
+    .grade-comment-label {
+      font-size: 12px;
+      color: #ed8936;
+      margin-bottom: 4px;
+    }
+    
+    /* Sección de instrucciones */
+    .instructions-section {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border-left: 4px solid #ed8936;
+    }
+    
+    .instructions-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #ed8936;
+    }
+    
+    .instructions-text {
+      color: #e2e8f0;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+    
+    /* Visor de contenido */
+    .content-viewer {
+      background: #2d2d44;
+      border-radius: 12px;
+      overflow: hidden;
+      min-height: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .content-viewer.image-viewer {
+      padding: 24px;
+    }
+    
+    .content-viewer img {
+      max-width: 100%;
+      transition: transform 0.3s ease;
+      border-radius: 8px;
+    }
+    
+    .content-viewer iframe {
+      width: 100%;
+      height: 80vh;
+      border: none;
+    }
+    
+    /* Botón finalizar */
+    .finish-section {
+      margin-top: 24px;
+      text-align: center;
+    }
+    
+    .btn-finish {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+    }
+    
+    .btn-finish:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(72, 187, 120, 0.4);
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Estado de carga -->
+  <div id="loadingState" class="loading-state">
+    <p>Cargando contenido...</p>
+  </div>
+  
+  <!-- Sin ciclo activo -->
+  <div id="noCycleState" class="no-cycle-state hidden">
+    <h2>No hay actividad disponible</h2>
+    <p>Actualmente no hay un ciclo de creatividad activo para tu grado.<br>Consulta con tu docente o vuelve más tarde.</p>
+    <a href="../estudiante/dashboard.html" class="btn-back-dashboard">Volver al Dashboard</a>
+  </div>
+  
+  <!-- Estado completado - pendiente de revisión -->
+  <div id="pendingReviewState" class="completed-state hidden">
+    <div class="completed-card">
+      <div class="completed-icon">⏳</div>
+      <h2>Esperando calificación del docente</h2>
+      <p>Ya solicitaste la revisión de tu trabajo. El docente te asignará una calificación pronto.</p>
+      <button class="btn-completed" onclick="window.location.href='../estudiante/dashboard.html'">
+        Volver al Dashboard
+      </button>
+    </div>
+  </div>
+  
+  <!-- Estado calificado -->
+  <div id="gradedState" class="completed-state hidden">
+    <div class="completed-card">
+      <div class="completed-icon">🎉</div>
+      <h2>¡Tu trabajo ha sido calificado!</h2>
+      <div class="grade-display">
+        <div class="grade-value" id="gradeValue">0%</div>
+        <div class="grade-label">Calificación obtenida</div>
+      </div>
+      <div id="gradeComment" class="grade-comment hidden"></div>
+      <button class="btn-completed" onclick="window.location.href='../estudiante/dashboard.html'">
+        Aceptar
+      </button>
+    </div>
+  </div>
+  
+  <!-- Estado completado - listo para solicitar revisión -->
+  <div id="completedState" class="completed-state hidden">
+    <div class="completed-card">
+      <div class="completed-icon">✅</div>
+      <h2>¡Actividad completada!</h2>
+      <p>Has terminado de visualizar el contenido. Ahora muestra tu trabajo al docente y solicita que lo califique.</p>
+      <button class="btn-request-review" onclick="solicitarRevision()">
+        Solicitar Revisión al Docente
+      </button>
+      <button class="btn-secondary-action" onclick="window.location.href='../estudiante/dashboard.html'">
+        Volver al Dashboard
+      </button>
+    </div>
+  </div>
+  
+  <!-- Contenido principal -->
+  <div id="mainContent" class="hidden">
+    <header class="header">
+      <span class="header-title" id="headerTitle">Creatividad</span>
+      <div class="header-controls">
+        <div class="zoom-controls">
+          <button class="zoom-btn" onclick="zoomOut()">−</button>
+          <span class="zoom-value" id="zoomValue">100%</span>
+          <button class="zoom-btn" onclick="zoomIn()">+</button>
+        </div>
+      </div>
+    </header>
+    
+    <div class="container">
+      <!-- Instrucciones (opcional) -->
+      <div id="instructionsSection" class="instructions-section hidden">
+        <h3 class="instructions-title">Instrucciones</h3>
+        <p class="instructions-text" id="instructionsText"></p>
+      </div>
+      
+      <!-- Visor de contenido -->
+      <div class="content-viewer" id="contentViewer">
+        <!-- Se carga dinámicamente: imagen o PDF -->
+      </div>
+      
+      <!-- Botón finalizar -->
+      <div class="finish-section">
+        <button class="btn-finish" id="btnFinish" onclick="finalizarActividad()">
+          He terminado de visualizar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getUser } from '../auth/auth.core.js';
+    import { CiclosCreatividadAPI, SesionesCreatividadAPI } from './creatividad.api.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    
+    let cicloActual = null;
+    let sesionActual = null;
+    let zoomLevel = 100;
+    let tiempoInicio = null;
+    
+    let usuarioActual = null;
+    
+    // Inicializar
+    async function init() {
+      usuarioActual = getUser();
+      
+      if (!usuarioActual) {
+        window.location.href = '../index.html';
+        return;
+      }
+      
+      try {
+        const gradoUsuario = await obtenerGradoUsuario(usuarioActual);
+        
+        if (!gradoUsuario) {
+          mostrarEstado('noCycleState');
+          return;
+        }
+        
+        // Obtener ciclo activo
+        cicloActual = await CiclosCreatividadAPI.obtenerActivoPorGrado(gradoUsuario);
+        
+        if (!cicloActual) {
+          mostrarEstado('noCycleState');
+          return;
+        }
+        
+        // Verificar sesión existente
+        const sesionExistente = await SesionesCreatividadAPI.obtenerSesion(cicloActual.id, usuarioActual.id);
+        
+        if (sesionExistente) {
+          sesionActual = sesionExistente;
+          
+          // Verificar estado de la sesión
+          if (sesionExistente.estado === 'calificada') {
+            // Mostrar calificación
+            mostrarCalificacion(sesionExistente);
+            return;
+          }
+          
+          if (sesionExistente.estado === 'pendiente_revision') {
+            // Esperando revisión del docente
+            mostrarEstado('pendingReviewState');
+            return;
+          }
+          
+          if (sesionExistente.estado === 'finalizada') {
+            // Completó pero no ha solicitado revisión
+            mostrarEstado('completedState');
+            return;
+          }
+        }
+        
+        // Iniciar o recuperar sesión
+        sesionActual = await SesionesCreatividadAPI.iniciar(cicloActual.id, usuarioActual.id);
+        tiempoInicio = Date.now();
+        
+        // Cargar contenido
+        cargarContenido();
+        mostrarEstado('mainContent');
+        
+      } catch (error) {
+        console.error('Error inicializando:', error);
+        if (error.message.includes('Ya completaste')) {
+          mostrarEstado('completedState');
+        } else {
+          mostrarEstado('noCycleState');
+        }
+      }
+    }
+    
+    // Obtener grado del usuario
+    async function obtenerGradoUsuario(user) {
+      let grado = user.grado;
+      
+      if (!grado) {
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}&select=grado`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data[0]) {
+            grado = data[0].grado;
+          }
+        }
+      }
+      
+      return mapearGrado(grado);
+    }
+    
+    // Mapear grado
+    function mapearGrado(gradoRaw) {
+      if (!gradoRaw) return null;
+      const gradoStr = String(gradoRaw).toLowerCase().replace('°', '').trim();
+      const mapa = {
+        '3': 'tercero', 'tercero': 'tercero',
+        '4': 'cuarto', 'cuarto': 'cuarto',
+        '5': 'quinto', 'quinto': 'quinto',
+        '6': 'sexto', 'sexto': 'sexto',
+        '7': 'septimo', 'séptimo': 'septimo', 'septimo': 'septimo',
+        '8': 'octavo', 'octavo': 'octavo',
+        '9': 'noveno', 'noveno': 'noveno',
+        '10': 'decimo', 'décimo': 'decimo', 'decimo': 'decimo',
+        '11': 'undecimo', 'undécimo': 'undecimo', 'undecimo': 'undecimo'
+      };
+      return mapa[gradoStr] || gradoStr;
+    }
+    
+    // Mostrar estado
+    function mostrarEstado(stateId) {
+      ['loadingState', 'noCycleState', 'completedState', 'pendingReviewState', 'gradedState', 'mainContent'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      document.getElementById(stateId).classList.remove('hidden');
+    }
+    
+    // Mostrar calificación recibida
+    function mostrarCalificacion(sesion) {
+      document.getElementById('gradeValue').textContent = `${sesion.calificacion_docente || 0}%`;
+      
+      if (sesion.comentario_docente) {
+        const commentDiv = document.getElementById('gradeComment');
+        commentDiv.innerHTML = `
+          <div class="grade-comment-label">Comentario del docente:</div>
+          <p>${sesion.comentario_docente}</p>
+        `;
+        commentDiv.classList.remove('hidden');
+      }
+      
+      mostrarEstado('gradedState');
+    }
+    
+    // Solicitar revisión al docente
+    window.solicitarRevision = async function() {
+      if (!confirm('¿Solicitar al docente que revise y califique tu trabajo?')) return;
+      
+      try {
+        await SesionesCreatividadAPI.solicitarRevision(sesionActual.id);
+        alert('¡Solicitud enviada! El docente revisará tu trabajo pronto.');
+        mostrarEstado('pendingReviewState');
+      } catch (error) {
+        console.error('Error solicitando revisión:', error);
+        alert('Error al enviar solicitud: ' + error.message);
+      }
+    };
+    
+    // Cargar contenido
+    function cargarContenido() {
+      document.getElementById('headerTitle').textContent = cicloActual.titulo;
+      
+      // Mostrar instrucciones si aplica
+      if (cicloActual.mostrar_instrucciones && cicloActual.instrucciones) {
+        document.getElementById('instructionsText').textContent = cicloActual.instrucciones;
+        document.getElementById('instructionsSection').classList.remove('hidden');
+      }
+      
+      // Cargar visor según tipo de archivo
+      const viewer = document.getElementById('contentViewer');
+      
+      if (cicloActual.archivo_tipo === 'pdf') {
+        viewer.classList.remove('image-viewer');
+        viewer.innerHTML = `<iframe id="pdfViewer" src="${cicloActual.archivo_url}" title="PDF"></iframe>`;
+      } else {
+        viewer.classList.add('image-viewer');
+        viewer.innerHTML = `<img id="imageViewer" src="${cicloActual.archivo_url}" alt="${cicloActual.titulo}">`;
+      }
+    }
+    
+    // Zoom In
+    window.zoomIn = function() {
+      if (zoomLevel >= 200) return;
+      zoomLevel += 10;
+      aplicarZoom();
+    };
+    
+    // Zoom Out
+    window.zoomOut = function() {
+      if (zoomLevel <= 50) return;
+      zoomLevel -= 10;
+      aplicarZoom();
+    };
+    
+    // Aplicar zoom
+    function aplicarZoom() {
+      document.getElementById('zoomValue').textContent = `${zoomLevel}%`;
+      
+      const img = document.getElementById('imageViewer');
+      if (img) {
+        img.style.transform = `scale(${zoomLevel / 100})`;
+      }
+      
+      // Para PDF, el zoom se maneja dentro del iframe
+    }
+    
+    // Finalizar actividad
+    window.finalizarActividad = async function() {
+      if (!confirm('¿Confirmas que has terminado de visualizar el contenido?')) return;
+      
+      try {
+        const tiempoTotal = Math.floor((Date.now() - tiempoInicio) / 1000);
+        
+        await SesionesCreatividadAPI.finalizarSesion(sesionActual.id, tiempoTotal);
+        
+        alert('¡Actividad completada! Ahora puedes continuar con el siguiente módulo.');
+        window.location.href = '../estudiante/dashboard.html';
+        
+      } catch (error) {
+        console.error('Error finalizando:', error);
+        alert('Error al guardar: ' + error.message);
+      }
+    };
+    
+    // Iniciar
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Acudiente - Thinking Skills Program</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+      color: white;
+      padding: 20px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    
+    .header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .welcome-card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+    }
+    
+    .welcome-card h2 {
+      color: #1a202c;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    
+    .student-info {
+      background: #f7fafc;
+      border-left: 4px solid #9f7aea;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+    
+    .student-info h3 {
+      color: #1a202c;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    
+    .student-info p {
+      color: #718096;
+      margin: 4px 0;
+    }
+    
+    .btn-logout {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    
+    .btn-logout:hover {
+      background: #c53030;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #718096;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .results-section {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .results-section h3 {
+      color: #1a202c;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #718096;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingState" class="loading">
+    Verificando sesión...
+  </div>
+  
+  <div id="dashboardContent" class="hidden">
+    <header class="header">
+      <h1>👨‍👩‍👧 Dashboard Acudiente</h1>
+      <p>Thinking Skills Program</p>
+    </header>
+    
+    <main class="main-content">
+      <div class="welcome-card">
+        <h2>¡Bienvenido, <span id="welcomeName">Acudiente</span>!</h2>
+        <p style="color: #718096; margin-top: 8px;">
+          Aquí podrás visualizar los resultados de las prácticas de tu hijo/a.
+        </p>
+        
+        <div id="studentInfo" class="student-info hidden">
+          <h3>👨‍🎓 Información del Estudiante</h3>
+          <p><strong>Nombre:</strong> <span id="studentName">-</span></p>
+          <p><strong>Código:</strong> <span id="studentCode">-</span></p>
+          <p><strong>Grado:</strong> <span id="studentGrade">-</span></p>
+        </div>
+        
+        <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+      </div>
+      
+      <div class="results-section">
+        <h3>📊 Resultados de Prácticas</h3>
+        <div id="resultsContent" class="empty-state">
+          <p>Aquí se mostrarán los resultados de las prácticas de tu hijo/a.</p>
+          <p style="margin-top: 8px; font-size: 14px;">
+            Los resultados aparecerán cuando el estudiante complete las prácticas.
+          </p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireRole, getUser, logout, getEstudianteHijo } from '../auth/auth.core.js';
+    
+    const loadingState = document.getElementById('loadingState');
+    const dashboardContent = document.getElementById('dashboardContent');
+    const welcomeName = document.getElementById('welcomeName');
+    const studentInfo = document.getElementById('studentInfo');
+    const studentName = document.getElementById('studentName');
+    const studentCode = document.getElementById('studentCode');
+    const studentGrade = document.getElementById('studentGrade');
+    const resultsContent = document.getElementById('resultsContent');
+    const btnLogout = document.getElementById('btnLogout');
+    
+    // Solo acudientes pueden acceder
+    const user = requireRole('acudiente');
+    
+    if (!user) {
+      loadingState.textContent = 'Redirigiendo al login...';
+    } else {
+      loadingState.classList.add('hidden');
+      dashboardContent.classList.remove('hidden');
+      
+      welcomeName.textContent = user.nombre || 'Acudiente';
+      
+      // Cargar información del estudiante hijo
+      if (user.estudiante_id) {
+        loadEstudianteInfo(user.estudiante_id);
+      } else {
+        studentInfo.classList.remove('hidden');
+        studentName.textContent = 'No asignado';
+      }
+      
+      btnLogout.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+          logout();
+        }
+      });
+    }
+    
+    /**
+     * Carga la información del estudiante hijo
+     */
+    async function loadEstudianteInfo(estudianteId) {
+      try {
+        const estudiante = await getEstudianteHijo(estudianteId);
+        
+        if (estudiante) {
+          studentInfo.classList.remove('hidden');
+          studentName.textContent = `${estudiante.nombre} ${estudiante.apellidos || ''}`.trim();
+          studentCode.textContent = estudiante.codigo_estudiante || 'N/A';
+          studentGrade.textContent = estudiante.grado || 'N/A';
+          
+          // Aquí puedes cargar los resultados de las prácticas
+          // loadPracticasResults(estudianteId);
+        } else {
+          studentInfo.classList.remove('hidden');
+          studentName.textContent = 'Estudiante no encontrado';
+        }
+      } catch (error) {
+        console.error('Error al cargar información del estudiante:', error);
+        studentInfo.classList.remove('hidden');
+        studentName.textContent = 'Error al cargar información';
+      }
+    }
+    
+    /**
+     * Función para cargar resultados de prácticas (a implementar)
+     */
+    async function loadPracticasResults(estudianteId) {
+      // TODO: Implementar carga de resultados de prácticas
+      // Ejemplo:
+      // const resultados = await fetch(`/api/practicas/${estudianteId}/resultados`);
+      // Mostrar resultados en resultsContent
+    }
+  </script>
+</body>
+</html>

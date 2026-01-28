@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Thinking Skills Program v2</title>
+  <style>
+    /* ============================================
+       ESTILOS DEL DASHBOARD
+       Thinking Skills Program v2
+       ============================================ */
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    /* Header */
+    .header {
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      color: #1a202c;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    
+    .user-details {
+      text-align: right;
+    }
+    
+    .user-name {
+      color: #1a202c;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .user-role {
+      color: #718096;
+      font-size: 12px;
+      text-transform: capitalize;
+    }
+    
+    .btn-logout {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .btn-logout:hover {
+      background: #c53030;
+    }
+    
+    /* Main Content */
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .welcome-card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+    }
+    
+    .welcome-card h2 {
+      color: #1a202c;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    
+    .welcome-card p {
+      color: #718096;
+      font-size: 16px;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card h3 {
+      color: #718096;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .stat-card .value {
+      color: #1a202c;
+      font-size: 32px;
+      font-weight: 700;
+    }
+    
+    /* Session Info */
+    .session-info {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .session-info h3 {
+      color: #1a202c;
+      font-size: 18px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .session-info pre {
+      background: #f7fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 13px;
+      color: #4a5568;
+    }
+    
+    /* Loading State */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #718096;
+    }
+    
+    /* Hidden */
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Estado de carga mientras verificamos autenticación -->
+  <div id="loadingState" class="loading">
+    Verificando sesión...
+  </div>
+  
+  <!-- Contenido del dashboard (oculto hasta verificar auth) -->
+  <div id="dashboardContent" class="hidden">
+    <header class="header">
+      <h1>Thinking Skills Program</h1>
+      
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-details">
+          <div class="user-name" id="userName">Usuario</div>
+          <div class="user-role" id="userRole">Rol</div>
+        </div>
+        <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+      </div>
+    </header>
+    
+    <main class="main-content">
+      <div class="welcome-card">
+        <h2>¡Bienvenido, <span id="welcomeName">Usuario</span>!</h2>
+        <p>Has iniciado sesión correctamente en Thinking Skills Program v2.</p>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Tu ID de Usuario</h3>
+          <div class="value" id="statUserId">-</div>
+        </div>
+        <div class="stat-card">
+          <h3>Tu Rol</h3>
+          <div class="value" id="statRole">-</div>
+        </div>
+        <div class="stat-card">
+          <h3>Estado de Sesión</h3>
+          <div class="value" style="color: #38a169;">Activa</div>
+        </div>
+      </div>
+      
+      <div class="session-info">
+        <h3>Información de Sesión (Debug)</h3>
+        <pre id="sessionData">Cargando...</pre>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================================
+       SCRIPT DE VERIFICACIÓN DE AUTENTICACIÓN
+       ============================================ -->
+  <script type="module">
+    // ============================================
+    // IMPORTAR MÓDULO DE AUTENTICACIÓN
+    // ============================================
+    import { 
+      requireAuth,
+      getUser,
+      logout,
+      getEffectiveRole,
+      hasRole
+    } from './auth/auth.core.js';
+    
+    // ============================================
+    // ELEMENTOS DEL DOM
+    // ============================================
+    const loadingState = document.getElementById('loadingState');
+    const dashboardContent = document.getElementById('dashboardContent');
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+    const userRole = document.getElementById('userRole');
+    const welcomeName = document.getElementById('welcomeName');
+    const statUserId = document.getElementById('statUserId');
+    const statRole = document.getElementById('statRole');
+    const sessionData = document.getElementById('sessionData');
+    const btnLogout = document.getElementById('btnLogout');
+    
+    // ============================================
+    // VERIFICACIÓN DE AUTENTICACIÓN
+    // ============================================
+    
+    // Requiere autenticación (cualquier rol)
+    const user = requireAuth();
+    
+    // Si no hay usuario, requireAuth ya redirigió
+    if (!user) {
+      loadingState.textContent = 'Redirigiendo al login...';
+    } else {
+      // ============================================
+      // USUARIO AUTENTICADO - MOSTRAR DASHBOARD
+      // ============================================
+      
+      // Ocultar loading, mostrar contenido
+      loadingState.classList.add('hidden');
+      dashboardContent.classList.remove('hidden');
+      
+      // Obtener inicial del nombre para el avatar
+      const inicial = (user.nombre || user.email || '?').charAt(0).toUpperCase();
+      userAvatar.textContent = inicial;
+      
+      // Mostrar información del usuario
+      userName.textContent = user.nombre || user.email || 'Usuario';
+      userRole.textContent = getEffectiveRole() || user.role;
+      welcomeName.textContent = user.nombre || 'Usuario';
+      
+      // Stats
+      statUserId.textContent = user.id || '-';
+      statRole.textContent = (getEffectiveRole() || user.role || '-').toUpperCase();
+      
+      // Mostrar datos de sesión (para debug)
+      sessionData.textContent = JSON.stringify(user, null, 2);
+      
+      // ============================================
+      // VERIFICACIONES ADICIONALES SEGÚN ROL
+      // ============================================
+      
+      // Ejemplo: Mostrar contenido solo para admins
+      if (hasRole('admin') || hasRole('super_admin')) {
+        console.log('Usuario es administrador');
+      }
+    }
+    
+    // ============================================
+    // MANEJADOR DE LOGOUT
+    // ============================================
+    btnLogout.addEventListener('click', () => {
+      if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+        logout();
+        // logout() redirige automáticamente al login
+      }
+    });
+  </script>
+</body>
+</html>

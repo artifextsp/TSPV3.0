@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Administrativo - Thinking Skills Program</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    
+    .header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .btn-logout {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .btn-logout:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .main-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .tab {
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 16px;
+      color: #718096;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .tab:hover {
+      color: #667eea;
+    }
+    
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #5568d3;
+    }
+    
+    .btn-danger {
+      background: #e53e3e;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #c53030;
+    }
+    
+    .btn-warning {
+      background: #ed8936;
+      color: white;
+    }
+    
+    .btn-warning:hover {
+      background: #dd6b20;
+    }
+    
+    .btn-success {
+      background: #38a169;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #2f855a;
+    }
+    
+    .table-container {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    thead {
+      background: #f7fafc;
+    }
+    
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 14px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+      color: #4a5568;
+    }
+    
+    tr:hover {
+      background: #f7fafc;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .modal-header h2 {
+      font-size: 20px;
+      color: #1a202c;
+    }
+    
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #718096;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #2d3748;
+      font-size: 14px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #718096;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #718096;
+    }
+    
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .badge-success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .badge-danger {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+    
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    
+    .alert-success {
+      background: #c6f6d5;
+      color: #22543d;
+      border: 1px solid #9ae6b4;
+    }
+    
+    .alert-error {
+      background: #fed7d7;
+      color: #742a2a;
+      border: 1px solid #fc8181;
+    }
+    
+    .alert-warning {
+      background: #feebc8;
+      color: #7c2d12;
+      border: 1px solid #f6ad55;
+    }
+    
+    /* Estilos para búsqueda de estudiantes */
+    .student-search-container {
+      position: relative;
+    }
+    
+    .student-search-container input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    
+    .student-search-container input[type="text"]:focus {
+      outline: none;
+      border-color: #4299e1;
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+    }
+    
+    .student-search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-top: 4px;
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+    
+    .student-search-results.active {
+      display: block;
+    }
+    
+    .student-search-results .student-item {
+      padding: 10px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #f7fafc;
+      transition: background-color 0.2s;
+    }
+    
+    .student-search-results .student-item:hover {
+      background-color: #edf2f7;
+    }
+    
+    .student-search-results .student-item:last-child {
+      border-bottom: none;
+    }
+    
+    .student-search-results .student-item .student-code {
+      font-weight: 600;
+      color: #2d3748;
+      margin-right: 8px;
+    }
+    
+    .student-search-results .student-item .student-name {
+      color: #4a5568;
+    }
+    
+    .student-search-results .student-item .student-grade {
+      color: #718096;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    
+    .student-search-results .no-results {
+      padding: 16px;
+      text-align: center;
+      color: #718096;
+      font-style: italic;
+    }
+    
+    .student-selected {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #edf2f7;
+      border-radius: 6px;
+      display: none;
+    }
+    
+    .student-selected.active {
+      display: block;
+    }
+    
+    .student-selected .selected-label {
+      font-size: 12px;
+      color: #718096;
+      margin-bottom: 4px;
+    }
+    
+    .student-selected .selected-value {
+      font-weight: 500;
+      color: #2d3748;
+    }
+    
+    .student-selected .btn-clear {
+      float: right;
+      background: none;
+      border: none;
+      color: #e53e3e;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+      margin-top: -2px;
+    }
+    
+    .student-selected .btn-clear:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingState" class="loading">
+    Verificando sesión...
+  </div>
+  
+  <div id="dashboardContent" class="hidden">
+    <header class="header">
+      <div>
+        <h1>⚙️ Dashboard Administrativo</h1>
+        <p>Thinking Skills Program v2</p>
+      </div>
+      <div class="user-info">
+        <span id="userName">Administrador</span>
+        <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+      </div>
+    </header>
+    
+    <main class="main-content">
+      <!-- Acceso rápido a módulos -->
+      <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="../lectura-critica/admin-ciclos.html" class="btn btn-primary" style="text-decoration: none;">
+          Gestión de Ciclos - Lectura Crítica
+        </a>
+        <a href="../creatividad/admin-ciclos.html" class="btn btn-warning" style="text-decoration: none;">
+          Gestión de Ciclos - Creatividad
+        </a>
+        <a href="../ejercicios/admin-ciclos.html" class="btn btn-success" style="text-decoration: none;">
+          Gestión de Ejercicios Digitales
+        </a>
+      </div>
+      
+      <!-- Pestañas -->
+      <div class="tabs">
+        <button class="tab active" data-tab="estudiantes">👨‍🎓 Estudiantes</button>
+        <button class="tab" data-tab="colegios">🏫 Colegios</button>
+        <button class="tab" data-tab="docentes">👨‍🏫 Docentes</button>
+        <button class="tab" data-tab="acudientes">👨‍👩‍👧 Acudientes</button>
+      </div>
+      
+      <!-- Contenido: Estudiantes -->
+      <div id="tab-estudiantes" class="tab-content active">
+        <div class="toolbar">
+          <input type="text" class="search-box" id="searchEstudiantes" placeholder="Buscar estudiantes...">
+          <button class="btn btn-primary" onclick="abrirModalEstudiante()">+ Nuevo Estudiante</button>
+        </div>
+        <div id="alertEstudiantes"></div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Grado</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyEstudiantes">
+              <tr><td colspan="6" class="empty-state">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Contenido: Colegios -->
+      <div id="tab-colegios" class="tab-content">
+        <div class="toolbar">
+          <input type="text" class="search-box" id="searchColegios" placeholder="Buscar colegios...">
+          <button class="btn btn-primary" onclick="abrirModalColegio()">+ Nuevo Colegio</button>
+        </div>
+        <div id="alertColegios"></div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Rector</th>
+                <th>Email</th>
+                <th>Celular</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyColegios">
+              <tr><td colspan="6" class="empty-state">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Contenido: Docentes -->
+      <div id="tab-docentes" class="tab-content">
+        <div class="toolbar">
+          <input type="text" class="search-box" id="searchDocentes" placeholder="Buscar docentes...">
+          <button class="btn btn-primary" onclick="abrirModalDocente()">+ Nuevo Docente</button>
+        </div>
+        <div id="alertDocentes"></div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Celular</th>
+                <th>Colegio</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyDocentes">
+              <tr><td colspan="4" class="empty-state">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Contenido: Acudientes -->
+      <div id="tab-acudientes" class="tab-content">
+        <div class="toolbar">
+          <input type="text" class="search-box" id="searchAcudientes" placeholder="Buscar acudientes...">
+          <button class="btn btn-primary" onclick="abrirModalAcudiente()">+ Nuevo Acudiente</button>
+        </div>
+        <div id="alertAcudientes"></div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Celular</th>
+                <th>Estudiante</th>
+                <th>Grado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyAcudientes">
+              <tr><td colspan="7" class="empty-state">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Modal: Estudiante -->
+  <div id="modalEstudiante" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalEstudianteTitle">Nuevo Estudiante</h2>
+        <button class="btn-close" onclick="cerrarModal('modalEstudiante')">&times;</button>
+      </div>
+      <form id="formEstudiante">
+        <input type="hidden" id="estudianteId">
+        <div class="form-group">
+          <label>Nombre *</label>
+          <input type="text" id="estudianteNombre" required>
+        </div>
+        <div class="form-group">
+          <label>Apellidos *</label>
+          <input type="text" id="estudianteApellidos" required>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="estudianteEmail" required>
+        </div>
+        <div class="form-group">
+          <label>Grado *</label>
+          <select id="estudianteGrado" required>
+            <option value="">Seleccionar...</option>
+            <option value="1">1°</option>
+            <option value="2">2°</option>
+            <option value="3">3°</option>
+            <option value="4">4°</option>
+            <option value="5">5°</option>
+            <option value="6">6°</option>
+            <option value="7">7°</option>
+            <option value="8">8°</option>
+            <option value="9">9°</option>
+            <option value="10">10°</option>
+            <option value="11">11°</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="cerrarModal('modalEstudiante')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Modal: Colegio -->
+  <div id="modalColegio" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalColegioTitle">Nuevo Colegio</h2>
+        <button class="btn-close" onclick="cerrarModal('modalColegio')">&times;</button>
+      </div>
+      <form id="formColegio">
+        <input type="hidden" id="colegioId">
+        <div class="form-group">
+          <label>Nombre del Colegio *</label>
+          <input type="text" id="colegioNombre" required>
+        </div>
+        <div class="form-group">
+          <label>Nombre del Rector *</label>
+          <input type="text" id="colegioRector" required>
+        </div>
+        <div class="form-group">
+          <label>Email del Rector *</label>
+          <input type="email" id="colegioEmail" required>
+        </div>
+        <div class="form-group">
+          <label>Celular del Rector</label>
+          <input type="text" id="colegioCelular">
+        </div>
+        <div class="form-group">
+          <label>Dirección</label>
+          <textarea id="colegioDireccion"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="cerrarModal('modalColegio')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Modal: Docente -->
+  <div id="modalDocente" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalDocenteTitle">Nuevo Docente</h2>
+        <button class="btn-close" onclick="cerrarModal('modalDocente')">&times;</button>
+      </div>
+      <form id="formDocente">
+        <input type="hidden" id="docenteId">
+        <div class="form-group">
+          <label>Nombre *</label>
+          <input type="text" id="docenteNombre" required>
+        </div>
+        <div class="form-group">
+          <label>Apellidos *</label>
+          <input type="text" id="docenteApellidos" required>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="docenteEmail" required>
+        </div>
+        <div class="form-group">
+          <label>Celular</label>
+          <input type="tel" id="docenteCelular" placeholder="Ej: 3001234567">
+        </div>
+        <div class="form-group">
+          <label>Colegio</label>
+          <select id="docenteColegio">
+            <option value="">Sin asignar</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="cerrarModal('modalDocente')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Modal: Asignar Estudiantes a Colegio -->
+  <div id="modalAsignarEstudiantes" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2>Asignar Estudiantes al Colegio</h2>
+        <button class="btn-close" onclick="cerrarModal('modalAsignarEstudiantes')">&times;</button>
+      </div>
+      <div id="asignarEstudiantesContent">
+        <p>Cargando estudiantes...</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Asignar Estudiantes a Colegio -->
+  <div id="modalAsignarEstudiantes" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2>Asignar Estudiantes al Colegio</h2>
+        <button class="btn-close" onclick="cerrarModal('modalAsignarEstudiantes')">&times;</button>
+      </div>
+      <div id="asignarEstudiantesContent">
+        <p>Cargando estudiantes...</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Acudiente -->
+  <div id="modalAcudiente" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalAcudienteTitle">Nuevo Acudiente</h2>
+        <button class="btn-close" onclick="cerrarModal('modalAcudiente')">&times;</button>
+      </div>
+      <form id="formAcudiente">
+        <input type="hidden" id="acudienteId">
+        <div class="form-group">
+          <label>Estudiante *</label>
+          <div class="student-search-container">
+            <input 
+              type="text" 
+              id="acudienteEstudianteSearch" 
+              placeholder="Buscar por código, nombre o apellido..."
+              autocomplete="off"
+              required
+            >
+            <input type="hidden" id="acudienteEstudiante" required>
+            <div id="acudienteEstudianteResults" class="student-search-results"></div>
+            <div id="acudienteEstudianteSelected" class="student-selected"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nombre *</label>
+          <input type="text" id="acudienteNombre" required>
+        </div>
+        <div class="form-group">
+          <label>Apellidos *</label>
+          <input type="text" id="acudienteApellidos" required>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="acudienteEmail" required>
+        </div>
+        <div class="form-group">
+          <label>Celular</label>
+          <input type="text" id="acudienteCelular" placeholder="Opcional">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="cerrarModal('modalAcudiente')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script type="module">
+    import { requireRole, getUser, logout } from '../auth/auth.core.js';
+    import { EstudiantesAPI, ColegiosAPI, DocentesAPI, AcudientesAPI } from './admin.api.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    
+    // Variables globales
+    window.EstudiantesAPI = EstudiantesAPI;
+    window.ColegiosAPI = ColegiosAPI;
+    window.DocentesAPI = DocentesAPI;
+    window.AcudientesAPI = AcudientesAPI;
+    window.CONFIG = CONFIG;
+    window.currentColegioId = null;
+    
+    const loadingState = document.getElementById('loadingState');
+    const dashboardContent = document.getElementById('dashboardContent');
+    const userName = document.getElementById('userName');
+    const btnLogout = document.getElementById('btnLogout');
+    
+    // Verificar autenticación y rol de administrador
+    // Nota: Necesitarás crear una función requireAdmin() o verificar manualmente
+    const user = getUser();
+    
+    if (!user) {
+      window.location.href = '../index.html';
+    } else {
+      // Verificar si es administrador
+      // Hansel Peña Díaz (CC 94300774) o usuarios con tipo_usuario admin/super_admin
+      const isAdmin = user.tipo_usuario === 'admin' || 
+                     user.tipo_usuario === 'super_admin' ||
+                     user.tipo_usuario === 'administrador' ||
+                     (user.email && user.email.includes('hansel')) ||
+                     (user.documento && user.documento === '94300774');
+      
+      if (!isAdmin) {
+        alert('No tienes permisos para acceder a esta página');
+        window.location.href = '../index.html';
+      } else {
+        loadingState.classList.add('hidden');
+        dashboardContent.classList.remove('hidden');
+        userName.textContent = user.nombre || 'Administrador';
+        
+        // Inicializar dashboard
+        inicializarDashboard();
+      }
+    }
+    
+    // Logout
+    btnLogout.addEventListener('click', () => {
+      if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+        logout();
+      }
+    });
+    
+    // Sistema de pestañas
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        
+        // Actualizar pestañas
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Actualizar contenido
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        
+        // Cargar datos según la pestaña
+        if (tabName === 'estudiantes') {
+          cargarEstudiantes();
+        } else if (tabName === 'colegios') {
+          cargarColegios();
+        } else if (tabName === 'docentes') {
+          cargarDocentes();
+        } else if (tabName === 'acudientes') {
+          cargarAcudientes();
+        }
+      });
+    });
+    
+    // Funciones de inicialización
+    function inicializarDashboard() {
+      cargarEstudiantes();
+      
+      // Búsquedas
+      document.getElementById('searchEstudiantes').addEventListener('input', (e) => {
+        cargarEstudiantes(e.target.value);
+      });
+      document.getElementById('searchColegios').addEventListener('input', (e) => {
+        cargarColegios(e.target.value);
+      });
+      document.getElementById('searchDocentes').addEventListener('input', (e) => {
+        cargarDocentes(e.target.value);
+      });
+      document.getElementById('searchAcudientes').addEventListener('input', (e) => {
+        cargarAcudientes(e.target.value);
+      });
+      
+      // Formularios
+      document.getElementById('formEstudiante').addEventListener('submit', guardarEstudiante);
+      document.getElementById('formColegio').addEventListener('submit', guardarColegio);
+      document.getElementById('formDocente').addEventListener('submit', guardarDocente);
+      document.getElementById('formAcudiente').addEventListener('submit', guardarAcudiente);
+    }
+    
+    // ============================================
+    // ESTUDIANTES
+    // ============================================
+    
+    async function cargarEstudiantes(buscar = '') {
+      const tbody = document.getElementById('tbodyEstudiantes');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+      
+      try {
+        const estudiantes = await EstudiantesAPI.listar({ buscar });
+        
+        if (estudiantes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay estudiantes registrados</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = estudiantes.map(est => `
+          <tr>
+            <td><strong>${est.codigo_estudiante || 'N/A'}</strong></td>
+            <td>${est.nombre} ${est.apellidos}</td>
+            <td>${est.email}</td>
+            <td>${est.grado || 'N/A'}</td>
+            <td>
+              <span class="badge ${est.activo ? 'badge-success' : 'badge-danger'}">
+                ${est.activo ? 'Activo' : 'Inactivo'}
+              </span>
+            </td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-sm btn-primary" onclick="editarEstudiante('${est.id}')">Editar</button>
+                <button class="btn btn-sm btn-warning" onclick="resetearPasswordEstudiante('${est.id}')">Resetear Password</button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarEstudiante('${est.id}')">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error cargando estudiantes:', error);
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${error.message}</td></tr>`;
+      }
+    }
+    
+    window.abrirModalEstudiante = function(id = null) {
+      const modal = document.getElementById('modalEstudiante');
+      const form = document.getElementById('formEstudiante');
+      const title = document.getElementById('modalEstudianteTitle');
+      
+      form.reset();
+      document.getElementById('estudianteId').value = '';
+      
+      if (id) {
+        title.textContent = 'Editar Estudiante';
+        cargarDatosEstudiante(id);
+      } else {
+        title.textContent = 'Nuevo Estudiante';
+      }
+      
+      modal.classList.add('active');
+    };
+    
+    async function cargarDatosEstudiante(id) {
+      try {
+        const estudiante = await EstudiantesAPI.obtener(id);
+        if (estudiante) {
+          document.getElementById('estudianteId').value = estudiante.id;
+          document.getElementById('estudianteNombre').value = estudiante.nombre || '';
+          document.getElementById('estudianteApellidos').value = estudiante.apellidos || '';
+          document.getElementById('estudianteEmail').value = estudiante.email || '';
+          document.getElementById('estudianteGrado').value = estudiante.grado || '';
+        }
+      } catch (error) {
+        console.error('Error cargando datos del estudiante:', error);
+        mostrarAlerta('alertEstudiantes', 'Error al cargar datos del estudiante', 'error');
+      }
+    }
+    
+    window.editarEstudiante = function(id) {
+      abrirModalEstudiante(id);
+    };
+    
+    async function guardarEstudiante(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('estudianteId').value;
+      const datos = {
+        nombre: document.getElementById('estudianteNombre').value,
+        apellidos: document.getElementById('estudianteApellidos').value,
+        email: document.getElementById('estudianteEmail').value,
+        grado: document.getElementById('estudianteGrado').value
+      };
+      
+      try {
+        if (id) {
+          await EstudiantesAPI.actualizar(id, datos);
+          mostrarAlerta('alertEstudiantes', 'Estudiante actualizado correctamente', 'success');
+        } else {
+          await EstudiantesAPI.crear(datos);
+          mostrarAlerta('alertEstudiantes', 'Estudiante creado correctamente', 'success');
+        }
+        
+        cerrarModal('modalEstudiante');
+        cargarEstudiantes();
+      } catch (error) {
+        console.error('Error guardando estudiante:', error);
+        // Extraer mensaje de error más amigable
+        let mensajeError = error.message || 'Error desconocido al guardar el estudiante';
+        
+        // Si el error es sobre email duplicado, mostrar mensaje más claro
+        if (mensajeError.includes('ya está registrado') || mensajeError.includes('23505') || mensajeError.includes('usuarios_email_key')) {
+          mensajeError = mensajeError.includes('ya está registrado') 
+            ? mensajeError 
+            : `El email ingresado ya está registrado en el sistema. Por favor, usa un email diferente o busca el estudiante existente para editarlo.`;
+        }
+        
+        mostrarAlerta('alertEstudiantes', mensajeError, 'error');
+      }
+    }
+    
+    window.resetearPasswordEstudiante = async function(id) {
+      if (!confirm('¿Estás seguro de resetear la contraseña de este estudiante? La nueva contraseña será: 123456')) {
+        return;
+      }
+      
+      try {
+        await EstudiantesAPI.resetearPassword(id);
+        mostrarAlerta('alertEstudiantes', 'Contraseña reseteada correctamente. Nueva contraseña: 123456', 'success');
+        cargarEstudiantes();
+      } catch (error) {
+        console.error('Error reseteando contraseña:', error);
+        mostrarAlerta('alertEstudiantes', `Error: ${error.message}`, 'error');
+      }
+    };
+    
+    window.eliminarEstudiante = async function(id) {
+      if (!confirm('¿Estás seguro de eliminar este estudiante?')) {
+        return;
+      }
+      
+      try {
+        await EstudiantesAPI.eliminar(id);
+        mostrarAlerta('alertEstudiantes', 'Estudiante eliminado correctamente', 'success');
+        cargarEstudiantes();
+      } catch (error) {
+        console.error('Error eliminando estudiante:', error);
+        mostrarAlerta('alertEstudiantes', `Error: ${error.message}`, 'error');
+      }
+    };
+    
+    // ============================================
+    // COLEGIOS
+    // ============================================
+    
+    async function cargarColegios(buscar = '') {
+      const tbody = document.getElementById('tbodyColegios');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+      
+      try {
+        const colegios = await ColegiosAPI.listar({ buscar });
+        
+        if (colegios.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay colegios registrados</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = colegios.map(col => `
+          <tr>
+            <td><strong>${col.codigo || 'N/A'}</strong></td>
+            <td>${col.nombre}</td>
+            <td>${col.nombre_rector}</td>
+            <td>${col.email}</td>
+            <td>${col.celular_rector || 'N/A'}</td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-sm btn-primary" onclick="editarColegio('${col.id}')">Editar</button>
+                <button class="btn btn-sm btn-success" onclick="abrirModalAsignarEstudiantes('${col.id}')">Asignar Estudiantes</button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarColegio('${col.id}')">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error cargando colegios:', error);
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${error.message}</td></tr>`;
+      }
+    }
+    
+    window.abrirModalColegio = function(id = null) {
+      const modal = document.getElementById('modalColegio');
+      const form = document.getElementById('formColegio');
+      const title = document.getElementById('modalColegioTitle');
+      
+      form.reset();
+      document.getElementById('colegioId').value = '';
+      
+      if (id) {
+        title.textContent = 'Editar Colegio';
+        cargarDatosColegio(id);
+      } else {
+        title.textContent = 'Nuevo Colegio';
+      }
+      
+      modal.classList.add('active');
+    };
+    
+    async function cargarDatosColegio(id) {
+      try {
+        const colegio = await ColegiosAPI.obtener(id);
+        if (colegio) {
+          document.getElementById('colegioId').value = colegio.id;
+          document.getElementById('colegioNombre').value = colegio.nombre || '';
+          document.getElementById('colegioRector').value = colegio.nombre_rector || '';
+          document.getElementById('colegioEmail').value = colegio.email || '';
+          document.getElementById('colegioCelular').value = colegio.celular_rector || '';
+          document.getElementById('colegioDireccion').value = colegio.direccion || '';
+        }
+      } catch (error) {
+        console.error('Error cargando datos del colegio:', error);
+        mostrarAlerta('alertColegios', 'Error al cargar datos del colegio', 'error');
+      }
+    }
+    
+    window.editarColegio = function(id) {
+      abrirModalColegio(id);
+    };
+    
+    async function guardarColegio(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('colegioId').value;
+      const datos = {
+        nombre: document.getElementById('colegioNombre').value,
+        nombre_rector: document.getElementById('colegioRector').value,
+        email: document.getElementById('colegioEmail').value,
+        celular_rector: document.getElementById('colegioCelular').value,
+        direccion: document.getElementById('colegioDireccion').value
+      };
+      
+      try {
+        if (id) {
+          await ColegiosAPI.actualizar(id, datos);
+          mostrarAlerta('alertColegios', 'Colegio actualizado correctamente', 'success');
+        } else {
+          await ColegiosAPI.crear(datos);
+          mostrarAlerta('alertColegios', 'Colegio creado correctamente', 'success');
+        }
+        
+        cerrarModal('modalColegio');
+        cargarColegios();
+      } catch (error) {
+        console.error('Error guardando colegio:', error);
+        mostrarAlerta('alertColegios', `Error: ${error.message}`, 'error');
+      }
+    }
+    
+    window.eliminarColegio = async function(id) {
+      if (!confirm('¿Estás seguro de eliminar este colegio?')) {
+        return;
+      }
+      
+      try {
+        await ColegiosAPI.eliminar(id);
+        mostrarAlerta('alertColegios', 'Colegio eliminado correctamente', 'success');
+        cargarColegios();
+      } catch (error) {
+        console.error('Error eliminando colegio:', error);
+        mostrarAlerta('alertColegios', `Error: ${error.message}`, 'error');
+      }
+    };
+    
+    window.abrirModalAsignarEstudiantes = async function(colegioId) {
+      window.currentColegioId = colegioId;
+      const modal = document.getElementById('modalAsignarEstudiantes');
+      const content = document.getElementById('asignarEstudiantesContent');
+      
+      content.innerHTML = '<p>Cargando estudiantes...</p>';
+      modal.classList.add('active');
+      
+      try {
+        const estudiantes = await EstudiantesAPI.listar();
+        const asignados = await ColegiosAPI.obtenerEstudiantes(colegioId);
+        const asignadosIds = asignados.map(a => a.estudiante_id);
+        
+        if (estudiantes.length === 0) {
+          content.innerHTML = '<p>No hay estudiantes disponibles</p>';
+          return;
+        }
+        
+        content.innerHTML = `
+          <div style="max-height: 400px; overflow-y: auto;">
+            ${estudiantes.map(est => {
+              const estaAsignado = asignadosIds.includes(est.id);
+              return `
+                <div style="padding: 12px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <strong>${est.codigo_estudiante}</strong> - ${est.nombre} ${est.apellidos} (${est.grado || 'N/A'})
+                  </div>
+                  <button class="btn btn-sm ${estaAsignado ? 'btn-danger' : 'btn-success'}" 
+                          onclick="toggleAsignacionEstudiante('${est.id}', ${estaAsignado})">
+                    ${estaAsignado ? 'Remover' : 'Asignar'}
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error cargando estudiantes para asignar:', error);
+        content.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+      }
+    };
+    
+    window.toggleAsignacionEstudiante = async function(estudianteId, estaAsignado) {
+      try {
+        if (estaAsignado) {
+          await ColegiosAPI.removerEstudiante(estudianteId);
+        } else {
+          await ColegiosAPI.asignarEstudiante(window.currentColegioId, estudianteId);
+        }
+        
+        // Recargar modal
+        abrirModalAsignarEstudiantes(window.currentColegioId);
+      } catch (error) {
+        console.error('Error asignando/removiendo estudiante:', error);
+        alert(`Error: ${error.message}`);
+      }
+    };
+    
+    // ============================================
+    // DOCENTES
+    // ============================================
+    
+    async function cargarDocentes(buscar = '') {
+      const tbody = document.getElementById('tbodyDocentes');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+      
+      try {
+        const docentes = await DocentesAPI.listar({ buscar });
+        
+        if (docentes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay docentes registrados</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = docentes.map(doc => {
+          // Manejar información del colegio de forma segura
+          let colegioNombre = 'Sin asignar';
+          if (doc.docentes_colegios && Array.isArray(doc.docentes_colegios) && doc.docentes_colegios.length > 0) {
+            const colegioInfo = doc.docentes_colegios[0];
+            if (colegioInfo.colegios) {
+              colegioNombre = colegioInfo.colegios.nombre || colegioInfo.colegios.codigo || 'Sin asignar';
+            }
+          }
+          
+          return `
+          <tr>
+            <td>${doc.nombre} ${doc.apellidos}</td>
+            <td>${doc.email}</td>
+            <td>${doc.celular || '-'}</td>
+            <td>${colegioNombre}</td>
+            <td>
+              <span class="badge ${doc.activo ? 'badge-success' : 'badge-danger'}">
+                ${doc.activo ? 'Activo' : 'Inactivo'}
+              </span>
+            </td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-sm btn-primary" onclick="editarDocente('${doc.id}')">Editar</button>
+                <button class="btn btn-sm btn-warning" onclick="resetearPasswordDocente('${doc.id}')">Resetear Password</button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarDocente('${doc.id}')">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+        `;
+        }).join('');
+      } catch (error) {
+        console.error('Error cargando docentes:', error);
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${error.message}</td></tr>`;
+      }
+    }
+    
+    window.abrirModalDocente = function(id = null) {
+      const modal = document.getElementById('modalDocente');
+      const form = document.getElementById('formDocente');
+      const title = document.getElementById('modalDocenteTitle');
+      
+      form.reset();
+      document.getElementById('docenteId').value = '';
+      document.getElementById('docenteCelular').value = '';
+      
+      // Cargar colegios en el select
+      cargarColegiosEnSelect();
+      
+      if (id) {
+        title.textContent = 'Editar Docente';
+        cargarDatosDocente(id);
+      } else {
+        title.textContent = 'Nuevo Docente';
+      }
+      
+      modal.classList.add('active');
+    };
+    
+    async function cargarDatosDocente(id) {
+      try {
+        const docente = await DocentesAPI.obtener(id);
+        if (docente) {
+          document.getElementById('docenteId').value = docente.id;
+          document.getElementById('docenteNombre').value = docente.nombre || '';
+          document.getElementById('docenteApellidos').value = docente.apellidos || '';
+          document.getElementById('docenteEmail').value = docente.email || '';
+          document.getElementById('docenteCelular').value = docente.celular || '';
+          
+          // Cargar colegio asociado de forma segura
+          const colegioSelect = document.getElementById('docenteColegio');
+          let colegioId = '';
+          if (docente.docentes_colegios && Array.isArray(docente.docentes_colegios) && docente.docentes_colegios.length > 0) {
+            colegioId = docente.docentes_colegios[0].colegio_id || '';
+          }
+          colegioSelect.value = colegioId;
+        }
+      } catch (error) {
+        console.error('Error cargando datos del docente:', error);
+        mostrarAlerta('alertDocentes', 'Error al cargar datos del docente', 'error');
+      }
+    }
+    
+    async function cargarColegiosEnSelect() {
+      try {
+        const colegios = await ColegiosAPI.listar();
+        const select = document.getElementById('docenteColegio');
+        select.innerHTML = '<option value="">Sin asignar</option>';
+        colegios.forEach(colegio => {
+          const option = document.createElement('option');
+          option.value = colegio.id;
+          option.textContent = `${colegio.codigo} - ${colegio.nombre}`;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Error cargando colegios:', error);
+      }
+    }
+    
+    window.editarDocente = function(id) {
+      abrirModalDocente(id);
+    };
+    
+    async function guardarDocente(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('docenteId').value;
+      const colegioId = document.getElementById('docenteColegio').value || null;
+      const datos = {
+        nombre: document.getElementById('docenteNombre').value,
+        apellidos: document.getElementById('docenteApellidos').value,
+        email: document.getElementById('docenteEmail').value,
+        celular: document.getElementById('docenteCelular').value || null,
+        colegio_id: colegioId
+      };
+      
+      try {
+        if (id) {
+          await DocentesAPI.actualizar(id, datos);
+          mostrarAlerta('alertDocentes', 'Docente actualizado correctamente', 'success');
+        } else {
+          const resultado = await DocentesAPI.crear(datos);
+          
+          // Verificar si se pudo asociar al colegio
+          if (colegioId) {
+            // Verificar si la tabla existe intentando obtener la asociación
+            try {
+              const asociacion = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/docentes_colegios?docente_id=eq.${resultado[0]?.id}&select=id`, {
+                headers: {
+                  'apikey': CONFIG.SUPABASE_ANON_KEY,
+                  'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+                }
+              });
+              
+              if (asociacion.status === 404) {
+                mostrarAlerta('alertDocentes', 
+                  'Docente creado exitosamente. ⚠️ No se pudo asociar al colegio porque la tabla docentes_colegios no existe. Por favor ejecuta el script crear_tabla_docentes_colegios.sql en Supabase SQL Editor.', 
+                  'warning'
+                );
+              } else {
+                mostrarAlerta('alertDocentes', 'Docente creado y asociado al colegio correctamente', 'success');
+              }
+            } catch (error) {
+              mostrarAlerta('alertDocentes', 'Docente creado exitosamente. ⚠️ No se pudo asociar al colegio porque la tabla docentes_colegios no existe. Por favor ejecuta el script crear_tabla_docentes_colegios.sql en Supabase SQL Editor.', 'warning');
+            }
+          } else {
+            mostrarAlerta('alertDocentes', 'Docente creado correctamente', 'success');
+          }
+        }
+        
+        cerrarModal('modalDocente');
+        cargarDocentes();
+      } catch (error) {
+        console.error('Error guardando docente:', error);
+        let mensajeError = error.message;
+        
+        // Mensaje más amigable si la tabla no existe
+        if (mensajeError.includes('docentes_colegios no existe')) {
+          mensajeError = 'Docente creado exitosamente, pero no se pudo asociar al colegio. Por favor ejecuta el script crear_tabla_docentes_colegios.sql en Supabase SQL Editor para habilitar esta funcionalidad.';
+          mostrarAlerta('alertDocentes', mensajeError, 'warning');
+          cerrarModal('modalDocente');
+          cargarDocentes();
+        } else {
+          mostrarAlerta('alertDocentes', `Error: ${mensajeError}`, 'error');
+        }
+      }
+    }
+    
+    window.resetearPasswordDocente = async function(id) {
+      if (!confirm('¿Estás seguro de resetear la contraseña de este docente? La nueva contraseña será: temporal123')) {
+        return;
+      }
+      
+      try {
+        await DocentesAPI.resetearPassword(id);
+        mostrarAlerta('alertDocentes', 'Contraseña reseteada correctamente. Nueva contraseña: temporal123', 'success');
+        cargarDocentes();
+      } catch (error) {
+        console.error('Error reseteando contraseña:', error);
+        mostrarAlerta('alertDocentes', `Error: ${error.message}`, 'error');
+      }
+    };
+    
+    window.eliminarDocente = async function(id) {
+      if (!confirm('¿Estás seguro de eliminar este docente?')) {
+        return;
+      }
+      
+      try {
+        await DocentesAPI.eliminar(id);
+        mostrarAlerta('alertDocentes', 'Docente eliminado correctamente', 'success');
+        cargarDocentes();
+      } catch (error) {
+        console.error('Error eliminando docente:', error);
+        mostrarAlerta('alertDocentes', `Error: ${error.message}`, 'error');
+      }
+    };
+    
+    // ============================================
+    // ACUDIENTES
+    // ============================================
+    
+    async function cargarAcudientes(buscar = '') {
+      const tbody = document.getElementById('tbodyAcudientes');
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Cargando...</td></tr>';
+      
+      try {
+        const acudientes = await AcudientesAPI.listar({ buscar });
+        
+        if (acudientes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No hay acudientes registrados</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = acudientes.map(acu => {
+          const estudiante = acu.usuarios || {};
+          return `
+            <tr>
+              <td><span class="credential">${acu.username || 'N/A'}</span></td>
+              <td>${acu.nombre} ${acu.apellidos || ''}</td>
+              <td>${acu.email}</td>
+              <td>${acu.celular || 'N/A'}</td>
+              <td><strong>${estudiante.codigo_estudiante || 'N/A'}</strong></td>
+              <td>${estudiante.grado || 'N/A'}</td>
+              <td>
+                <div class="actions">
+                  <button class="btn btn-sm btn-primary" onclick="editarAcudiente('${acu.id}')">Editar</button>
+                  <button class="btn btn-sm btn-warning" onclick="resetearPasswordAcudiente('${acu.id}')">Resetear Password</button>
+                  <button class="btn btn-sm btn-danger" onclick="eliminarAcudiente('${acu.id}')">Eliminar</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Error cargando acudientes:', error);
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Error: ${error.message}</td></tr>`;
+      }
+    }
+    
+    window.abrirModalAcudiente = async function(id = null) {
+      const modal = document.getElementById('modalAcudiente');
+      const form = document.getElementById('formAcudiente');
+      const title = document.getElementById('modalAcudienteTitle');
+      const searchInput = document.getElementById('acudienteEstudianteSearch');
+      const hiddenInput = document.getElementById('acudienteEstudiante');
+      const resultsDiv = document.getElementById('acudienteEstudianteResults');
+      const selectedDiv = document.getElementById('acudienteEstudianteSelected');
+      
+      form.reset();
+      document.getElementById('acudienteId').value = '';
+      hiddenInput.value = '';
+      searchInput.value = '';
+      resultsDiv.classList.remove('active');
+      selectedDiv.classList.remove('active');
+      
+      // Cargar lista de estudiantes para la búsqueda
+      let todosEstudiantes = [];
+      try {
+        todosEstudiantes = await EstudiantesAPI.listar();
+      } catch (error) {
+        console.error('Error cargando estudiantes:', error);
+        mostrarAlerta('alertAcudientes', 'Error al cargar lista de estudiantes', 'error');
+      }
+      
+      // Función para filtrar estudiantes
+      function filtrarEstudiantes(termino) {
+        if (!termino || termino.trim() === '') {
+          resultsDiv.classList.remove('active');
+          return;
+        }
+        
+        const terminoLower = termino.toLowerCase().trim();
+        const filtrados = todosEstudiantes.filter(est => {
+          const codigo = (est.codigo_estudiante || '').toLowerCase();
+          const nombre = (est.nombre || '').toLowerCase();
+          const apellidos = (est.apellidos || '').toLowerCase();
+          const nombreCompleto = `${nombre} ${apellidos}`.toLowerCase();
+          
+          return codigo.includes(terminoLower) || 
+                 nombre.includes(terminoLower) || 
+                 apellidos.includes(terminoLower) ||
+                 nombreCompleto.includes(terminoLower);
+        });
+        
+        if (filtrados.length === 0) {
+          resultsDiv.innerHTML = '<div class="no-results">No se encontraron estudiantes</div>';
+        } else {
+          resultsDiv.innerHTML = filtrados.map(est => {
+            const nombreCompleto = `${est.nombre} ${est.apellidos || ''}`.trim();
+            return `
+              <div class="student-item" data-id="${est.id}" data-codigo="${est.codigo_estudiante || ''}" data-nombre="${nombreCompleto}">
+                <span class="student-code">${est.codigo_estudiante || 'N/A'}</span>
+                <span class="student-name">${nombreCompleto}</span>
+                <span class="student-grade">Grado ${est.grado || 'N/A'}</span>
+              </div>
+            `;
+          }).join('');
+          
+          // Agregar event listeners a los items
+          resultsDiv.querySelectorAll('.student-item').forEach(item => {
+            item.addEventListener('click', () => {
+              const estudianteId = item.dataset.id;
+              const codigo = item.dataset.codigo;
+              const nombre = item.dataset.nombre;
+              
+              hiddenInput.value = estudianteId;
+              searchInput.value = `${codigo} - ${nombre}`;
+              selectedDiv.innerHTML = `
+                <div class="selected-label">Estudiante seleccionado:</div>
+                <div class="selected-value">${codigo} - ${nombre}</div>
+                <button type="button" class="btn-clear" onclick="limpiarSeleccionEstudiante()">Cambiar</button>
+              `;
+              selectedDiv.classList.add('active');
+              resultsDiv.classList.remove('active');
+            });
+          });
+        }
+        
+        resultsDiv.classList.add('active');
+      }
+      
+      // Event listener para búsqueda en tiempo real
+      searchInput.addEventListener('input', (e) => {
+        filtrarEstudiantes(e.target.value);
+      });
+      
+      // Cerrar resultados al hacer clic fuera
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+          resultsDiv.classList.remove('active');
+        }
+      });
+      
+      // Guardar referencia global para limpiar selección
+      window.limpiarSeleccionEstudiante = function() {
+        hiddenInput.value = '';
+        searchInput.value = '';
+        selectedDiv.classList.remove('active');
+        searchInput.focus();
+      };
+      
+      if (id) {
+        title.textContent = 'Editar Acudiente';
+        cargarDatosAcudiente(id, todosEstudiantes);
+      } else {
+        title.textContent = 'Nuevo Acudiente';
+      }
+      
+      modal.classList.add('active');
+      // Enfocar el campo de búsqueda después de un pequeño delay
+      setTimeout(() => searchInput.focus(), 100);
+    };
+    
+    async function cargarDatosAcudiente(id, todosEstudiantes = null) {
+      try {
+        const acudiente = await AcudientesAPI.obtener(id);
+        if (acudiente) {
+          document.getElementById('acudienteId').value = acudiente.id;
+          
+          // Cargar estudiantes si no se pasaron
+          if (!todosEstudiantes) {
+            todosEstudiantes = await EstudiantesAPI.listar();
+          }
+          
+          // Buscar el estudiante asociado
+          const estudiante = todosEstudiantes.find(est => est.id === acudiente.estudiante_id);
+          if (estudiante) {
+            const searchInput = document.getElementById('acudienteEstudianteSearch');
+            const hiddenInput = document.getElementById('acudienteEstudiante');
+            const selectedDiv = document.getElementById('acudienteEstudianteSelected');
+            
+            hiddenInput.value = estudiante.id;
+            const nombreCompleto = `${estudiante.nombre} ${estudiante.apellidos || ''}`.trim();
+            searchInput.value = `${estudiante.codigo_estudiante} - ${nombreCompleto}`;
+            selectedDiv.innerHTML = `
+              <div class="selected-label">Estudiante seleccionado:</div>
+              <div class="selected-value">${estudiante.codigo_estudiante} - ${nombreCompleto}</div>
+              <button type="button" class="btn-clear" onclick="limpiarSeleccionEstudiante()">Cambiar</button>
+            `;
+            selectedDiv.classList.add('active');
+          }
+          
+          document.getElementById('acudienteNombre').value = acudiente.nombre || '';
+          document.getElementById('acudienteApellidos').value = acudiente.apellidos || '';
+          document.getElementById('acudienteEmail').value = acudiente.email || '';
+          document.getElementById('acudienteCelular').value = acudiente.celular || '';
+        }
+      } catch (error) {
+        console.error('Error cargando datos del acudiente:', error);
+        mostrarAlerta('alertAcudientes', 'Error al cargar datos del acudiente', 'error');
+      }
+    }
+    
+    window.editarAcudiente = function(id) {
+      abrirModalAcudiente(id);
+    };
+    
+    async function guardarAcudiente(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('acudienteId').value;
+      const estudianteId = document.getElementById('acudienteEstudiante').value;
+      
+      if (!estudianteId) {
+        mostrarAlerta('alertAcudientes', 'Por favor, selecciona un estudiante', 'error');
+        document.getElementById('acudienteEstudianteSearch').focus();
+        return;
+      }
+      
+      const datos = {
+        estudiante_id: estudianteId,
+        nombre: document.getElementById('acudienteNombre').value,
+        apellidos: document.getElementById('acudienteApellidos').value,
+        email: document.getElementById('acudienteEmail').value,
+        celular: document.getElementById('acudienteCelular').value || null
+      };
+      
+      try {
+        if (id) {
+          await AcudientesAPI.actualizar(id, datos);
+          mostrarAlerta('alertAcudientes', 'Acudiente actualizado correctamente', 'success');
+        } else {
+          await AcudientesAPI.crear(datos);
+          mostrarAlerta('alertAcudientes', 'Acudiente creado correctamente', 'success');
+        }
+        
+        cerrarModal('modalAcudiente');
+        cargarAcudientes();
+      } catch (error) {
+        console.error('Error guardando acudiente:', error);
+        mostrarAlerta('alertAcudientes', `Error: ${error.message}`, 'error');
+      }
+    }
+    
+    window.resetearPasswordAcudiente = async function(id) {
+      if (!confirm('¿Estás seguro de resetear la contraseña de este acudiente? La nueva contraseña será: temporal123')) {
+        return;
+      }
+      
+      try {
+        await AcudientesAPI.resetearPassword(id);
+        mostrarAlerta('alertAcudientes', 'Contraseña reseteada correctamente. Nueva contraseña: temporal123', 'success');
+        cargarAcudientes();
+      } catch (error) {
+        console.error('Error reseteando contraseña:', error);
+        mostrarAlerta('alertAcudientes', `Error: ${error.message}`, 'error');
+      }
+    };
+    
+    window.eliminarAcudiente = async function(id) {
+      if (!confirm('¿Estás seguro de eliminar este acudiente?')) {
+        return;
+      }
+      
+      try {
+        await AcudientesAPI.eliminar(id);
+        mostrarAlerta('alertAcudientes', 'Acudiente eliminado correctamente', 'success');
+        cargarAcudientes();
+      } catch (error) {
+        console.error('Error eliminando acudiente:', error);
+        mostrarAlerta('alertAcudientes', `Error: ${error.message}`, 'error');
+      }
+    };
+    
+    // ============================================
+    // UTILIDADES
+    // ============================================
+    
+    window.cerrarModal = function(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    };
+    
+    function mostrarAlerta(containerId, mensaje, tipo) {
+      const container = document.getElementById(containerId);
+      const alertClass = tipo === 'success' ? 'alert-success' : tipo === 'error' ? 'alert-error' : 'alert-warning';
+      container.innerHTML = `<div class="alert ${alertClass}">${mensaje}</div>`;
+      
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, tipo === 'warning' ? 8000 : 5000);
+    }
+    
+    // Cerrar modales al hacer clic fuera
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Historial - Lectura Crítica | TSP</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    
+    .btn-light {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .btn-light:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .main-content {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    
+    .stat-label {
+      font-size: 14px;
+      color: #718096;
+      margin-top: 4px;
+    }
+    
+    .history-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .history-card h2 {
+      color: #1a202c;
+      margin-bottom: 20px;
+    }
+    
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .session-info {
+      flex: 1;
+    }
+    
+    .session-title {
+      font-weight: 600;
+      color: #1a202c;
+      margin-bottom: 4px;
+    }
+    
+    .session-meta {
+      font-size: 14px;
+      color: #718096;
+    }
+    
+    .session-stats {
+      display: flex;
+      gap: 24px;
+    }
+    
+    .session-stat {
+      text-align: center;
+    }
+    
+    .session-stat-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    
+    .session-stat-label {
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #718096;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #718096;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingState" class="loading">
+    Cargando historial...
+  </div>
+  
+  <div id="mainContent" class="hidden">
+    <header class="header">
+      <h1>📖 Mi Historial de Lectura</h1>
+      <a href="../estudiante/dashboard.html" class="btn btn-light">← Volver</a>
+    </header>
+    
+    <main class="main-content">
+      <!-- Estadísticas generales -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="totalSesiones">0</div>
+          <div class="stat-label">Lecturas Completadas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="promedioComprension">0%</div>
+          <div class="stat-label">Promedio Comprensión</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="promedioVelocidad">0</div>
+          <div class="stat-label">Promedio PPM</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="promedioVE">0</div>
+          <div class="stat-label">Promedio VE</div>
+        </div>
+      </div>
+      
+      <!-- Historial de sesiones -->
+      <div class="history-card">
+        <h2>Mis Sesiones</h2>
+        <div id="sessionsList">
+          <div class="empty-state">Cargando...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { getUser } from '../auth/auth.core.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    
+    const loadingState = document.getElementById('loadingState');
+    const mainContent = document.getElementById('mainContent');
+    
+    // Verificar autenticación
+    const user = getUser();
+    
+    if (!user) {
+      window.location.href = '../index.html';
+    } else {
+      cargarHistorial();
+    }
+    
+    async function cargarHistorial() {
+      try {
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_lectura?estudiante_id=eq.${user.id}&estado=eq.finalizada&select=*,ciclos_lectura(titulo,grado,numero_ciclo)&order=fecha_fin_sesion.desc`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) {
+          throw new Error('Error cargando historial');
+        }
+        
+        const sesiones = await response.json();
+        
+        loadingState.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        
+        if (!sesiones || sesiones.length === 0) {
+          document.getElementById('sessionsList').innerHTML = 
+            '<div class="empty-state">Aún no has completado ninguna lectura</div>';
+          return;
+        }
+        
+        // Calcular estadísticas
+        const totalSesiones = sesiones.length;
+        const sumComprension = sesiones.reduce((sum, s) => sum + (s.porcentaje_comprension || 0), 0);
+        const sumVelocidad = sesiones.reduce((sum, s) => sum + (s.velocidad_simple || 0), 0);
+        const sumVE = sesiones.reduce((sum, s) => sum + (s.velocidad_efectiva || 0), 0);
+        
+        document.getElementById('totalSesiones').textContent = totalSesiones;
+        document.getElementById('promedioComprension').textContent = 
+          `${(sumComprension / totalSesiones).toFixed(0)}%`;
+        document.getElementById('promedioVelocidad').textContent = 
+          (sumVelocidad / totalSesiones).toFixed(0);
+        document.getElementById('promedioVE').textContent = 
+          (sumVE / totalSesiones).toFixed(0);
+        
+        // Renderizar sesiones
+        document.getElementById('sessionsList').innerHTML = sesiones.map(sesion => {
+          const ciclo = sesion.ciclos_lectura;
+          const fecha = new Date(sesion.fecha_fin_sesion).toLocaleDateString('es-CO', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          });
+          
+          return `
+            <div class="session-item">
+              <div class="session-info">
+                <div class="session-title">${ciclo?.titulo || 'Lectura'}</div>
+                <div class="session-meta">Ciclo #${ciclo?.numero_ciclo || '-'} • ${fecha}</div>
+              </div>
+              <div class="session-stats">
+                <div class="session-stat">
+                  <div class="session-stat-value">${(sesion.porcentaje_comprension || 0).toFixed(0)}%</div>
+                  <div class="session-stat-label">Comprensión</div>
+                </div>
+                <div class="session-stat">
+                  <div class="session-stat-value">${(sesion.velocidad_simple || 0).toFixed(0)}</div>
+                  <div class="session-stat-label">PPM</div>
+                </div>
+                <div class="session-stat">
+                  <div class="session-stat-value">${(sesion.velocidad_efectiva || 0).toFixed(0)}</div>
+                  <div class="session-stat-label">VE</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+      } catch (error) {
+        console.error('Error:', error);
+        loadingState.textContent = 'Error: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>

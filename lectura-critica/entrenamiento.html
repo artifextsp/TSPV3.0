@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lectura Crítica - Entrenamiento | TSP</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --success: #48bb78;
+      --danger: #e53e3e;
+      --warning: #ed8936;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #f7fafc;
+      --white: #ffffff;
+      --border: #e2e8f0;
+    }
+    
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: var(--bg);
+      min-height: 100vh;
+      line-height: 1.8;
+    }
+    
+    /* Header fijo con cronómetro */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .header h1 {
+      font-size: 18px;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .cronometro {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 24px;
+      font-family: 'Courier New', monospace;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    
+    .zoom-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .btn-zoom {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      background: var(--white);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .btn-zoom:hover {
+      background: var(--bg);
+    }
+    
+    .zoom-level {
+      font-size: 14px;
+      color: var(--text-light);
+      min-width: 50px;
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    /* Contenedor principal */
+    .main-container {
+      padding-top: 80px;
+      max-width: 800px;
+      margin: 0 auto;
+      padding-left: 24px;
+      padding-right: 24px;
+      padding-bottom: 100px;
+    }
+    
+    /* Sección de lectura */
+    .reading-section {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 48px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    
+    .reading-title {
+      font-size: 28px;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    
+    .reading-meta {
+      color: var(--text-light);
+      font-size: 14px;
+      margin-bottom: 32px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .reading-text {
+      font-size: 18px;
+      color: var(--text);
+      line-height: 2;
+      text-align: justify;
+    }
+    
+    .reading-text p {
+      margin-bottom: 24px;
+      text-align: justify;
+      position: relative;
+      padding-left: 40px;
+    }
+    
+    .reading-text p .paragraph-number {
+      position: absolute;
+      left: 0;
+      top: 2px;
+    }
+    
+    /* Vocabulario con tooltips */
+    .vocab-word {
+      color: var(--primary);
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      cursor: help;
+      position: relative;
+    }
+    
+    .vocab-word:hover {
+      color: var(--primary-dark);
+    }
+    
+    .vocab-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      white-space: nowrap;
+      max-width: 300px;
+      white-space: normal;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .vocab-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 8px solid transparent;
+      border-top-color: var(--text);
+    }
+    
+    .vocab-word:hover .vocab-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Botón terminar lectura */
+    .finish-reading-container {
+      text-align: center;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .btn-finish {
+      background: linear-gradient(135deg, var(--success) 0%, #38a169 100%);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      font-size: 18px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .btn-finish:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    }
+    
+    .btn-finish:disabled {
+      background: #a0aec0;
+      cursor: not-allowed;
+    }
+    
+    .finish-hint {
+      color: var(--text-light);
+      font-size: 14px;
+      margin-top: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    /* Sección de cuestionarios */
+    .quiz-section {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .quiz-header h2 {
+      font-size: 20px;
+      color: var(--text);
+    }
+    
+    .quiz-score {
+      font-size: 16px;
+      color: var(--text-light);
+    }
+    
+    .quiz-score .correct {
+      color: var(--success);
+      font-weight: 600;
+    }
+    
+    .quiz-score .incorrect {
+      color: var(--danger);
+      font-weight: 600;
+    }
+    
+    .question {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .question-stem {
+      font-size: 16px;
+      color: var(--text);
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    
+    .question-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .option:hover:not(.selected):not(.correct):not(.incorrect) {
+      border-color: var(--primary);
+    }
+    
+    .option.selected {
+      border-color: var(--primary);
+      background: #ebf4ff;
+    }
+    
+    .option.correct {
+      border-color: var(--success);
+      background: #c6f6d5;
+    }
+    
+    .option.incorrect {
+      border-color: var(--danger);
+      background: #fed7d7;
+    }
+    
+    .option input {
+      margin-top: 2px;
+    }
+    
+    .option-text {
+      flex: 1;
+      font-size: 14px;
+      color: var(--text);
+    }
+    
+    .question-feedback {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .question-feedback.correct {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .question-feedback.incorrect {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+    
+    /* Sección de resultados */
+    .results-section {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-radius: 12px;
+      padding: 48px;
+      color: white;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    .results-title {
+      font-size: 28px;
+      margin-bottom: 32px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    
+    .result-card {
+      background: rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    
+    .result-value {
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .result-label {
+      font-size: 14px;
+      opacity: 0.9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    /* Tarjeta de nivel de grado */
+    .nivel-grado-card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 16px;
+      padding: 24px 32px;
+      margin: 24px auto;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .nivel-grado-icon {
+      font-size: 48px;
+    }
+    
+    .nivel-grado-content {
+      flex: 1;
+      text-align: left;
+    }
+    
+    .nivel-grado-label {
+      font-size: 14px;
+      color: #718096;
+      margin-bottom: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .nivel-grado-value {
+      font-size: 42px;
+      font-weight: bold;
+      line-height: 1;
+      margin-bottom: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .nivel-grado-descripcion {
+      font-size: 14px;
+      color: #4a5568;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .btn-volver {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.5);
+      padding: 14px 32px;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .btn-volver:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    /* Botón volver al dashboard - resaltado */
+    .btn-volver-dashboard {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    }
+    
+    .btn-volver-dashboard:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(72, 187, 120, 0.5);
+    }
+    
+    /* Tarjeta de resultados de vocabulario */
+    .vocab-results-card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 20px auto;
+      max-width: 350px;
+    }
+    
+    .vocab-results-card h3 {
+      color: #2d3748;
+      font-size: 16px;
+      margin-bottom: 16px;
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .vocab-results-row {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+    }
+    
+    .vocab-result-item {
+      text-align: center;
+    }
+    
+    .vocab-result-item.correct .vocab-result-value {
+      color: #48bb78;
+    }
+    
+    .vocab-result-item.incorrect .vocab-result-value {
+      color: #e53e3e;
+    }
+    
+    .vocab-result-value {
+      font-size: 32px;
+      font-weight: bold;
+      display: block;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .vocab-result-label {
+      font-size: 14px;
+      color: #718096;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    /* Rankings */
+    .rankings-section {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .rankings-title {
+      font-size: 20px;
+      color: var(--text);
+      margin-bottom: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      background: var(--bg);
+      border-radius: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .ranking-position {
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .ranking-position.gold { background: #f6ad55; }
+    .ranking-position.silver { background: #a0aec0; }
+    .ranking-position.bronze { background: #c77c4d; }
+    
+    .ranking-name {
+      flex: 1;
+      color: var(--text);
+    }
+    
+    .ranking-value {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    /* Estados */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: var(--text-light);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    /* Número de párrafo */
+    .paragraph-number {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 24px;
+      font-size: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    
+    /* Botón ver lectura */
+    .btn-ver-lectura {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .btn-ver-lectura:hover {
+      background: var(--primary-dark);
+    }
+    
+    /* Modal de lectura */
+    .modal-lectura {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .modal-lectura-content {
+      background: white;
+      border-radius: 12px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .modal-lectura-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    
+    .modal-lectura-header h2 {
+      font-size: 18px;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .btn-close-modal {
+      background: none;
+      border: none;
+      font-size: 32px;
+      cursor: pointer;
+      color: var(--text-light);
+      line-height: 1;
+    }
+    
+    .btn-close-modal:hover {
+      color: var(--text);
+    }
+    
+    .modal-lectura-body {
+      padding: 24px;
+      overflow-y: auto;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 16px;
+      line-height: 1.8;
+      color: var(--text);
+    }
+    
+    .modal-lectura-body p {
+      margin-bottom: 16px;
+      text-align: justify;
+      position: relative;
+      padding-left: 40px;
+    }
+    
+    .modal-lectura-body p .paragraph-number {
+      position: absolute;
+      left: 0;
+      top: 2px;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .error-message {
+      text-align: center;
+      padding: 48px;
+      color: var(--text-light);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .error-message h2 {
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+    
+    .error-message a {
+      color: var(--primary);
+    }
+    
+    /* Estado: Lectura ya completada */
+    .completed-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 24px;
+    }
+    
+    .completed-card {
+      background: white;
+      border-radius: 16px;
+      padding: 48px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .completed-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+    
+    .completed-card h2 {
+      color: var(--text);
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    
+    .completed-message {
+      color: var(--text-light);
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    
+    .completed-results {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .completed-results-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      text-align: center;
+    }
+    
+    .completed-result-item {
+      padding: 12px;
+    }
+    
+    .completed-result-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .completed-result-label {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+    
+    .btn-completed {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      padding: 14px 48px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-completed:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .reading-section {
+        padding: 24px;
+      }
+      
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header {
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingState" class="loading">
+    Cargando entrenamiento...
+  </div>
+  
+  <div id="errorState" class="error-message hidden">
+    <h2>No hay ciclo activo</h2>
+    <p>No hay un ciclo de lectura activo para tu grado.</p>
+    <p><a href="../estudiante/dashboard.html">Volver al dashboard</a></p>
+  </div>
+  
+  <div id="completedState" class="completed-state hidden">
+    <div class="completed-card">
+      <div class="completed-icon">✅</div>
+      <h2>¡Ya completaste esta lectura!</h2>
+      <p class="completed-message">Has realizado este entrenamiento anteriormente. Si deseas mejorar tus resultados, solicita al administrador que te permita repetirlo.</p>
+      <div class="completed-results" id="previousResults">
+        <!-- Resultados anteriores se cargarán aquí -->
+      </div>
+      <button class="btn-completed" onclick="window.location.href='../estudiante/dashboard.html'">
+        Aceptar
+      </button>
+    </div>
+  </div>
+  
+  <div id="mainContent" class="hidden">
+    <!-- Header con cronómetro -->
+    <header class="header">
+      <div class="header-left">
+        <h1 id="headerTitle">Lectura Crítica</h1>
+        <div class="cronometro" id="cronometro">00:00</div>
+      </div>
+      <div class="zoom-controls">
+        <button class="btn-zoom" onclick="zoomOut()">−</button>
+        <span class="zoom-level" id="zoomLevel">100%</span>
+        <button class="btn-zoom" onclick="zoomIn()">+</button>
+      </div>
+    </header>
+    
+    <div class="main-container">
+      <!-- Sección de Lectura -->
+      <section id="readingSection" class="reading-section">
+        <h1 class="reading-title" id="readingTitle"></h1>
+        <p class="reading-meta" id="readingMeta"></p>
+        <div class="reading-text" id="readingText"></div>
+        
+        <div class="finish-reading-container">
+          <button class="btn-finish" id="btnFinishReading" disabled>
+            ✓ Terminé de leer
+          </button>
+          <p class="finish-hint" id="finishHint">Tiempo mínimo de lectura: 1 minuto</p>
+        </div>
+      </section>
+      
+      <!-- Sección de Vocabulario -->
+      <section id="vocabularySection" class="quiz-section hidden">
+        <div class="quiz-header">
+          <h2>📖 Prueba de Vocabulario</h2>
+          <div class="quiz-score">
+            Aciertos: <span class="correct" id="vocabCorrect">0</span> | 
+            Errores: <span class="incorrect" id="vocabIncorrect">0</span>
+          </div>
+        </div>
+        <div id="vocabularyQuestions"></div>
+        <div style="text-align: center; margin-top: 24px;">
+          <button class="btn-finish" id="btnFinishVocab" disabled>
+            Continuar a Evaluación →
+          </button>
+        </div>
+      </section>
+      
+      <!-- Sección de Evaluación -->
+      <section id="evaluationSection" class="quiz-section hidden">
+        <div class="quiz-header">
+          <h2>📝 Evaluación de Comprensión</h2>
+          <div class="quiz-score">
+            Aciertos: <span class="correct" id="evalCorrect">0</span> | 
+            Errores: <span class="incorrect" id="evalIncorrect">0</span>
+          </div>
+        </div>
+        
+        <!-- Botón para ver lectura -->
+        <div style="text-align: center; margin-bottom: 20px;">
+          <button class="btn-ver-lectura" onclick="toggleModalLectura()">
+            📖 Ver Lectura
+          </button>
+        </div>
+        
+        <div id="evaluationQuestions"></div>
+        <div style="text-align: center; margin-top: 24px;">
+          <button class="btn-finish" id="btnFinishEval" disabled>
+            Ver Resultados →
+          </button>
+        </div>
+      </section>
+      
+      <!-- Modal para ver lectura durante evaluación -->
+      <div id="modalLectura" class="modal-lectura hidden">
+        <div class="modal-lectura-content">
+          <div class="modal-lectura-header">
+            <h2 id="modalLecturaTitulo">Lectura</h2>
+            <button class="btn-close-modal" onclick="toggleModalLectura()">&times;</button>
+          </div>
+          <div class="modal-lectura-body" id="modalLecturaTexto">
+            <!-- Texto de lectura -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Sección de Resultados -->
+      <section id="resultsSection" class="hidden">
+        <div class="results-section">
+          <h1 class="results-title">🎉 ¡Entrenamiento Completado!</h1>
+          <div class="results-grid">
+            <div class="result-card">
+              <div class="result-value" id="resultComprension">0%</div>
+              <div class="result-label">Comprensión</div>
+            </div>
+            <div class="result-card">
+              <div class="result-value" id="resultVelocidadSimple">0</div>
+              <div class="result-label">Palabras/Minuto</div>
+            </div>
+            <div class="result-card">
+              <div class="result-value" id="resultVelocidadEfectiva">0</div>
+              <div class="result-label">Velocidad Efectiva</div>
+            </div>
+          </div>
+          
+          <!-- Resultados de vocabulario -->
+          <div class="vocab-results-card">
+            <h3>📖 Prueba de Vocabulario</h3>
+            <div class="vocab-results-row">
+              <div class="vocab-result-item correct">
+                <span class="vocab-result-value" id="resultVocabAciertos">0</span>
+                <span class="vocab-result-label">Aciertos</span>
+              </div>
+              <div class="vocab-result-item incorrect">
+                <span class="vocab-result-value" id="resultVocabErrores">0</span>
+                <span class="vocab-result-label">Errores</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Nivel de grado alcanzado -->
+          <div class="nivel-grado-card">
+            <div class="nivel-grado-icon">🎓</div>
+            <div class="nivel-grado-content">
+              <div class="nivel-grado-label">Tu nivel de lectura equivale a:</div>
+              <div class="nivel-grado-value" id="resultNivelGrado">-</div>
+              <div class="nivel-grado-descripcion" id="nivelGradoDescripcion">-</div>
+            </div>
+          </div>
+          
+          <button class="btn-volver-dashboard" onclick="window.location.href='../estudiante/dashboard.html'">
+            Volver al Dashboard
+          </button>
+        </div>
+        
+        <div class="rankings-section">
+          <h2 class="rankings-title">🏆 Top 5 - Velocidad Efectiva</h2>
+          <div class="ranking-list" id="rankingList">
+            <!-- Rankings dinámicos -->
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getUser } from '../auth/auth.core.js';
+    import { CiclosAPI, SesionesAPI, RankingsAPI } from './lectura.api.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    
+    // Estado de la aplicación
+    let cicloActual = null;
+    let sesionActual = null;
+    let user = null;
+    let cronometroInterval = null;
+    let segundosTranscurridos = 0;
+    let zoomLevel = 100;
+    
+    // Respuestas
+    let respuestasVocabulario = {};
+    let respuestasEvaluacion = {};
+    let aciertosVocab = 0;
+    let erroresVocab = 0;
+    let aciertosEval = 0;
+    let erroresEval = 0;
+    
+    // Elementos del DOM
+    const loadingState = document.getElementById('loadingState');
+    const errorState = document.getElementById('errorState');
+    const completedState = document.getElementById('completedState');
+    const mainContent = document.getElementById('mainContent');
+    
+    // Inicialización
+    init();
+    
+    async function init() {
+      user = getUser();
+      
+      console.log('[Lectura] Usuario:', user);
+      console.log('[Lectura] Grado original del usuario:', user?.grado);
+      
+      if (!user) {
+        window.location.href = '../index.html';
+        return;
+      }
+      
+      // Si el grado no está en la sesión, obtenerlo de la base de datos
+      let gradoDelUsuario = user.grado;
+      
+      if (!gradoDelUsuario) {
+        console.log('[Lectura] Grado no encontrado en sesión, consultando base de datos...');
+        try {
+          const response = await fetch(
+            `${CONFIG.SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}&select=grado`,
+            {
+              headers: {
+                'apikey': CONFIG.SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+              }
+            }
+          );
+          
+          if (response.ok) {
+            const datos = await response.json();
+            if (datos && datos.length > 0 && datos[0].grado) {
+              gradoDelUsuario = datos[0].grado;
+              console.log('[Lectura] Grado obtenido de BD:', gradoDelUsuario);
+              
+              // Actualizar la sesión local para futuras visitas
+              const sessionData = JSON.parse(localStorage.getItem('tsp_user_session') || '{}');
+              sessionData.grado = gradoDelUsuario;
+              localStorage.setItem('tsp_user_session', JSON.stringify(sessionData));
+            }
+          }
+        } catch (error) {
+          console.error('[Lectura] Error al obtener grado de BD:', error);
+        }
+      }
+      
+      // Mapear grado del usuario al formato esperado
+      const gradoUsuario = mapearGrado(gradoDelUsuario);
+      
+      console.log('[Lectura] Grado mapeado:', gradoUsuario);
+      
+      if (!gradoUsuario) {
+        console.error('[Lectura] No se pudo determinar el grado del usuario. Grado original:', gradoDelUsuario);
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        document.querySelector('#errorState p').textContent = 
+          `No se pudo determinar tu grado (valor actual: "${gradoDelUsuario || 'sin grado'}"). Contacta al administrador.`;
+        return;
+      }
+      
+      try {
+        // Obtener ciclo activo para el grado del usuario
+        console.log('[Lectura] Buscando ciclo activo para grado:', gradoUsuario);
+        cicloActual = await CiclosAPI.obtenerActivoPorGrado(gradoUsuario);
+        
+        console.log('[Lectura] Ciclo encontrado:', cicloActual);
+        
+        if (!cicloActual) {
+          console.warn('[Lectura] No hay ciclo activo para el grado:', gradoUsuario);
+          loadingState.classList.add('hidden');
+          errorState.classList.remove('hidden');
+          return;
+        }
+        
+        // Verificar si ya completó este ciclo
+        const yaCompletado = await SesionesAPI.verificarCompletado(cicloActual.id, user.id);
+        
+        if (yaCompletado) {
+          // Cargar resultados anteriores
+          await cargarResultadosAnteriores();
+          loadingState.classList.add('hidden');
+          completedState.classList.remove('hidden');
+          return;
+        }
+        
+        // Iniciar sesión
+        sesionActual = await SesionesAPI.iniciar(cicloActual.id, user.id);
+        
+        // Cargar interfaz
+        cargarLectura();
+        
+        loadingState.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        
+        // Iniciar cronómetro
+        iniciarCronometro();
+        
+      } catch (error) {
+        console.error('Error inicializando:', error);
+        loadingState.textContent = 'Error: ' + error.message;
+      }
+    }
+    
+    async function cargarResultadosAnteriores() {
+      try {
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_lectura?ciclo_id=eq.${cicloActual.id}&estudiante_id=eq.${user.id}&estado=eq.finalizada&select=*`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const sesiones = await response.json();
+          if (sesiones && sesiones.length > 0) {
+            const sesion = sesiones[0];
+            const nivelGrado = obtenerNivelGrado(sesion.velocidad_efectiva);
+            
+            document.getElementById('previousResults').innerHTML = `
+              <div class="completed-results-grid">
+                <div class="completed-result-item">
+                  <div class="completed-result-value">${(sesion.porcentaje_comprension || 0).toFixed(0)}%</div>
+                  <div class="completed-result-label">Comprensión</div>
+                </div>
+                <div class="completed-result-item">
+                  <div class="completed-result-value">${(sesion.velocidad_simple || 0).toFixed(0)}</div>
+                  <div class="completed-result-label">Palabras/Min</div>
+                </div>
+                <div class="completed-result-item">
+                  <div class="completed-result-value">${(sesion.velocidad_efectiva || 0).toFixed(0)}</div>
+                  <div class="completed-result-label">Vel. Efectiva</div>
+                </div>
+              </div>
+              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                <div style="font-size: 14px; color: #718096;">Nivel alcanzado:</div>
+                <div style="font-size: 24px; font-weight: bold; color: ${nivelGrado.color};">
+                  Grado ${nivelGrado.grado} - ${nivelGrado.nivel}
+                </div>
+              </div>
+            `;
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando resultados anteriores:', error);
+      }
+    }
+    
+    // Función para determinar el nivel de grado según velocidad efectiva
+    function obtenerNivelGrado(velocidadEfectiva) {
+      const ve = Math.round(velocidadEfectiva || 0);
+      
+      if (ve <= 10) return { grado: '2°', nivel: 'Segundo', color: '#e53e3e' };
+      if (ve <= 30) return { grado: '3°', nivel: 'Tercero', color: '#ed8936' };
+      if (ve <= 45) return { grado: '4°', nivel: 'Cuarto', color: '#ecc94b' };
+      if (ve <= 55) return { grado: '5°', nivel: 'Quinto', color: '#48bb78' };
+      if (ve <= 75) return { grado: '6°', nivel: 'Sexto', color: '#38b2ac' };
+      if (ve <= 85) return { grado: '7°', nivel: 'Séptimo', color: '#4299e1' };
+      if (ve <= 110) return { grado: '8°', nivel: 'Octavo', color: '#667eea' };
+      if (ve <= 125) return { grado: '9°', nivel: 'Noveno', color: '#9f7aea' };
+      if (ve <= 140) return { grado: '10°', nivel: 'Décimo', color: '#ed64a6' };
+      return { grado: '11°', nivel: 'Undécimo', color: '#f56565' };
+    }
+    
+    function mapearGrado(gradoUsuario) {
+      console.log('[Lectura] Grado del usuario:', gradoUsuario);
+      
+      if (!gradoUsuario) {
+        console.warn('[Lectura] El usuario no tiene grado asignado');
+        return null;
+      }
+      
+      const gradoLower = gradoUsuario.toString().toLowerCase().trim();
+      
+      // Mapeos comunes
+      const mapeos = {
+        '3': 'tercero', '3°': 'tercero', 'tercero': 'tercero', '3ro': 'tercero', 'tercer': 'tercero',
+        '4': 'cuarto', '4°': 'cuarto', 'cuarto': 'cuarto', '4to': 'cuarto',
+        '5': 'quinto', '5°': 'quinto', 'quinto': 'quinto', '5to': 'quinto',
+        '6': 'sexto', '6°': 'sexto', 'sexto': 'sexto', '6to': 'sexto',
+        '7': 'septimo', '7°': 'septimo', 'septimo': 'septimo', 'séptimo': 'septimo',
+        '8': 'octavo', '8°': 'octavo', 'octavo': 'octavo', '8vo': 'octavo',
+        '9': 'noveno', '9°': 'noveno', 'noveno': 'noveno', '9no': 'noveno',
+        '10': 'decimo', '10°': 'decimo', 'decimo': 'decimo', 'décimo': 'decimo',
+        '11': 'undecimo', '11°': 'undecimo', 'undecimo': 'undecimo', 'undécimo': 'undecimo'
+      };
+      
+      // Buscar coincidencia exacta
+      if (mapeos[gradoLower]) {
+        console.log('[Lectura] Grado mapeado a:', mapeos[gradoLower]);
+        return mapeos[gradoLower];
+      }
+      
+      // Buscar coincidencia parcial (si el grado contiene el número)
+      for (const [key, value] of Object.entries(mapeos)) {
+        if (gradoLower.includes(key) || key.includes(gradoLower)) {
+          console.log('[Lectura] Grado mapeado (parcial) a:', value);
+          return value;
+        }
+      }
+      
+      console.warn('[Lectura] No se pudo mapear el grado:', gradoUsuario);
+      return null;
+    }
+    
+    function cargarLectura() {
+      const reading = cicloActual.contenido.reading;
+      
+      document.getElementById('headerTitle').textContent = reading.title;
+      document.getElementById('readingTitle').textContent = reading.title;
+      document.getElementById('readingMeta').textContent = 
+        `${reading.author || 'Autor desconocido'}${reading.year ? ` • ${reading.year}` : ''} • ${reading.word_count_text} palabras`;
+      
+      // Procesar texto con vocabulario como tooltips
+      let textoProcesado = reading.text_excerpt;
+      
+      // Reemplazar SOLO la primera aparición de cada keyword con tooltip
+      const keywords = reading.keywords || [];
+      keywords.forEach(keyword => {
+        // Usar regex sin flag 'g' para reemplazar solo la primera ocurrencia
+        const regex = new RegExp(`(${escapeRegex(keyword.word)})`, 'i');
+        textoProcesado = textoProcesado.replace(regex, 
+          `<span class="vocab-word">$1<span class="vocab-tooltip">${keyword.meaning}</span></span>`
+        );
+      });
+      
+      // Convertir saltos de línea en párrafos numerados
+      const parrafos = textoProcesado.split(/\n\n+/).filter(p => p.trim());
+      document.getElementById('readingText').innerHTML = 
+        parrafos.map((p, idx) => `<p><span class="paragraph-number">${idx + 1}</span>${p.trim()}</p>`).join('');
+    }
+    
+    function escapeRegex(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    
+    function iniciarCronometro() {
+      cronometroInterval = setInterval(() => {
+        segundosTranscurridos++;
+        actualizarCronometro();
+        
+        // Habilitar botón después de 60 segundos
+        if (segundosTranscurridos >= 60) {
+          document.getElementById('btnFinishReading').disabled = false;
+          document.getElementById('finishHint').textContent = '¡Ya puedes continuar!';
+        } else {
+          document.getElementById('finishHint').textContent = 
+            `Tiempo mínimo de lectura: ${60 - segundosTranscurridos} segundos restantes`;
+        }
+      }, 1000);
+    }
+    
+    function actualizarCronometro() {
+      const minutos = Math.floor(segundosTranscurridos / 60);
+      const segundos = segundosTranscurridos % 60;
+      document.getElementById('cronometro').textContent = 
+        `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+    }
+    
+    function detenerCronometro() {
+      if (cronometroInterval) {
+        clearInterval(cronometroInterval);
+        cronometroInterval = null;
+      }
+    }
+    
+    // Zoom
+    window.zoomIn = function() {
+      if (zoomLevel < 150) {
+        zoomLevel += 10;
+        aplicarZoom();
+      }
+    };
+    
+    window.zoomOut = function() {
+      if (zoomLevel > 80) {
+        zoomLevel -= 10;
+        aplicarZoom();
+      }
+    };
+    
+    function aplicarZoom() {
+      document.getElementById('zoomLevel').textContent = `${zoomLevel}%`;
+      document.querySelector('.reading-text').style.fontSize = `${18 * (zoomLevel / 100)}px`;
+    }
+    
+    // Modal de lectura durante evaluación
+    window.toggleModalLectura = function() {
+      const modal = document.getElementById('modalLectura');
+      
+      if (modal.classList.contains('hidden')) {
+        // Mostrar modal con el contenido de la lectura
+        const reading = cicloActual.contenido.reading;
+        document.getElementById('modalLecturaTitulo').textContent = reading.title;
+        
+        // Generar texto con párrafos numerados (sin tooltips para simplicidad)
+        const parrafos = reading.text_excerpt.split(/\n\n+/).filter(p => p.trim());
+        document.getElementById('modalLecturaTexto').innerHTML = 
+          parrafos.map((p, idx) => `<p><span class="paragraph-number">${idx + 1}</span>${p.trim()}</p>`).join('');
+        
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    };
+    
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('modalLectura');
+        if (!modal.classList.contains('hidden')) {
+          modal.classList.add('hidden');
+        }
+      }
+    });
+    
+    // Evento: Terminar lectura
+    document.getElementById('btnFinishReading').addEventListener('click', async () => {
+      detenerCronometro();
+      
+      try {
+        await SesionesAPI.finalizarLectura(sesionActual.id, segundosTranscurridos);
+        
+        // Ocultar sección de lectura y mostrar vocabulario
+        document.getElementById('readingSection').classList.add('hidden');
+        document.getElementById('vocabularySection').classList.remove('hidden');
+        
+        // Cargar preguntas de vocabulario
+        cargarCuestionarioVocabulario();
+        
+        // Scroll al inicio del cuestionario
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+      } catch (error) {
+        console.error('Error finalizando lectura:', error);
+        alert('Error al guardar: ' + error.message);
+      }
+    });
+    
+    // Función para mezclar opciones de una pregunta
+    function mezclarOpciones(options, correctIndex) {
+      // Crear array de objetos con índice original y texto
+      const optionsWithIndex = options.map((opt, idx) => ({
+        text: opt,
+        isCorrect: idx === correctIndex
+      }));
+      
+      // Mezclar usando Fisher-Yates
+      for (let i = optionsWithIndex.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [optionsWithIndex[i], optionsWithIndex[j]] = [optionsWithIndex[j], optionsWithIndex[i]];
+      }
+      
+      // Encontrar el nuevo índice de la respuesta correcta
+      const newCorrectIndex = optionsWithIndex.findIndex(opt => opt.isCorrect);
+      
+      return {
+        options: optionsWithIndex.map(opt => opt.text),
+        correctIndex: newCorrectIndex
+      };
+    }
+    
+    function cargarCuestionarioVocabulario() {
+      const questions = cicloActual.contenido.vocabulary_questions || [];
+      const container = document.getElementById('vocabularyQuestions');
+      
+      container.innerHTML = questions.map((q, idx) => {
+        // Mezclar opciones para esta pregunta
+        const mezclado = mezclarOpciones(q.options, q.answer);
+        
+        return `
+          <div class="question" data-qid="${q.qid}" data-answer="${mezclado.correctIndex}">
+            <div class="question-stem">${idx + 1}. ${q.stem}</div>
+            <div class="question-options">
+              ${mezclado.options.map((opt, optIdx) => `
+                <label class="option" data-option="${optIdx}">
+                  <input type="radio" name="vocab_${q.qid}" value="${optIdx}">
+                  <span class="option-text">${opt}</span>
+                </label>
+              `).join('')}
+            </div>
+            <div class="question-feedback hidden"></div>
+          </div>
+        `;
+      }).join('');
+      
+      // Agregar eventos a las opciones
+      container.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          const questionDiv = e.target.closest('.question');
+          const qid = questionDiv.dataset.qid;
+          const answer = parseInt(questionDiv.dataset.answer);
+          const selected = parseInt(e.target.value);
+          
+          // Guardar respuesta
+          respuestasVocabulario[qid] = selected;
+          
+          // Marcar opciones
+          questionDiv.querySelectorAll('.option').forEach(opt => {
+            opt.classList.remove('selected', 'correct', 'incorrect');
+          });
+          
+          const selectedOption = questionDiv.querySelector(`[data-option="${selected}"]`);
+          const correctOption = questionDiv.querySelector(`[data-option="${answer}"]`);
+          
+          if (selected === answer) {
+            selectedOption.classList.add('correct');
+            aciertosVocab++;
+          } else {
+            selectedOption.classList.add('incorrect');
+            correctOption.classList.add('correct');
+            erroresVocab++;
+          }
+          
+          // Actualizar contadores
+          document.getElementById('vocabCorrect').textContent = aciertosVocab;
+          document.getElementById('vocabIncorrect').textContent = erroresVocab;
+          
+          // Deshabilitar opciones de esta pregunta
+          questionDiv.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+          
+          // Verificar si todas las preguntas están respondidas
+          if (Object.keys(respuestasVocabulario).length === questions.length) {
+            document.getElementById('btnFinishVocab').disabled = false;
+          }
+        });
+      });
+    }
+    
+    // Evento: Terminar vocabulario
+    document.getElementById('btnFinishVocab').addEventListener('click', async () => {
+      try {
+        await SesionesAPI.guardarVocabulario(
+          sesionActual.id, 
+          respuestasVocabulario, 
+          aciertosVocab, 
+          aciertosVocab + erroresVocab
+        );
+        
+        // Ocultar vocabulario y mostrar evaluación
+        document.getElementById('vocabularySection').classList.add('hidden');
+        document.getElementById('evaluationSection').classList.remove('hidden');
+        
+        // Cargar preguntas de evaluación
+        cargarCuestionarioEvaluacion();
+        
+        // Scroll al inicio del cuestionario
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+      } catch (error) {
+        console.error('Error guardando vocabulario:', error);
+        alert('Error al guardar: ' + error.message);
+      }
+    });
+    
+    function cargarCuestionarioEvaluacion() {
+      const questions = cicloActual.contenido.questions || [];
+      const container = document.getElementById('evaluationQuestions');
+      
+      container.innerHTML = questions.map((q, idx) => {
+        // Mezclar opciones para esta pregunta
+        const mezclado = mezclarOpciones(q.options, q.answer);
+        
+        return `
+          <div class="question" data-qid="${q.qid}" data-answer="${mezclado.correctIndex}">
+            <div class="question-stem">${idx + 1}. ${q.stem}</div>
+            <div class="question-options">
+              ${mezclado.options.map((opt, optIdx) => `
+                <label class="option" data-option="${optIdx}">
+                  <input type="radio" name="eval_${q.qid}" value="${optIdx}">
+                  <span class="option-text">${opt}</span>
+                </label>
+              `).join('')}
+            </div>
+            <div class="question-feedback hidden"></div>
+          </div>
+        `;
+      }).join('');
+      
+      // Agregar eventos a las opciones
+      container.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          const questionDiv = e.target.closest('.question');
+          const qid = questionDiv.dataset.qid;
+          const answer = parseInt(questionDiv.dataset.answer);
+          const selected = parseInt(e.target.value);
+          
+          // Guardar respuesta
+          respuestasEvaluacion[qid] = selected;
+          
+          // Marcar opciones
+          questionDiv.querySelectorAll('.option').forEach(opt => {
+            opt.classList.remove('selected', 'correct', 'incorrect');
+          });
+          
+          const selectedOption = questionDiv.querySelector(`[data-option="${selected}"]`);
+          const correctOption = questionDiv.querySelector(`[data-option="${answer}"]`);
+          
+          if (selected === answer) {
+            selectedOption.classList.add('correct');
+            aciertosEval++;
+          } else {
+            selectedOption.classList.add('incorrect');
+            correctOption.classList.add('correct');
+            erroresEval++;
+          }
+          
+          // Actualizar contadores
+          document.getElementById('evalCorrect').textContent = aciertosEval;
+          document.getElementById('evalIncorrect').textContent = erroresEval;
+          
+          // Deshabilitar opciones de esta pregunta
+          questionDiv.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+          
+          // Verificar si todas las preguntas están respondidas
+          if (Object.keys(respuestasEvaluacion).length === questions.length) {
+            document.getElementById('btnFinishEval').disabled = false;
+          }
+        });
+      });
+    }
+    
+    // Evento: Terminar evaluación
+    document.getElementById('btnFinishEval').addEventListener('click', async () => {
+      try {
+        await SesionesAPI.finalizarSesion(
+          sesionActual.id, 
+          respuestasEvaluacion, 
+          aciertosEval, 
+          aciertosEval + erroresEval
+        );
+        
+        // Obtener resultados actualizados
+        const resultados = await SesionesAPI.obtenerResultados(sesionActual.id);
+        
+        // Mostrar resultados
+        mostrarResultados(resultados);
+        
+      } catch (error) {
+        console.error('Error finalizando sesión:', error);
+        alert('Error al guardar: ' + error.message);
+      }
+    });
+    
+    async function mostrarResultados(resultados) {
+      document.getElementById('evaluationSection').classList.add('hidden');
+      document.getElementById('resultsSection').classList.remove('hidden');
+      
+      // Scroll al inicio
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      const velocidadEfectiva = resultados.velocidad_efectiva || 0;
+      const nivelAlcanzado = obtenerNivelGrado(velocidadEfectiva);
+      
+      // Mostrar métricas
+      document.getElementById('resultComprension').textContent = 
+        `${(resultados.porcentaje_comprension || 0).toFixed(0)}%`;
+      document.getElementById('resultVelocidadSimple').textContent = 
+        `${(resultados.velocidad_simple || 0).toFixed(0)}`;
+      document.getElementById('resultVelocidadEfectiva').textContent = 
+        `${velocidadEfectiva.toFixed(0)}`;
+      
+      // Mostrar resultados de vocabulario
+      document.getElementById('resultVocabAciertos').textContent = aciertosVocab;
+      document.getElementById('resultVocabErrores').textContent = erroresVocab;
+      
+      // Mostrar nivel de grado alcanzado
+      document.getElementById('resultNivelGrado').textContent = nivelAlcanzado.grado;
+      document.getElementById('resultNivelGrado').style.color = nivelAlcanzado.color;
+      document.getElementById('nivelGradoDescripcion').textContent = 
+        `Nivel de lectura: Grado ${nivelAlcanzado.nivel}`;
+      
+      // Cargar rankings
+      try {
+        const rankings = await RankingsAPI.topVelocidadEfectiva(cicloActual.id, 5);
+        
+        if (rankings && rankings.length > 0) {
+          document.getElementById('rankingList').innerHTML = rankings.map((r, idx) => {
+            const positionClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
+            const nombre = r.usuarios ? `${r.usuarios.nombre} ${r.usuarios.apellidos || ''}` : 'Estudiante';
+            
+            return `
+              <div class="ranking-item">
+                <div class="ranking-position ${positionClass}">${idx + 1}</div>
+                <div class="ranking-name">${nombre}</div>
+                <div class="ranking-value">${(r.velocidad_efectiva || 0).toFixed(0)} VE</div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          document.getElementById('rankingList').innerHTML = 
+            '<div class="ranking-item"><div class="ranking-name">Sé el primero en completar el ranking</div></div>';
+        }
+      } catch (error) {
+        console.error('Error cargando rankings:', error);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejercicios Digitales - Thinking Skills Program</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      min-height: 100vh;
+      color: #e2e8f0;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header-title { font-size: 20px; font-weight: 600; }
+    
+    .btn-back {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    /* Estados */
+    .state-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+    }
+    
+    .state-container h2 {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    
+    .state-container p {
+      color: #a0aec0;
+      margin-bottom: 24px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    
+    .btn-primary:hover { transform: translateY(-2px); }
+    
+    /* Games Grid */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+    
+    .game-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 24px;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .game-card.completed {
+      border-color: #48bb78;
+      background: rgba(72, 187, 120, 0.1);
+    }
+    
+    .game-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #e2e8f0;
+    }
+    
+    .game-skill {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(56, 178, 172, 0.3);
+      border-radius: 12px;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .game-meta {
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 12px 0;
+    }
+    
+    .game-meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #a0aec0;
+    }
+    
+    .game-meta-value {
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+    
+    .game-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .btn-play {
+      flex: 1;
+      background: #38b2ac;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .btn-play:hover { background: #319795; }
+    
+    .btn-register {
+      flex: 1;
+      background: #ed8936;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .btn-register:hover { background: #dd6b20; }
+    
+    .result-display {
+      background: rgba(72, 187, 120, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      margin-top: 12px;
+    }
+    
+    .result-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #48bb78;
+    }
+    
+    .result-label {
+      font-size: 12px;
+      color: #a0aec0;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active { display: flex; }
+    
+    .modal-content {
+      background: #2d2d44;
+      border-radius: 16px;
+      max-width: 400px;
+      width: 90%;
+      padding: 32px;
+      text-align: center;
+    }
+    
+    .modal-content h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+    }
+    
+    .warning-box {
+      background: rgba(237, 137, 54, 0.2);
+      border: 1px solid #ed8936;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .warning-box p {
+      color: #fbd38d;
+      font-size: 14px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #a0aec0;
+      font-size: 14px;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      font-size: 20px;
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      color: white;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .btn-cancel {
+      flex: 1;
+      background: rgba(255,255,255,0.1);
+      color: #a0aec0;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    
+    .btn-confirm {
+      flex: 1;
+      background: #48bb78;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    /* Progress Bar */
+    .progress-section {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #38b2ac, #48bb78);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <!-- Estado de carga -->
+  <div id="loadingState" class="state-container">
+    <p>Cargando ejercicios...</p>
+  </div>
+  
+  <!-- Sin ciclo activo -->
+  <div id="noCycleState" class="state-container hidden">
+    <h2>No hay ejercicios disponibles</h2>
+    <p>Actualmente no hay un ciclo de ejercicios activo para tu grado.</p>
+    <a href="../estudiante/dashboard.html" class="btn-primary">Volver al Dashboard</a>
+  </div>
+  
+  <!-- Contenido principal -->
+  <div id="mainContent" class="hidden">
+    <header class="header">
+      <span class="header-title" id="headerTitle">Ejercicios Digitales</span>
+      <a href="../estudiante/dashboard.html" class="btn-back">← Volver</a>
+    </header>
+    
+    <div class="container">
+      <!-- Progreso -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span>Progreso del ciclo</span>
+          <span id="progressText">0/0 completados</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+      </div>
+      
+      <!-- Grid de juegos -->
+      <div class="games-grid" id="gamesGrid">
+        <!-- Los juegos se cargan dinámicamente -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal: Registrar Resultado -->
+  <div id="modalRegistrar" class="modal">
+    <div class="modal-content">
+      <h2>Registrar Resultado</h2>
+      <p id="modalJuegoNombre" style="color: #a0aec0; margin-bottom: 16px;">-</p>
+      
+      <div class="warning-box">
+        <p><strong>Importante:</strong> Antes de registrar tu resultado, asegúrate de que el docente pueda verificar tu puntaje en la pantalla del juego.</p>
+      </div>
+      
+      <input type="hidden" id="registroJuegoId">
+      <input type="hidden" id="registroMeta">
+      <input type="hidden" id="registroTipoMeta">
+      
+      <div class="form-group">
+        <label id="labelResultado">Tu resultado:</label>
+        <input type="number" id="inputResultado" min="0" placeholder="0">
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn-confirm" onclick="guardarResultado()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getUser } from '../auth/auth.core.js';
+    import { CiclosEjerciciosAPI, JuegosAPI, SesionesEjerciciosAPI, ResultadosAPI, HABILIDADES, TIPOS_META } from './ejercicios.api.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    
+    let cicloActual = null;
+    let sesionActual = null;
+    let juegosDelCiclo = [];
+    let resultadosActuales = {};
+    let usuarioActual = null;
+    
+    // Inicializar
+    async function init() {
+      usuarioActual = getUser();
+      
+      if (!usuarioActual) {
+        window.location.href = '../index.html';
+        return;
+      }
+      
+      try {
+        const gradoUsuario = await obtenerGradoUsuario(usuarioActual);
+        
+        if (!gradoUsuario) {
+          mostrarEstado('noCycleState');
+          return;
+        }
+        
+        cicloActual = await CiclosEjerciciosAPI.obtenerActivoPorGrado(gradoUsuario);
+        
+        if (!cicloActual) {
+          mostrarEstado('noCycleState');
+          return;
+        }
+        
+        // Iniciar o recuperar sesión
+        sesionActual = await SesionesEjerciciosAPI.iniciar(cicloActual.id, usuarioActual.id);
+        
+        // Cargar juegos
+        juegosDelCiclo = await JuegosAPI.listarPorCiclo(cicloActual.id);
+        
+        if (!juegosDelCiclo || juegosDelCiclo.length === 0) {
+          mostrarEstado('noCycleState');
+          return;
+        }
+        
+        // Cargar resultados existentes
+        await cargarResultados();
+        
+        // Mostrar interfaz
+        document.getElementById('headerTitle').textContent = cicloActual.titulo;
+        renderizarJuegos();
+        actualizarProgreso();
+        mostrarEstado('mainContent');
+        
+      } catch (error) {
+        console.error('Error inicializando:', error);
+        mostrarEstado('noCycleState');
+      }
+    }
+    
+    async function obtenerGradoUsuario(user) {
+      let grado = user.grado;
+      
+      if (!grado) {
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}&select=grado`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data[0]) grado = data[0].grado;
+        }
+      }
+      
+      return mapearGrado(grado);
+    }
+    
+    function mapearGrado(gradoRaw) {
+      if (!gradoRaw) return null;
+      const gradoStr = String(gradoRaw).toLowerCase().replace('°', '').trim();
+      const mapa = {
+        '3': 'tercero', 'tercero': 'tercero',
+        '4': 'cuarto', 'cuarto': 'cuarto',
+        '5': 'quinto', 'quinto': 'quinto',
+        '6': 'sexto', 'sexto': 'sexto',
+        '7': 'septimo', 'séptimo': 'septimo', 'septimo': 'septimo',
+        '8': 'octavo', 'octavo': 'octavo',
+        '9': 'noveno', 'noveno': 'noveno',
+        '10': 'decimo', 'décimo': 'decimo', 'decimo': 'decimo',
+        '11': 'undecimo', 'undécimo': 'undecimo', 'undecimo': 'undecimo'
+      };
+      return mapa[gradoStr] || gradoStr;
+    }
+    
+    function mostrarEstado(stateId) {
+      ['loadingState', 'noCycleState', 'mainContent'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      document.getElementById(stateId).classList.remove('hidden');
+    }
+    
+    async function cargarResultados() {
+      try {
+        const resultados = await ResultadosAPI.obtenerPorSesion(sesionActual.id);
+        resultadosActuales = {};
+        if (resultados) {
+          resultados.forEach(r => {
+            resultadosActuales[r.juego_id] = r;
+          });
+        }
+      } catch (error) {
+        console.error('Error cargando resultados:', error);
+      }
+    }
+    
+    function renderizarJuegos() {
+      const grid = document.getElementById('gamesGrid');
+      
+      grid.innerHTML = juegosDelCiclo.map(juego => {
+        const habilidad = HABILIDADES.find(h => h.value === juego.habilidad_estimulada)?.label || juego.habilidad_estimulada;
+        const tipoMeta = TIPOS_META.find(t => t.value === juego.tipo_meta)?.label || juego.tipo_meta;
+        const resultado = resultadosActuales[juego.id];
+        const completado = resultado && resultado.meta_alcanzada;
+        
+        return `
+          <div class="game-card ${completado ? 'completed' : ''}">
+            <h3>${juego.nombre}</h3>
+            <span class="game-skill">${habilidad}</span>
+            
+            <div class="game-meta">
+              <div class="game-meta-row">
+                <span>Meta:</span>
+                <span class="game-meta-value">${juego.meta_objetivo} ${tipoMeta}</span>
+              </div>
+              ${juego.instrucciones ? `<p style="margin-top: 8px; font-size: 13px; color: #a0aec0;">${juego.instrucciones}</p>` : ''}
+            </div>
+            
+            ${resultado ? `
+              <div class="result-display">
+                <div class="result-value">${resultado.resultado_obtenido}</div>
+                <div class="result-label">Tu resultado (${resultado.meta_alcanzada ? 'Meta alcanzada' : 'Meta no alcanzada'})</div>
+              </div>
+            ` : ''}
+            
+            <div class="game-actions">
+              <button class="btn-play" onclick="abrirJuego('${juego.url_juego}')">Jugar</button>
+              <button class="btn-register" onclick="abrirRegistro('${juego.id}', '${juego.nombre}', ${juego.meta_objetivo}, '${juego.tipo_meta}')">
+                ${resultado ? 'Actualizar' : 'Registrar'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function actualizarProgreso() {
+      const total = juegosDelCiclo.length;
+      const completados = Object.values(resultadosActuales).filter(r => r.meta_alcanzada).length;
+      const porcentaje = total > 0 ? (completados / total) * 100 : 0;
+      
+      document.getElementById('progressText').textContent = `${completados}/${total} completados`;
+      document.getElementById('progressFill').style.width = `${porcentaje}%`;
+    }
+    
+    // Abrir juego en nueva pestaña
+    window.abrirJuego = function(url) {
+      window.open(url, '_blank');
+    };
+    
+    // Abrir modal de registro
+    window.abrirRegistro = function(juegoId, nombre, meta, tipoMeta) {
+      document.getElementById('registroJuegoId').value = juegoId;
+      document.getElementById('registroMeta').value = meta;
+      document.getElementById('registroTipoMeta').value = tipoMeta;
+      document.getElementById('modalJuegoNombre').textContent = nombre;
+      
+      const tipoLabel = TIPOS_META.find(t => t.value === tipoMeta)?.label || tipoMeta;
+      document.getElementById('labelResultado').textContent = `Tu resultado (${tipoLabel}):`;
+      
+      // Si ya hay resultado, mostrarlo
+      const resultadoExistente = resultadosActuales[juegoId];
+      document.getElementById('inputResultado').value = resultadoExistente ? resultadoExistente.resultado_obtenido : '';
+      
+      document.getElementById('modalRegistrar').classList.add('active');
+    };
+    
+    // Cerrar modal
+    window.cerrarModal = function() {
+      document.getElementById('modalRegistrar').classList.remove('active');
+    };
+    
+    // Guardar resultado
+    window.guardarResultado = async function() {
+      const juegoId = document.getElementById('registroJuegoId').value;
+      const meta = parseInt(document.getElementById('registroMeta').value);
+      const tipoMeta = document.getElementById('registroTipoMeta').value;
+      const resultado = parseInt(document.getElementById('inputResultado').value);
+      
+      if (isNaN(resultado) || resultado < 0) {
+        alert('Ingresa un resultado válido');
+        return;
+      }
+      
+      try {
+        const metaAlcanzada = resultado >= meta;
+        const porcentajeLogro = Math.min((resultado / meta) * 100, 100);
+        
+        await ResultadosAPI.registrar({
+          sesion_id: sesionActual.id,
+          juego_id: juegoId,
+          estudiante_id: usuarioActual.id,
+          resultado_obtenido: resultado,
+          meta_alcanzada: metaAlcanzada,
+          porcentaje_logro: porcentajeLogro
+        });
+        
+        // Recargar resultados
+        await cargarResultados();
+        renderizarJuegos();
+        actualizarProgreso();
+        cerrarModal();
+        
+        if (metaAlcanzada) {
+          alert('¡Excelente! Has alcanzado la meta.');
+        } else {
+          alert('Resultado guardado. ¡Sigue intentando para alcanzar la meta!');
+        }
+        
+      } catch (error) {
+        console.error('Error guardando resultado:', error);
+        alert('Error: ' + error.message);
+      }
+    };
+    
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') cerrarModal();
+    });
+    
+    // Iniciar
+    init();
+  </script>
+</body>
+</html>

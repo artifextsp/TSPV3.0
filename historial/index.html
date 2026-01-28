@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Historial - Thinking Skills Program</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+    }
+    
+    .btn-back {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    
+    .btn-back:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e2e8f0;
+      flex-wrap: wrap;
+    }
+    
+    .tab {
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 14px;
+      color: #718096;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .tab:hover {
+      color: #667eea;
+    }
+    
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 8px;
+    }
+    
+    .stat-label {
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    /* Session List */
+    .sessions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .session-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .session-info h3 {
+      font-size: 16px;
+      color: #2d3748;
+      margin-bottom: 4px;
+    }
+    
+    .session-info p {
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    .session-stats {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    
+    .session-stat {
+      text-align: center;
+    }
+    
+    .session-stat-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #2d3748;
+    }
+    
+    .session-stat-label {
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .badge-success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .badge-warning {
+      background: #feebc8;
+      color: #744210;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #718096;
+      background: white;
+      border-radius: 12px;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Mi Historial</h1>
+    <a href="../estudiante/dashboard.html" class="btn-back">← Volver al Dashboard</a>
+  </header>
+  
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" data-tab="lectura">Lectura Crítica</button>
+      <button class="tab" data-tab="creatividad">Creatividad</button>
+      <button class="tab" data-tab="ejercicios">Ejercicios Digitales</button>
+    </div>
+    
+    <!-- Tab: Lectura Crítica -->
+    <div id="tab-lectura" class="tab-content active">
+      <div class="stats-grid" id="statsLectura">
+        <div class="stat-card">
+          <div class="stat-value" id="lecturaTotal">0</div>
+          <div class="stat-label">Lecturas Completadas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="lecturaPromComprension">0%</div>
+          <div class="stat-label">Promedio Comprensión</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="lecturaPromVelocidad">0</div>
+          <div class="stat-label">Promedio Velocidad Efectiva</div>
+        </div>
+      </div>
+      
+      <h3 style="margin-bottom: 16px; color: #2d3748;">Sesiones Recientes</h3>
+      <div class="sessions-list" id="sessionesLectura">
+        <div class="empty-state">Cargando...</div>
+      </div>
+    </div>
+    
+    <!-- Tab: Creatividad -->
+    <div id="tab-creatividad" class="tab-content">
+      <div class="stats-grid" id="statsCreatividad">
+        <div class="stat-card">
+          <div class="stat-value" id="creatividadTotal">0</div>
+          <div class="stat-label">Actividades Completadas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="creatividadTiempo">0 min</div>
+          <div class="stat-label">Tiempo Total</div>
+        </div>
+      </div>
+      
+      <h3 style="margin-bottom: 16px; color: #2d3748;">Actividades Recientes</h3>
+      <div class="sessions-list" id="sessionesCreatividad">
+        <div class="empty-state">Cargando...</div>
+      </div>
+    </div>
+    
+    <!-- Tab: Ejercicios -->
+    <div id="tab-ejercicios" class="tab-content">
+      <div class="stats-grid" id="statsEjercicios">
+        <div class="stat-card">
+          <div class="stat-value" id="ejerciciosTotal">0</div>
+          <div class="stat-label">Juegos Jugados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="ejerciciosMetas">0</div>
+          <div class="stat-label">Metas Alcanzadas</div>
+        </div>
+      </div>
+      
+      <h3 style="margin-bottom: 16px; color: #2d3748;">Resultados Recientes</h3>
+      <div class="sessions-list" id="sessionesEjercicios">
+        <div class="empty-state">Cargando...</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getUser } from '../auth/auth.core.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    
+    const user = getUser();
+    
+    if (!user) {
+      window.location.href = '../index.html';
+    } else {
+      inicializarHistorial();
+    }
+    
+    // Sistema de pestañas
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        
+        if (tabName === 'lectura') {
+          cargarHistorialLectura();
+        } else if (tabName === 'creatividad') {
+          cargarHistorialCreatividad();
+        } else if (tabName === 'ejercicios') {
+          cargarHistorialEjercicios();
+        }
+      });
+    });
+    
+    async function inicializarHistorial() {
+      cargarHistorialLectura();
+    }
+    
+    // Cargar historial de lectura crítica
+    async function cargarHistorialLectura() {
+      const container = document.getElementById('sessionesLectura');
+      container.innerHTML = '<div class="empty-state">Cargando...</div>';
+      
+      try {
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_lectura?estudiante_id=eq.${user.id}&estado=eq.finalizada&select=*,ciclos_lectura(titulo,grado)&order=fecha_fin_sesion.desc`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) throw new Error('Error al cargar historial');
+        
+        const sesiones = await response.json();
+        
+        // Actualizar estadísticas
+        document.getElementById('lecturaTotal').textContent = sesiones.length;
+        
+        if (sesiones.length > 0) {
+          const promedioComprension = sesiones.reduce((acc, s) => acc + (s.porcentaje_comprension || 0), 0) / sesiones.length;
+          const promedioVelocidad = sesiones.reduce((acc, s) => acc + (s.velocidad_efectiva || 0), 0) / sesiones.length;
+          
+          document.getElementById('lecturaPromComprension').textContent = `${promedioComprension.toFixed(0)}%`;
+          document.getElementById('lecturaPromVelocidad').textContent = promedioVelocidad.toFixed(0);
+          
+          container.innerHTML = sesiones.map(s => `
+            <div class="session-card">
+              <div class="session-info">
+                <h3>${s.ciclos_lectura?.titulo || 'Sin título'}</h3>
+                <p>${formatearFecha(s.fecha_fin_sesion)}</p>
+              </div>
+              <div class="session-stats">
+                <div class="session-stat">
+                  <div class="session-stat-value">${(s.porcentaje_comprension || 0).toFixed(0)}%</div>
+                  <div class="session-stat-label">Comprensión</div>
+                </div>
+                <div class="session-stat">
+                  <div class="session-stat-value">${(s.velocidad_simple || 0).toFixed(0)}</div>
+                  <div class="session-stat-label">Palabras/min</div>
+                </div>
+                <div class="session-stat">
+                  <div class="session-stat-value">${(s.velocidad_efectiva || 0).toFixed(0)}</div>
+                  <div class="session-stat-label">Vel. Efectiva</div>
+                </div>
+              </div>
+              <span class="badge badge-success">Completado</span>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div class="empty-state">No tienes sesiones de lectura completadas aún</div>';
+        }
+        
+      } catch (error) {
+        console.error('Error cargando historial de lectura:', error);
+        container.innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Cargar historial de creatividad
+    async function cargarHistorialCreatividad() {
+      const container = document.getElementById('sessionesCreatividad');
+      container.innerHTML = '<div class="empty-state">Cargando...</div>';
+      
+      try {
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_creatividad?estudiante_id=eq.${user.id}&estado=eq.finalizada&select=*,ciclos_creatividad(titulo,grado)&order=fecha_fin_sesion.desc`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) throw new Error('Error al cargar historial');
+        
+        const sesiones = await response.json();
+        
+        // Actualizar estadísticas
+        document.getElementById('creatividadTotal').textContent = sesiones.length;
+        
+        if (sesiones.length > 0) {
+          const tiempoTotal = sesiones.reduce((acc, s) => acc + (s.tiempo_visualizacion_segundos || 0), 0);
+          document.getElementById('creatividadTiempo').textContent = `${Math.floor(tiempoTotal / 60)} min`;
+          
+          container.innerHTML = sesiones.map(s => `
+            <div class="session-card">
+              <div class="session-info">
+                <h3>${s.ciclos_creatividad?.titulo || 'Sin título'}</h3>
+                <p>${formatearFecha(s.fecha_fin_sesion)}</p>
+              </div>
+              <div class="session-stats">
+                <div class="session-stat">
+                  <div class="session-stat-value">${formatearTiempo(s.tiempo_visualizacion_segundos || 0)}</div>
+                  <div class="session-stat-label">Tiempo</div>
+                </div>
+              </div>
+              <span class="badge badge-success">Completado</span>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div class="empty-state">No tienes actividades de creatividad completadas aún</div>';
+        }
+        
+      } catch (error) {
+        console.error('Error cargando historial de creatividad:', error);
+        container.innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Formatear fecha
+    function formatearFecha(fechaStr) {
+      if (!fechaStr) return 'Fecha no disponible';
+      const fecha = new Date(fechaStr);
+      return fecha.toLocaleDateString('es-CO', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    // Formatear tiempo
+    function formatearTiempo(segundos) {
+      const mins = Math.floor(segundos / 60);
+      const secs = segundos % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // Cargar historial de ejercicios digitales
+    async function cargarHistorialEjercicios() {
+      const container = document.getElementById('sessionesEjercicios');
+      container.innerHTML = '<div class="empty-state">Cargando...</div>';
+      
+      try {
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/resultados_juegos?estudiante_id=eq.${user.id}&select=*,juegos_ejercicios:juego_id(nombre,habilidad_estimulada,meta_objetivo,tipo_meta)&order=fecha_registro.desc`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) throw new Error('Error al cargar historial');
+        
+        const resultados = await response.json();
+        
+        // Actualizar estadísticas
+        document.getElementById('ejerciciosTotal').textContent = resultados.length;
+        const metasAlcanzadas = resultados.filter(r => r.meta_alcanzada).length;
+        document.getElementById('ejerciciosMetas').textContent = metasAlcanzadas;
+        
+        if (resultados.length > 0) {
+          container.innerHTML = resultados.map(r => {
+            const juego = r.juegos_ejercicios || {};
+            return `
+              <div class="session-card">
+                <div class="session-info">
+                  <h3>${juego.nombre || 'Juego'}</h3>
+                  <p>${formatearFecha(r.fecha_registro)}</p>
+                </div>
+                <div class="session-stats">
+                  <div class="session-stat">
+                    <div class="session-stat-value">${r.resultado_obtenido}</div>
+                    <div class="session-stat-label">Resultado</div>
+                  </div>
+                  <div class="session-stat">
+                    <div class="session-stat-value">${juego.meta_objetivo || '-'}</div>
+                    <div class="session-stat-label">Meta</div>
+                  </div>
+                </div>
+                <span class="badge ${r.meta_alcanzada ? 'badge-success' : 'badge-warning'}">
+                  ${r.meta_alcanzada ? 'Meta Alcanzada' : 'En Progreso'}
+                </span>
+              </div>
+            `;
+          }).join('');
+        } else {
+          container.innerHTML = '<div class="empty-state">No tienes resultados de ejercicios aún</div>';
+        }
+        
+      } catch (error) {
+        console.error('Error cargando historial de ejercicios:', error);
+        container.innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>

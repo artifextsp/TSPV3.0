@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rankings - Lectura Crítica | TSP</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    
+    .btn-light {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .btn-light:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    
+    .toolbar select {
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    .rankings-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    
+    @media (max-width: 900px) {
+      .rankings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .ranking-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .ranking-card h2 {
+      font-size: 18px;
+      color: #1a202c;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #f7fafc;
+      border-radius: 8px;
+    }
+    
+    .ranking-position {
+      width: 32px;
+      height: 32px;
+      background: #667eea;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .ranking-position.gold { background: #f6ad55; }
+    .ranking-position.silver { background: #a0aec0; }
+    .ranking-position.bronze { background: #c77c4d; }
+    
+    .ranking-name {
+      flex: 1;
+      color: #2d3748;
+    }
+    
+    .ranking-code {
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .ranking-value {
+      font-weight: 600;
+      color: #667eea;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: #718096;
+    }
+    
+    .ciclo-info {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+    }
+    
+    .ciclo-info h2 {
+      color: #1a202c;
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    
+    .ciclo-info p {
+      color: #718096;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #718096;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingState" class="loading">
+    Cargando rankings...
+  </div>
+  
+  <div id="mainContent" class="hidden">
+    <header class="header">
+      <h1>🏆 Rankings - Lectura Crítica</h1>
+      <a href="../docente/dashboard.html" class="btn btn-light">← Volver</a>
+    </header>
+    
+    <main class="main-content">
+      <div class="toolbar">
+        <select id="filterGrado" onchange="cargarRankings()">
+          <option value="">Selecciona un grado</option>
+        </select>
+      </div>
+      
+      <div id="cicloInfo" class="ciclo-info hidden">
+        <h2 id="cicloTitulo">Ciclo activo</h2>
+        <p id="cicloMeta">Información del ciclo</p>
+      </div>
+      
+      <div class="rankings-grid">
+        <!-- Velocidad Efectiva -->
+        <div class="ranking-card">
+          <h2>🚀 Velocidad Efectiva</h2>
+          <div class="ranking-list" id="rankingVE">
+            <div class="empty-state">Selecciona un grado</div>
+          </div>
+        </div>
+        
+        <!-- Comprensión -->
+        <div class="ranking-card">
+          <h2>🧠 Comprensión</h2>
+          <div class="ranking-list" id="rankingComprension">
+            <div class="empty-state">Selecciona un grado</div>
+          </div>
+        </div>
+        
+        <!-- Velocidad Simple -->
+        <div class="ranking-card">
+          <h2>⚡ Velocidad Simple</h2>
+          <div class="ranking-list" id="rankingVS">
+            <div class="empty-state">Selecciona un grado</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { getUser } from '../auth/auth.core.js';
+    import { RankingsAPI, GRADOS } from './lectura.api.js';
+    
+    const loadingState = document.getElementById('loadingState');
+    const mainContent = document.getElementById('mainContent');
+    
+    // Verificar autenticación
+    const user = getUser();
+    
+    if (!user) {
+      window.location.href = '../index.html';
+    } else {
+      loadingState.classList.add('hidden');
+      mainContent.classList.remove('hidden');
+      
+      // Cargar grados en el select
+      const filterGrado = document.getElementById('filterGrado');
+      GRADOS.forEach(grado => {
+        filterGrado.innerHTML += `<option value="${grado.value}">${grado.label}</option>`;
+      });
+    }
+    
+    window.cargarRankings = async function() {
+      const grado = document.getElementById('filterGrado').value;
+      
+      if (!grado) {
+        document.getElementById('cicloInfo').classList.add('hidden');
+        document.getElementById('rankingVE').innerHTML = '<div class="empty-state">Selecciona un grado</div>';
+        document.getElementById('rankingComprension').innerHTML = '<div class="empty-state">Selecciona un grado</div>';
+        document.getElementById('rankingVS').innerHTML = '<div class="empty-state">Selecciona un grado</div>';
+        return;
+      }
+      
+      try {
+        const rankings = await RankingsAPI.rankingsPorGrado(grado, 5);
+        
+        if (!rankings || !rankings.ciclo) {
+          document.getElementById('cicloInfo').classList.add('hidden');
+          document.getElementById('rankingVE').innerHTML = '<div class="empty-state">No hay ciclo activo para este grado</div>';
+          document.getElementById('rankingComprension').innerHTML = '<div class="empty-state">No hay ciclo activo para este grado</div>';
+          document.getElementById('rankingVS').innerHTML = '<div class="empty-state">No hay ciclo activo para este grado</div>';
+          return;
+        }
+        
+        // Mostrar info del ciclo
+        document.getElementById('cicloInfo').classList.remove('hidden');
+        document.getElementById('cicloTitulo').textContent = `Ciclo #${rankings.ciclo.numero_ciclo}: ${rankings.ciclo.titulo}`;
+        document.getElementById('cicloMeta').textContent = `${rankings.ciclo.conteo_palabras} palabras • Lexile ${rankings.ciclo.lexile || 'N/A'}`;
+        
+        // Mostrar rankings
+        renderRanking('rankingVE', rankings.velocidadEfectiva, 'velocidad_efectiva', 'VE');
+        renderRanking('rankingComprension', rankings.comprension, 'porcentaje_comprension', '%');
+        renderRanking('rankingVS', rankings.velocidadSimple, 'velocidad_simple', 'PPM');
+        
+      } catch (error) {
+        console.error('Error cargando rankings:', error);
+      }
+    };
+    
+    function renderRanking(containerId, data, field, suffix) {
+      const container = document.getElementById(containerId);
+      
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-state">Sin datos aún</div>';
+        return;
+      }
+      
+      container.innerHTML = data.map((item, idx) => {
+        const positionClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
+        const nombre = item.usuarios ? `${item.usuarios.nombre} ${item.usuarios.apellidos || ''}` : 'Estudiante';
+        const codigo = item.usuarios?.codigo_estudiante || '';
+        const valor = (item[field] || 0).toFixed(field === 'porcentaje_comprension' ? 0 : 0);
+        
+        return `
+          <div class="ranking-item">
+            <div class="ranking-position ${positionClass}">${idx + 1}</div>
+            <div class="ranking-name">
+              ${nombre}
+              ${codigo ? `<div class="ranking-code">${codigo}</div>` : ''}
+            </div>
+            <div class="ranking-value">${valor} ${suffix}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>

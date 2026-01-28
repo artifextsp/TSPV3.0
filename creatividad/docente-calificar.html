@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calificar Creatividad - Docente</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 { font-size: 24px; }
+    
+    .btn-back {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    .filter-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .filter-bar select {
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      flex: 1;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #ed8936;
+    }
+    
+    .stat-label {
+      color: #718096;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .card-header {
+      background: #f7fafc;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .card-header h2 {
+      font-size: 18px;
+      color: #2d3748;
+    }
+    
+    table { width: 100%; border-collapse: collapse; }
+    
+    th, td {
+      padding: 14px 20px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    th {
+      background: #f7fafc;
+      font-weight: 600;
+      color: #4a5568;
+      font-size: 13px;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .badge-pending { background: #feebc8; color: #744210; }
+    .badge-graded { background: #c6f6d5; color: #22543d; }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      border: none;
+    }
+    
+    .btn-primary { background: #ed8936; color: white; }
+    .btn-primary:hover { background: #dd6b20; }
+    
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #718096;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active { display: flex; }
+    
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      padding: 24px;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .modal-header h2 { font-size: 20px; color: #2d3748; }
+    
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #718096;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #2d3748;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .grade-input {
+      font-size: 24px !important;
+      text-align: center;
+      max-width: 120px;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+    
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+    
+    .student-info {
+      background: #f7fafc;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .student-info h3 {
+      font-size: 16px;
+      color: #2d3748;
+      margin-bottom: 4px;
+    }
+    
+    .student-info p {
+      color: #718096;
+      font-size: 14px;
+    }
+    
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Calificar Creatividad</h1>
+    <a href="../docente/dashboard.html" class="btn-back">← Volver al Dashboard</a>
+  </header>
+  
+  <div class="container">
+    <div class="filter-bar">
+      <select id="filtroGrado" onchange="cargarPendientes()">
+        <option value="">Seleccionar grado...</option>
+      </select>
+      <span id="statusText" style="color: #718096; font-size: 14px;"></span>
+    </div>
+    
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="pendientesCount">0</div>
+        <div class="stat-label">Pendientes de Revisión</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="calificadosCount">0</div>
+        <div class="stat-label">Calificados Hoy</div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h2>Trabajos Pendientes de Calificación</h2>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Estudiante</th>
+            <th>Actividad</th>
+            <th>Fecha Solicitud</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="tablaPendientes">
+          <tr><td colspan="6" class="empty-state">Selecciona un grado para ver los trabajos pendientes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Modal Calificar -->
+  <div id="modalCalificar" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Calificar Trabajo</h2>
+        <button class="btn-close" onclick="cerrarModal()">&times;</button>
+      </div>
+      
+      <div class="student-info" id="studentInfo">
+        <h3 id="studentName">-</h3>
+        <p id="activityName">-</p>
+      </div>
+      
+      <form id="formCalificar">
+        <input type="hidden" id="sesionId">
+        
+        <div class="form-group">
+          <label>Calificación (0-100%)</label>
+          <input type="number" id="calificacion" class="grade-input" min="0" max="100" step="1" required placeholder="0">
+        </div>
+        
+        <div class="form-group">
+          <label>Comentario (opcional)</label>
+          <textarea id="comentario" rows="3" placeholder="Observaciones sobre el trabajo..."></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar Calificación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getUser } from '../auth/auth.core.js';
+    import { SesionesCreatividadAPI, GRADOS } from './creatividad.api.js';
+    
+    const user = getUser();
+    
+    if (!user || (user.tipo_usuario !== 'docente' && user.tipo_usuario !== 'admin' && user.tipo_usuario !== 'super_admin')) {
+      alert('No tienes permisos para acceder a esta página');
+      window.location.href = '../index.html';
+    }
+    
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarSelectGrados();
+      
+      document.getElementById('formCalificar').addEventListener('submit', guardarCalificacion);
+    });
+    
+    // Cargar grados en el select
+    function cargarSelectGrados() {
+      const select = document.getElementById('filtroGrado');
+      GRADOS.forEach(grado => {
+        const option = document.createElement('option');
+        option.value = grado.value;
+        option.textContent = grado.label;
+        select.appendChild(option);
+      });
+    }
+    
+    // Cargar trabajos pendientes
+    window.cargarPendientes = async function() {
+      const grado = document.getElementById('filtroGrado').value;
+      const tbody = document.getElementById('tablaPendientes');
+      
+      if (!grado) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Selecciona un grado</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+      
+      try {
+        const pendientes = await SesionesCreatividadAPI.obtenerPendientesRevision(grado);
+        
+        // Filtrar por grado del ciclo
+        const filtrados = pendientes.filter(s => 
+          s.ciclos_creatividad && s.ciclos_creatividad.grado === grado
+        );
+        
+        document.getElementById('pendientesCount').textContent = filtrados.length;
+        
+        if (filtrados.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay trabajos pendientes de calificación para este grado</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = filtrados.map(s => {
+          const estudiante = s.usuarios || {};
+          const ciclo = s.ciclos_creatividad || {};
+          const nombreCompleto = `${estudiante.nombre || ''} ${estudiante.apellidos || ''}`.trim();
+          const fechaSolicitud = s.fecha_solicitud_revision 
+            ? new Date(s.fecha_solicitud_revision).toLocaleDateString('es-CO')
+            : '-';
+          
+          return `
+            <tr>
+              <td><strong>${estudiante.codigo_estudiante || '-'}</strong></td>
+              <td>${nombreCompleto}</td>
+              <td>${ciclo.titulo || '-'}</td>
+              <td>${fechaSolicitud}</td>
+              <td><span class="badge badge-pending">Pendiente</span></td>
+              <td>
+                <button class="btn btn-primary" onclick="abrirCalificar('${s.id}', '${nombreCompleto}', '${ciclo.titulo || ''}')">
+                  Calificar
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+      } catch (error) {
+        console.error('Error cargando pendientes:', error);
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${error.message}</td></tr>`;
+      }
+    };
+    
+    // Abrir modal de calificación
+    window.abrirCalificar = function(sesionId, nombreEstudiante, actividad) {
+      document.getElementById('sesionId').value = sesionId;
+      document.getElementById('studentName').textContent = nombreEstudiante;
+      document.getElementById('activityName').textContent = actividad;
+      document.getElementById('calificacion').value = '';
+      document.getElementById('comentario').value = '';
+      document.getElementById('modalCalificar').classList.add('active');
+    };
+    
+    // Cerrar modal
+    window.cerrarModal = function() {
+      document.getElementById('modalCalificar').classList.remove('active');
+    };
+    
+    // Guardar calificación
+    async function guardarCalificacion(e) {
+      e.preventDefault();
+      
+      const sesionId = document.getElementById('sesionId').value;
+      const calificacion = parseFloat(document.getElementById('calificacion').value);
+      const comentario = document.getElementById('comentario').value.trim();
+      
+      if (isNaN(calificacion) || calificacion < 0 || calificacion > 100) {
+        alert('La calificación debe estar entre 0 y 100');
+        return;
+      }
+      
+      try {
+        await SesionesCreatividadAPI.calificarSesion(
+          sesionId,
+          user.id,
+          calificacion,
+          comentario || null
+        );
+        
+        alert('Calificación guardada exitosamente');
+        cerrarModal();
+        cargarPendientes();
+        
+      } catch (error) {
+        console.error('Error guardando calificación:', error);
+        alert('Error: ' + error.message);
+      }
+    }
+    
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') cerrarModal();
+    });
+  </script>
+</body>
+</html>

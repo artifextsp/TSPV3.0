@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Docente - Thinking Skills Program</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      padding: 20px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+    }
+    
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .btn-logout {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .btn-logout:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .main-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .welcome-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+    }
+    
+    .welcome-card h2 {
+      color: #1a202c;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    
+    .welcome-card p {
+      color: #718096;
+      margin-top: 4px;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .tab {
+      background: none;
+      border: none;
+      padding: 12px 24px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #718096;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    
+    .tab:hover {
+      color: #48bb78;
+    }
+    
+    .tab.active {
+      color: #48bb78;
+      border-bottom-color: #48bb78;
+      font-weight: 600;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .filter-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-group select {
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    thead {
+      background: #f7fafc;
+    }
+    
+    th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 14px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    td {
+      padding: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #4a5568;
+      font-size: 14px;
+    }
+    
+    tbody tr:hover {
+      background: #f7fafc;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .badge-success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .badge-danger {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+    
+    .badge-warning {
+      background: #feebc8;
+      color: #7c2d12;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    
+    .btn-primary {
+      background: #48bb78;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #38a169;
+    }
+    
+    .btn-warning {
+      background: #ed8936;
+      color: white;
+    }
+    
+    .btn-warning:hover {
+      background: #dd6b20;
+    }
+    
+    .btn-danger {
+      background: #e53e3e;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #c53030;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #718096;
+    }
+    
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    
+    .alert-success {
+      background: #c6f6d5;
+      color: #22543d;
+      border: 1px solid #9ae6b4;
+    }
+    
+    .alert-error {
+      background: #fed7d7;
+      color: #742a2a;
+      border: 1px solid #fc8181;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .modal-header h2 {
+      color: #1a202c;
+      font-size: 20px;
+    }
+    
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #718096;
+      line-height: 1;
+    }
+    
+    .btn-close:hover {
+      color: #2d3748;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #2d3748;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #718096;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card h3 {
+      color: #718096;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .stat-card .value {
+      color: #1a202c;
+      font-size: 32px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingState" class="loading">
+    Verificando sesión...
+  </div>
+  
+  <div id="dashboardContent" class="hidden">
+    <header class="header">
+      <h1>👨‍🏫 Dashboard Docente</h1>
+      <div class="header-info">
+        <span id="colegioInfo">Cargando...</span>
+        <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+      </div>
+    </header>
+    
+    <main class="main-content">
+      <div class="welcome-card">
+        <h2>¡Bienvenido, <span id="welcomeName">Docente</span>!</h2>
+        <p>Gestiona tus estudiantes, visualiza resultados y resetea contraseñas cuando sea necesario.</p>
+      </div>
+      
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <h3>Total Estudiantes</h3>
+          <div class="value" id="totalEstudiantes">-</div>
+        </div>
+        <div class="stat-card">
+          <h3>Estudiantes Activos</h3>
+          <div class="value" id="estudiantesActivos">-</div>
+        </div>
+      </div>
+      
+      <!-- Acceso a módulos -->
+      <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="../lectura-critica/rankings.html" 
+           style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; 
+                  border-radius: 8px; text-decoration: none; font-weight: 500;">
+          Ver Rankings de Lectura Crítica
+        </a>
+        <a href="../creatividad/docente-calificar.html" 
+           style="display: inline-block; padding: 12px 24px; background: #ed8936; color: white; 
+                  border-radius: 8px; text-decoration: none; font-weight: 500;">
+          Calificar Creatividad
+        </a>
+      </div>
+      
+      <div class="tabs">
+        <button class="tab active" data-tab="estudiantes">👨‍🎓 Estudiantes</button>
+        <button class="tab" data-tab="resultados">📊 Resultados</button>
+      </div>
+      
+      <!-- Tab: Estudiantes -->
+      <div id="tab-estudiantes" class="tab-content active">
+        <div class="toolbar">
+          <input type="text" class="search-box" id="searchEstudiantes" placeholder="Buscar por nombre, código o email...">
+          <div class="filter-group">
+            <select id="filterGrado">
+              <option value="">Todos los grados</option>
+            </select>
+            <select id="filterEstado">
+              <option value="">Todos los estados</option>
+              <option value="activo">Activos</option>
+              <option value="inactivo">Inactivos</option>
+            </select>
+          </div>
+        </div>
+        <div id="alertEstudiantes"></div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre Completo</th>
+                <th>Email</th>
+                <th>Grado</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyEstudiantes">
+              <tr><td colspan="6" class="empty-state">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Tab: Resultados -->
+      <div id="tab-resultados" class="tab-content">
+        <div class="welcome-card">
+          <h2>📊 Resultados en Tiempo Real</h2>
+          <p>Esta funcionalidad estará disponible próximamente. Aquí podrás ver los resultados de las prácticas de tus estudiantes en tiempo real.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Modal: Resetear Contraseña -->
+  <div id="modalResetPassword" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Resetear Contraseña</h2>
+        <button class="btn-close" onclick="cerrarModal('modalResetPassword')">&times;</button>
+      </div>
+      <form id="formResetPassword">
+        <input type="hidden" id="resetEstudianteId">
+        <div class="form-group">
+          <label>Estudiante</label>
+          <input type="text" id="resetEstudianteNombre" readonly>
+        </div>
+        <div class="form-group">
+          <label>Nueva Contraseña</label>
+          <input type="text" id="resetPassword" value="123456" placeholder="123456">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="cerrarModal('modalResetPassword')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Resetear</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireRole, getUser, logout } from '../auth/auth.core.js';
+    import { DocentesAPI } from '../admin/admin.api.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    
+    const loadingState = document.getElementById('loadingState');
+    const dashboardContent = document.getElementById('dashboardContent');
+    const welcomeName = document.getElementById('welcomeName');
+    const colegioInfo = document.getElementById('colegioInfo');
+    const btnLogout = document.getElementById('btnLogout');
+    
+    // Solo docentes pueden acceder
+    const user = requireRole('docente');
+    
+    if (!user) {
+      loadingState.textContent = 'Redirigiendo al login...';
+    } else {
+      loadingState.classList.add('hidden');
+      dashboardContent.classList.remove('hidden');
+      
+      welcomeName.textContent = user.nombre || 'Docente';
+      
+      // Cargar información del colegio
+      cargarInfoColegio();
+      
+      // Inicializar tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const tabName = tab.dataset.tab;
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById(`tab-${tabName}`).classList.add('active');
+          
+          if (tabName === 'estudiantes') {
+            cargarEstudiantes();
+          }
+        });
+      });
+      
+      // Cargar estudiantes inicialmente
+      cargarEstudiantes();
+      cargarGrados();
+      
+      // Búsqueda y filtros
+      document.getElementById('searchEstudiantes').addEventListener('input', (e) => {
+        cargarEstudiantes(e.target.value);
+      });
+      
+      document.getElementById('filterGrado').addEventListener('change', () => {
+        cargarEstudiantes();
+      });
+      
+      document.getElementById('filterEstado').addEventListener('change', () => {
+        cargarEstudiantes();
+      });
+      
+      // Formulario resetear contraseña
+      document.getElementById('formResetPassword').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const estudianteId = document.getElementById('resetEstudianteId').value;
+        const nuevaPassword = document.getElementById('resetPassword').value || '123456';
+        
+        try {
+          await DocentesAPI.resetearPasswordEstudiante(estudianteId, nuevaPassword);
+          mostrarAlerta('alertEstudiantes', `Contraseña reseteada correctamente. Nueva contraseña: ${nuevaPassword}`, 'success');
+          cerrarModal('modalResetPassword');
+          cargarEstudiantes();
+        } catch (error) {
+          console.error('Error reseteando contraseña:', error);
+          mostrarAlerta('alertEstudiantes', `Error: ${error.message}`, 'error');
+        }
+      });
+      
+      btnLogout.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+          logout();
+        }
+      });
+    }
+    
+    async function cargarInfoColegio() {
+      try {
+        const asociacion = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/docentes_colegios?docente_id=eq.${user.id}&select=colegios(id,codigo,nombre)`, {
+          headers: {
+            'apikey': CONFIG.SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+          }
+        }).then(r => r.json());
+        
+        if (asociacion && asociacion.length > 0 && asociacion[0].colegios) {
+          const colegio = asociacion[0].colegios;
+          colegioInfo.textContent = `${colegio.codigo} - ${colegio.nombre}`;
+        } else {
+          colegioInfo.textContent = 'Sin colegio asignado';
+        }
+      } catch (error) {
+        console.error('Error cargando información del colegio:', error);
+        colegioInfo.textContent = 'Error cargando colegio';
+      }
+    }
+    
+    async function cargarEstudiantes(buscar = '') {
+      const tbody = document.getElementById('tbodyEstudiantes');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+      
+      try {
+        // Obtener estudiantes del colegio del docente
+        const estudiantes = await DocentesAPI.obtenerEstudiantesDelColegio(user.id);
+        
+        // Aplicar filtros
+        let estudiantesFiltrados = estudiantes;
+        
+        // Filtro de búsqueda
+        if (buscar) {
+          const busqueda = buscar.toLowerCase();
+          estudiantesFiltrados = estudiantesFiltrados.filter(est => 
+            (est.nombre && est.nombre.toLowerCase().includes(busqueda)) ||
+            (est.apellidos && est.apellidos.toLowerCase().includes(busqueda)) ||
+            (est.codigo_estudiante && est.codigo_estudiante.toLowerCase().includes(busqueda)) ||
+            (est.email && est.email.toLowerCase().includes(busqueda))
+          );
+        }
+        
+        // Filtro de grado
+        const gradoFilter = document.getElementById('filterGrado').value;
+        if (gradoFilter) {
+          estudiantesFiltrados = estudiantesFiltrados.filter(est => est.grado === gradoFilter);
+        }
+        
+        // Filtro de estado
+        const estadoFilter = document.getElementById('filterEstado').value;
+        if (estadoFilter === 'activo') {
+          estudiantesFiltrados = estudiantesFiltrados.filter(est => est.activo === true);
+        } else if (estadoFilter === 'inactivo') {
+          estudiantesFiltrados = estudiantesFiltrados.filter(est => est.activo === false);
+        }
+        
+        // Actualizar estadísticas
+        document.getElementById('totalEstudiantes').textContent = estudiantes.length;
+        document.getElementById('estudiantesActivos').textContent = estudiantes.filter(e => e.activo).length;
+        
+        if (estudiantesFiltrados.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay estudiantes que coincidan con los filtros</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = estudiantesFiltrados.map(est => `
+          <tr>
+            <td>${est.codigo_estudiante || '-'}</td>
+            <td>${est.nombre} ${est.apellidos || ''}</td>
+            <td>${est.email || '-'}</td>
+            <td>${est.grado || '-'}</td>
+            <td>
+              <span class="badge ${est.activo ? 'badge-success' : 'badge-danger'}">
+                ${est.activo ? 'Activo' : 'Inactivo'}
+              </span>
+            </td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-sm btn-warning" onclick="abrirModalResetPassword('${est.id}', '${est.nombre} ${est.apellidos || ''}')">
+                  Resetear Password
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error cargando estudiantes:', error);
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${error.message}</td></tr>`;
+      }
+    }
+    
+    async function cargarGrados() {
+      try {
+        const estudiantes = await DocentesAPI.obtenerEstudiantesDelColegio(user.id);
+        const grados = [...new Set(estudiantes.map(e => e.grado).filter(Boolean))].sort();
+        const select = document.getElementById('filterGrado');
+        grados.forEach(grado => {
+          const option = document.createElement('option');
+          option.value = grado;
+          option.textContent = grado;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Error cargando grados:', error);
+      }
+    }
+    
+    window.abrirModalResetPassword = function(estudianteId, estudianteNombre) {
+      document.getElementById('resetEstudianteId').value = estudianteId;
+      document.getElementById('resetEstudianteNombre').value = estudianteNombre;
+      document.getElementById('resetPassword').value = '123456';
+      document.getElementById('modalResetPassword').classList.add('active');
+    };
+    
+    window.cerrarModal = function(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    };
+    
+    function mostrarAlerta(containerId, mensaje, tipo) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

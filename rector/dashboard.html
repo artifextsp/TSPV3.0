@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Rector - Thinking Skills Program</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      color: white;
+      padding: 20px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    
+    .header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .welcome-card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+    }
+    
+    .welcome-card h2 {
+      color: #1a202c;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    
+    .btn-logout {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    
+    .btn-logout:hover {
+      background: #c53030;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #718096;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingState" class="loading">
+    Verificando sesión...
+  </div>
+  
+  <div id="dashboardContent" class="hidden">
+    <header class="header">
+      <h1>🎓 Dashboard Rector</h1>
+      <p>Thinking Skills Program</p>
+    </header>
+    
+    <main class="main-content">
+      <div class="welcome-card">
+        <h2>¡Bienvenido, <span id="welcomeName">Rector</span>!</h2>
+        <p style="color: #718096; margin-top: 8px;">
+          Aquí podrás visualizar resultados y estadísticas generales del programa.
+        </p>
+        <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+      </div>
+      
+      <div class="welcome-card">
+        <h3 style="color: #1a202c; margin-bottom: 16px;">Funciones Disponibles</h3>
+        <ul style="color: #718096; margin-left: 20px; line-height: 1.8;">
+          <li>Visualizar estadísticas generales</li>
+          <li>Ver resultados de todos los estudiantes</li>
+          <li>Análisis por grado, grupo y docente</li>
+          <li>Generar reportes completos</li>
+        </ul>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireRole, getUser, logout } from '../auth/auth.core.js';
+    
+    const loadingState = document.getElementById('loadingState');
+    const dashboardContent = document.getElementById('dashboardContent');
+    const welcomeName = document.getElementById('welcomeName');
+    const btnLogout = document.getElementById('btnLogout');
+    
+    // Solo rectores pueden acceder
+    const user = requireRole('rector');
+    
+    if (!user) {
+      loadingState.textContent = 'Redirigiendo al login...';
+    } else {
+      loadingState.classList.add('hidden');
+      dashboardContent.classList.remove('hidden');
+      
+      welcomeName.textContent = user.nombre || 'Rector';
+      
+      btnLogout.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+          logout();
+        }
+      });
+    }
+  </script>
+</body>
+</html>
