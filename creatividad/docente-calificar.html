@@ -331,7 +331,13 @@
     
     const user = getUser();
     
-    if (!user || (user.tipo_usuario !== 'docente' && user.tipo_usuario !== 'admin' && user.tipo_usuario !== 'super_admin')) {
+    // Verificar permisos - el rol puede estar en 'role' o 'tipo_usuario'
+    const userRole = (user?.role || user?.tipo_usuario || '').toLowerCase();
+    const rolesPermitidos = ['docente', 'admin', 'super_admin', 'administrador', 'rector'];
+    
+    if (!user || !rolesPermitidos.includes(userRole)) {
+      console.log('Usuario:', user);
+      console.log('Rol detectado:', userRole);
       alert('No tienes permisos para acceder a esta página');
       window.location.href = '../index.html';
     }

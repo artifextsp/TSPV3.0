@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rankings - Creatividad | TSP</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 { font-size: 24px; }
+    
+    .btn-light {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    
+    .toolbar select {
+      padding: 10px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+    }
+    
+    .rankings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+    }
+    
+    .ranking-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .ranking-card h2 {
+      font-size: 18px;
+      color: #1a202c;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #f7fafc;
+      border-radius: 8px;
+    }
+    
+    .ranking-position {
+      width: 32px;
+      height: 32px;
+      background: #9f7aea;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .ranking-position.gold { background: linear-gradient(135deg, #f6e05e 0%, #d69e2e 100%); }
+    .ranking-position.silver { background: linear-gradient(135deg, #a0aec0 0%, #718096 100%); }
+    .ranking-position.bronze { background: linear-gradient(135deg, #ed8936 0%, #c05621 100%); }
+    
+    .ranking-name {
+      flex: 1;
+      color: #2d3748;
+    }
+    
+    .ranking-code {
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .ranking-value {
+      font-weight: 600;
+      color: #9f7aea;
+      font-size: 16px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: #718096;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 18px;
+      color: #718096;
+    }
+    
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="loadingState" class="loading">Cargando rankings...</div>
+  
+  <div id="mainContent" class="hidden">
+    <header class="header">
+      <h1>🏆 Rankings - Creatividad</h1>
+      <a href="../docente/dashboard.html" class="btn-light">← Volver</a>
+    </header>
+    
+    <main class="main-content">
+      <div class="toolbar">
+        <select id="filterGrado" onchange="cargarRankings()">
+          <option value="">Selecciona un grado</option>
+        </select>
+      </div>
+      
+      <div class="rankings-grid">
+        <div class="ranking-card">
+          <h2>🎨 Mejores Calificaciones en Creatividad</h2>
+          <div class="ranking-list" id="rankingCalificacion">
+            <div class="empty-state">Selecciona un grado</div>
+          </div>
+        </div>
+        
+        <div class="ranking-card">
+          <h2>⏱️ Mayor Tiempo de Visualización</h2>
+          <div class="ranking-list" id="rankingTiempo">
+            <div class="empty-state">Selecciona un grado</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { getUser } from '../auth/auth.core.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    
+    const GRADOS = [
+      { value: 'tercero', label: '3° Tercero' },
+      { value: 'cuarto', label: '4° Cuarto' },
+      { value: 'quinto', label: '5° Quinto' },
+      { value: 'sexto', label: '6° Sexto' },
+      { value: 'septimo', label: '7° Séptimo' },
+      { value: 'octavo', label: '8° Octavo' },
+      { value: 'noveno', label: '9° Noveno' },
+      { value: 'decimo', label: '10° Décimo' },
+      { value: 'undecimo', label: '11° Undécimo' }
+    ];
+    
+    const user = getUser();
+    
+    if (!user) {
+      window.location.href = '../index.html';
+    } else {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
+      
+      const filterGrado = document.getElementById('filterGrado');
+      GRADOS.forEach(g => {
+        filterGrado.innerHTML += `<option value="${g.value}">${g.label}</option>`;
+      });
+    }
+    
+    window.cargarRankings = async function() {
+      const grado = document.getElementById('filterGrado').value;
+      
+      if (!grado) {
+        document.getElementById('rankingCalificacion').innerHTML = '<div class="empty-state">Selecciona un grado</div>';
+        document.getElementById('rankingTiempo').innerHTML = '<div class="empty-state">Selecciona un grado</div>';
+        return;
+      }
+      
+      document.getElementById('rankingCalificacion').innerHTML = '<div class="empty-state">Cargando...</div>';
+      document.getElementById('rankingTiempo').innerHTML = '<div class="empty-state">Cargando...</div>';
+      
+      try {
+        // Obtener sesiones calificadas
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_creatividad?estado=eq.calificada&select=*,usuarios:estudiante_id(id,nombre,apellidos,codigo_estudiante,grado),ciclos_creatividad:ciclo_id(grado)`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) throw new Error('Error al cargar datos');
+        
+        const sesiones = await response.json();
+        
+        // Filtrar por grado
+        const sesionesGrado = sesiones.filter(s => 
+          s.usuarios?.grado === grado || s.ciclos_creatividad?.grado === grado
+        );
+        
+        if (sesionesGrado.length === 0) {
+          document.getElementById('rankingCalificacion').innerHTML = '<div class="empty-state">No hay datos para este grado</div>';
+          document.getElementById('rankingTiempo').innerHTML = '<div class="empty-state">No hay datos para este grado</div>';
+          return;
+        }
+        
+        // Ranking por calificación
+        const rankingCalif = [...sesionesGrado]
+          .filter(s => s.calificacion_docente != null)
+          .sort((a, b) => b.calificacion_docente - a.calificacion_docente)
+          .slice(0, 10);
+        
+        // Ranking por tiempo
+        const rankingTiempo = [...sesionesGrado]
+          .filter(s => s.tiempo_visualizacion_segundos > 0)
+          .sort((a, b) => b.tiempo_visualizacion_segundos - a.tiempo_visualizacion_segundos)
+          .slice(0, 10);
+        
+        renderRanking('rankingCalificacion', rankingCalif, 'calificacion_docente', '%');
+        renderRankingTiempo('rankingTiempo', rankingTiempo);
+        
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('rankingCalificacion').innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
+      }
+    };
+    
+    function renderRanking(containerId, data, field, suffix) {
+      const container = document.getElementById(containerId);
+      
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-state">Sin datos aún</div>';
+        return;
+      }
+      
+      container.innerHTML = data.map((item, idx) => {
+        const positionClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
+        const nombre = item.usuarios ? `${item.usuarios.nombre} ${item.usuarios.apellidos || ''}`.trim() : 'Estudiante';
+        const codigo = item.usuarios?.codigo_estudiante || '';
+        const valor = item[field] || 0;
+        
+        return `
+          <div class="ranking-item">
+            <div class="ranking-position ${positionClass}">${idx + 1}</div>
+            <div class="ranking-name">
+              ${nombre}
+              ${codigo ? `<div class="ranking-code">${codigo}</div>` : ''}
+            </div>
+            <div class="ranking-value">${valor}${suffix}</div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function renderRankingTiempo(containerId, data) {
+      const container = document.getElementById(containerId);
+      
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-state">Sin datos aún</div>';
+        return;
+      }
+      
+      container.innerHTML = data.map((item, idx) => {
+        const positionClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
+        const nombre = item.usuarios ? `${item.usuarios.nombre} ${item.usuarios.apellidos || ''}`.trim() : 'Estudiante';
+        const codigo = item.usuarios?.codigo_estudiante || '';
+        const segundos = item.tiempo_visualizacion_segundos || 0;
+        const mins = Math.floor(segundos / 60);
+        const secs = segundos % 60;
+        const tiempo = `${mins}:${secs.toString().padStart(2, '0')}`;
+        
+        return `
+          <div class="ranking-item">
+            <div class="ranking-position ${positionClass}">${idx + 1}</div>
+            <div class="ranking-name">
+              ${nombre}
+              ${codigo ? `<div class="ranking-code">${codigo}</div>` : ''}
+            </div>
+            <div class="ranking-value">${tiempo}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
