@@ -249,6 +249,16 @@ export const SesionesEjerciciosAPI = {
   },
 
   async permitirRepetir(cicloId, estudianteId) {
+    // Primero obtener la sesión para eliminar sus resultados
+    const sesion = await this.obtenerSesion(cicloId, estudianteId);
+    if (sesion) {
+      // Eliminar resultados de esta sesión
+      await apiRequest(
+        `${TABLES.RESULTADOS}?sesion_id=eq.${sesion.id}`,
+        { method: 'DELETE' }
+      );
+    }
+    // Eliminar la sesión
     return await apiRequest(
       `${TABLES.SESIONES}?ciclo_id=eq.${cicloId}&estudiante_id=eq.${estudianteId}`,
       { method: 'DELETE' }

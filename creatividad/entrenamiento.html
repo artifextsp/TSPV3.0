@@ -629,7 +629,7 @@
       // Para PDF, el zoom se maneja dentro del iframe
     }
     
-    // Finalizar actividad
+    // Finalizar actividad - ahora muestra directamente el botón de solicitar revisión
     window.finalizarActividad = async function() {
       if (!confirm('¿Confirmas que has terminado de visualizar el contenido?')) return;
       
@@ -638,8 +638,8 @@
         
         await SesionesCreatividadAPI.finalizarSesion(sesionActual.id, tiempoTotal);
         
-        alert('¡Actividad completada! Ahora puedes continuar con el siguiente módulo.');
-        window.location.href = '../estudiante/dashboard.html';
+        // Mostrar directamente el estado para solicitar revisión
+        mostrarEstado('completedState');
         
       } catch (error) {
         console.error('Error finalizando:', error);

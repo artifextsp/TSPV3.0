@@ -487,11 +487,45 @@
       </div>
     </div>
   </div>
+  
+  <!-- Modal: Ver Sesiones -->
+  <div id="modalVerSesiones" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header">
+        <h2 id="modalSesionesTitulo">Sesiones del Ciclo</h2>
+        <button class="btn-close" onclick="cerrarModal('modalVerSesiones')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 16px; color: #718096; font-size: 14px;">
+          Aquí puedes ver los estudiantes que han iniciado este ciclo y permitirles repetir si es necesario.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Estudiante</th>
+              <th>Grado</th>
+              <th>Estado</th>
+              <th>Juegos Completados</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaSesiones">
+            <tr><td colspan="6" class="empty-state">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalVerSesiones')">Cerrar</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
-    import { CiclosEjerciciosAPI, JuegosAPI, GRADOS, HABILIDADES, TIPOS_META } from './ejercicios.api.js';
+    import { CiclosEjerciciosAPI, JuegosAPI, SesionesEjerciciosAPI, ResultadosAPI, GRADOS, HABILIDADES, TIPOS_META } from './ejercicios.api.js';
     
     let cicloActualId = null;
+    let cicloSesionesId = null;
     
     document.addEventListener('DOMContentLoaded', () => {
       cargarSelectGrados();
@@ -573,6 +607,7 @@
               </td>
               <td class="actions">
                 <button class="btn btn-sm btn-primary" onclick="verJuegos('${ciclo.id}', '${ciclo.titulo}')">Ver Juegos</button>
+                <button class="btn btn-sm" style="background:#ed8936;color:white;" onclick="verSesiones('${ciclo.id}', '${ciclo.titulo}')">Ver Sesiones</button>
                 <button class="btn btn-sm" style="background:#805ad5;color:white;" onclick="abrirEditarCiclo('${ciclo.id}')">Editar</button>
                 <button class="btn btn-sm" style="background:#3182ce;color:white;" onclick="abrirCopiarCiclo('${ciclo.id}','${ciclo.grado}')">Copiar</button>
                 ${ciclo.activo ?
@@ -875,6 +910,83 @@
       }
     };
     
+    // ============================================
+    // SESIONES
+    // ============================================
+    
+    window.verSesiones = async function(cicloId, titulo) {
+      cicloSesionesId = cicloId;
+      document.getElementById('modalSesionesTitulo').textContent = `Sesiones: ${titulo}`;
+      document.getElementById('modalVerSesiones').classList.add('active');
+      
+      await cargarSesiones(cicloId);
+    };
+    
+    async function cargarSesiones(cicloId) {
+      const tbody = document.getElementById('tablaSesiones');
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+      
+      try {
+        const sesiones = await SesionesEjerciciosAPI.listarPorCiclo(cicloId);
+        
+        if (!sesiones || sesiones.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay estudiantes que hayan iniciado este ciclo.</td></tr>';
+          return;
+        }
+        
+        // Obtener juegos del ciclo para contar
+        const juegos = await JuegosAPI.listarPorCiclo(cicloId);
+        const totalJuegos = juegos ? juegos.length : 0;
+        
+        // Para cada sesión, contar resultados
+        const sesionesConResultados = await Promise.all(sesiones.map(async (s) => {
+          const resultados = await ResultadosAPI.obtenerPorSesion(s.id);
+          const juegosCompletados = resultados ? resultados.filter(r => r.meta_alcanzada).length : 0;
+          return { ...s, juegosCompletados, totalResultados: resultados ? resultados.length : 0 };
+        }));
+        
+        tbody.innerHTML = sesionesConResultados.map(s => {
+          const estudiante = s.usuarios || {};
+          const nombreCompleto = `${estudiante.nombre || ''} ${estudiante.apellidos || ''}`.trim();
+          const estadoBadge = s.estado === 'finalizada' 
+            ? '<span class="badge badge-active">Finalizado</span>' 
+            : '<span class="badge" style="background:#feebc8;color:#744210;">En Progreso</span>';
+          
+          return `
+            <tr>
+              <td><strong>${estudiante.codigo_estudiante || '-'}</strong></td>
+              <td>${nombreCompleto}</td>
+              <td>${estudiante.grado || '-'}</td>
+              <td>${estadoBadge}</td>
+              <td>${s.juegosCompletados}/${totalJuegos} metas alcanzadas</td>
+              <td class="actions">
+                <button class="btn btn-sm" style="background:#ed8936;color:white;" onclick="permitirRepetirEjercicios('${cicloSesionesId}', '${estudiante.id}', '${nombreCompleto}')">
+                  Permitir Repetir
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+      } catch (error) {
+        console.error('Error cargando sesiones:', error);
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color:#e53e3e;">Error: ${error.message}</td></tr>`;
+      }
+    }
+    
+    window.permitirRepetirEjercicios = async function(cicloId, estudianteId, nombreEstudiante) {
+      if (!confirm(`¿Permitir que "${nombreEstudiante}" repita este ciclo?\n\nEsto eliminará todos sus resultados anteriores.`)) return;
+      
+      try {
+        await SesionesEjerciciosAPI.permitirRepetir(cicloId, estudianteId);
+        mostrarAlerta('alertContainer', `Se permitió a ${nombreEstudiante} repetir el ciclo`, 'success');
+        await cargarSesiones(cicloId);
+      } catch (error) {
+        console.error('Error permitiendo repetir:', error);
+        alert('Error: ' + error.message);
+      }
+    };
+    
     window.cerrarModal = function(id) {
       document.getElementById(id).classList.remove('active');
       // Limpiar alertas si existen
@@ -903,6 +1015,21 @@
         const modalVerJuegos = document.getElementById('modalVerJuegos');
         if (modalVerJuegos.classList.contains('active')) {
           cerrarModal('modalVerJuegos');
+          return;
+        }
+        const modalVerSesiones = document.getElementById('modalVerSesiones');
+        if (modalVerSesiones && modalVerSesiones.classList.contains('active')) {
+          cerrarModal('modalVerSesiones');
+          return;
+        }
+        const modalEditarCiclo = document.getElementById('modalEditarCiclo');
+        if (modalEditarCiclo && modalEditarCiclo.classList.contains('active')) {
+          cerrarModal('modalEditarCiclo');
+          return;
+        }
+        const modalCopiarCiclo = document.getElementById('modalCopiarCiclo');
+        if (modalCopiarCiclo && modalCopiarCiclo.classList.contains('active')) {
+          cerrarModal('modalCopiarCiclo');
           return;
         }
         const modalCiclo = document.getElementById('modalCiclo');

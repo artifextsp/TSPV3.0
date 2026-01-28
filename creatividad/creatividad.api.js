@@ -297,11 +297,19 @@ export const SesionesCreatividadAPI = {
   },
 
   /**
-   * Obtener sesiones pendientes de revisión por grado
+   * Obtener sesiones pendientes de revisión (todas o por grado)
    */
-  async obtenerPendientesRevision(grado) {
+  async obtenerPendientesRevision(grado = null) {
+    let query = `${TABLES.SESIONES}?estado=eq.pendiente_revision&select=*,usuarios:estudiante_id(id,nombre,apellidos,codigo_estudiante,grado),ciclos_creatividad:ciclo_id(titulo,grado)&order=fecha_solicitud_revision.asc.nullslast`;
+    return await apiRequest(query);
+  },
+  
+  /**
+   * Obtener todas las sesiones pendientes (sin filtro de grado)
+   */
+  async obtenerTodasPendientes() {
     return await apiRequest(
-      `${TABLES.SESIONES}?estado=eq.pendiente_revision&select=*,usuarios:estudiante_id(id,nombre,apellidos,codigo_estudiante,grado),ciclos_creatividad:ciclo_id(titulo,grado)&ciclos_creatividad.grado=eq.${grado}&order=fecha_solicitud_revision.asc`
+      `${TABLES.SESIONES}?estado=eq.pendiente_revision&select=id,estudiante_id,usuarios:estudiante_id(nombre,apellidos,grado)`
     );
   },
 

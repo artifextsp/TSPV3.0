@@ -90,7 +90,7 @@
     /* Stats Cards */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
@@ -113,6 +113,144 @@
     .stat-label {
       color: #718096;
       font-size: 14px;
+    }
+    
+    .stat-card.highlight {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-card.highlight .stat-value,
+    .stat-card.highlight .stat-label {
+      color: white;
+    }
+    
+    /* Grado alcanzado badge */
+    .grade-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    
+    /* Porcentaje rendimiento */
+    .performance-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .performance-high {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .performance-medium {
+      background: #feebc8;
+      color: #744210;
+    }
+    
+    .performance-low {
+      background: #fed7d7;
+      color: #742a2a;
+    }
+    
+    /* Ranking section */
+    .ranking-section {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .ranking-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .ranking-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    
+    .ranking-card {
+      background: #f7fafc;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    
+    .ranking-card h4 {
+      font-size: 14px;
+      color: #667eea;
+      margin-bottom: 12px;
+    }
+    
+    .ranking-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .ranking-item:last-child {
+      border-bottom: none;
+    }
+    
+    .ranking-position {
+      width: 24px;
+      height: 24px;
+      background: #667eea;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .ranking-position.gold {
+      background: linear-gradient(135deg, #f6e05e 0%, #d69e2e 100%);
+    }
+    
+    .ranking-position.silver {
+      background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+    }
+    
+    .ranking-position.bronze {
+      background: linear-gradient(135deg, #ed8936 0%, #c05621 100%);
+    }
+    
+    .ranking-name {
+      flex: 1;
+      margin-left: 12px;
+      font-size: 13px;
+      color: #2d3748;
+    }
+    
+    .ranking-value {
+      font-weight: 600;
+      color: #667eea;
+      font-size: 13px;
+    }
+    
+    .my-position {
+      background: rgba(102, 126, 234, 0.1);
+      border: 1px solid #667eea;
+      border-radius: 6px;
     }
     
     /* Session List */
@@ -224,11 +362,23 @@
           <div class="stat-value" id="lecturaPromVelocidad">0</div>
           <div class="stat-label">Promedio Velocidad Efectiva</div>
         </div>
+        <div class="stat-card highlight">
+          <div class="stat-value" id="lecturaGradoAlcanzado">-</div>
+          <div class="stat-label">Nivel de Grado Alcanzado</div>
+        </div>
       </div>
       
       <h3 style="margin-bottom: 16px; color: #2d3748;">Sesiones Recientes</h3>
       <div class="sessions-list" id="sessionesLectura">
         <div class="empty-state">Cargando...</div>
+      </div>
+      
+      <!-- Rankings de Lectura Crítica -->
+      <div class="ranking-section" id="rankingLectura">
+        <div class="ranking-title">🏆 Tu Posición en los Rankings</div>
+        <div class="ranking-grid" id="rankingLecturaGrid">
+          <div class="empty-state">Cargando rankings...</div>
+        </div>
       </div>
     </div>
     
@@ -242,6 +392,10 @@
         <div class="stat-card">
           <div class="stat-value" id="creatividadTiempo">0 min</div>
           <div class="stat-label">Tiempo Total</div>
+        </div>
+        <div class="stat-card highlight">
+          <div class="stat-value" id="creatividadPromedio">-%</div>
+          <div class="stat-label">Promedio Calificación</div>
         </div>
       </div>
       
@@ -262,11 +416,23 @@
           <div class="stat-value" id="ejerciciosMetas">0</div>
           <div class="stat-label">Metas Alcanzadas</div>
         </div>
+        <div class="stat-card highlight">
+          <div class="stat-value" id="ejerciciosPromedio">0%</div>
+          <div class="stat-label">Promedio Rendimiento</div>
+        </div>
       </div>
       
       <h3 style="margin-bottom: 16px; color: #2d3748;">Resultados Recientes</h3>
       <div class="sessions-list" id="sessionesEjercicios">
         <div class="empty-state">Cargando...</div>
+      </div>
+      
+      <!-- Rankings de Ejercicios -->
+      <div class="ranking-section" id="rankingEjercicios">
+        <div class="ranking-title">🏆 Tu Posición en los Rankings</div>
+        <div class="ranking-grid" id="rankingEjerciciosGrid">
+          <div class="empty-state">Cargando rankings...</div>
+        </div>
       </div>
     </div>
   </div>
@@ -308,6 +474,35 @@
       cargarHistorialLectura();
     }
     
+    // Función para calcular el grado alcanzado según velocidad efectiva
+    function calcularGradoAlcanzado(velocidadEfectiva) {
+      if (velocidadEfectiva >= 141) return '11°';
+      if (velocidadEfectiva >= 126) return '10°';
+      if (velocidadEfectiva >= 111) return '9°';
+      if (velocidadEfectiva >= 86) return '8°';
+      if (velocidadEfectiva >= 76) return '7°';
+      if (velocidadEfectiva >= 56) return '6°';
+      if (velocidadEfectiva >= 46) return '5°';
+      if (velocidadEfectiva >= 31) return '4°';
+      if (velocidadEfectiva >= 21) return '3°';
+      return '2°';
+    }
+    
+    // Función para obtener el grado del usuario
+    async function obtenerGradoUsuario() {
+      let grado = user.grado;
+      if (!grado) {
+        try {
+          const resp = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}&select=grado`, {
+            headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` }
+          });
+          const data = await resp.json();
+          if (data && data[0]) grado = data[0].grado;
+        } catch (e) {}
+      }
+      return grado;
+    }
+    
     // Cargar historial de lectura crítica
     async function cargarHistorialLectura() {
       const container = document.getElementById('sessionesLectura');
@@ -334,35 +529,49 @@
         if (sesiones.length > 0) {
           const promedioComprension = sesiones.reduce((acc, s) => acc + (s.porcentaje_comprension || 0), 0) / sesiones.length;
           const promedioVelocidad = sesiones.reduce((acc, s) => acc + (s.velocidad_efectiva || 0), 0) / sesiones.length;
+          const gradoAlcanzado = calcularGradoAlcanzado(promedioVelocidad);
           
           document.getElementById('lecturaPromComprension').textContent = `${promedioComprension.toFixed(0)}%`;
           document.getElementById('lecturaPromVelocidad').textContent = promedioVelocidad.toFixed(0);
+          document.getElementById('lecturaGradoAlcanzado').textContent = gradoAlcanzado;
           
-          container.innerHTML = sesiones.map(s => `
-            <div class="session-card">
-              <div class="session-info">
-                <h3>${s.ciclos_lectura?.titulo || 'Sin título'}</h3>
-                <p>${formatearFecha(s.fecha_fin_sesion)}</p>
+          container.innerHTML = sesiones.map(s => {
+            const velEfectiva = s.velocidad_efectiva || 0;
+            const gradoSesion = calcularGradoAlcanzado(velEfectiva);
+            return `
+              <div class="session-card">
+                <div class="session-info">
+                  <h3>${s.ciclos_lectura?.titulo || 'Sin título'}</h3>
+                  <p>${formatearFecha(s.fecha_fin_sesion)}</p>
+                </div>
+                <div class="session-stats">
+                  <div class="session-stat">
+                    <div class="session-stat-value">${(s.porcentaje_comprension || 0).toFixed(0)}%</div>
+                    <div class="session-stat-label">Comprensión</div>
+                  </div>
+                  <div class="session-stat">
+                    <div class="session-stat-value">${(s.velocidad_simple || 0).toFixed(0)}</div>
+                    <div class="session-stat-label">Palabras/min</div>
+                  </div>
+                  <div class="session-stat">
+                    <div class="session-stat-value">${velEfectiva.toFixed(0)}</div>
+                    <div class="session-stat-label">Vel. Efectiva</div>
+                  </div>
+                </div>
+                <div>
+                  <span class="badge badge-success">Completado</span>
+                  <span class="grade-badge">Nivel ${gradoSesion}</span>
+                </div>
               </div>
-              <div class="session-stats">
-                <div class="session-stat">
-                  <div class="session-stat-value">${(s.porcentaje_comprension || 0).toFixed(0)}%</div>
-                  <div class="session-stat-label">Comprensión</div>
-                </div>
-                <div class="session-stat">
-                  <div class="session-stat-value">${(s.velocidad_simple || 0).toFixed(0)}</div>
-                  <div class="session-stat-label">Palabras/min</div>
-                </div>
-                <div class="session-stat">
-                  <div class="session-stat-value">${(s.velocidad_efectiva || 0).toFixed(0)}</div>
-                  <div class="session-stat-label">Vel. Efectiva</div>
-                </div>
-              </div>
-              <span class="badge badge-success">Completado</span>
-            </div>
-          `).join('');
+            `;
+          }).join('');
+          
+          // Cargar rankings
+          cargarRankingsLectura();
         } else {
           container.innerHTML = '<div class="empty-state">No tienes sesiones de lectura completadas aún</div>';
+          document.getElementById('lecturaGradoAlcanzado').textContent = '-';
+          document.getElementById('rankingLecturaGrid').innerHTML = '<div class="empty-state">Completa una lectura para ver tu ranking</div>';
         }
         
       } catch (error) {
@@ -371,14 +580,117 @@
       }
     }
     
-    // Cargar historial de creatividad
+    // Cargar rankings de lectura crítica
+    async function cargarRankingsLectura() {
+      const grid = document.getElementById('rankingLecturaGrid');
+      
+      try {
+        const grado = await obtenerGradoUsuario();
+        if (!grado) {
+          grid.innerHTML = '<div class="empty-state">No se pudo determinar tu grado</div>';
+          return;
+        }
+        
+        // Obtener todas las sesiones del grado
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_lectura?estado=eq.finalizada&select=*,usuarios:estudiante_id(id,nombre,apellidos,grado),ciclos_lectura(grado)`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) throw new Error('Error al cargar rankings');
+        
+        const todasSesiones = await response.json();
+        
+        // Filtrar por grado del usuario
+        const sesionesGrado = todasSesiones.filter(s => 
+          s.usuarios?.grado === grado || s.ciclos_lectura?.grado === grado
+        );
+        
+        // Agrupar por estudiante y calcular promedios
+        const estudiantesMap = {};
+        sesionesGrado.forEach(s => {
+          if (!s.usuarios) return;
+          const id = s.usuarios.id;
+          if (!estudiantesMap[id]) {
+            estudiantesMap[id] = {
+              id: id,
+              nombre: `${s.usuarios.nombre} ${s.usuarios.apellidos || ''}`.trim(),
+              sesiones: [],
+              totalComprension: 0,
+              totalVelocidad: 0,
+              totalVelEfectiva: 0
+            };
+          }
+          estudiantesMap[id].sesiones.push(s);
+          estudiantesMap[id].totalComprension += s.porcentaje_comprension || 0;
+          estudiantesMap[id].totalVelocidad += s.velocidad_simple || 0;
+          estudiantesMap[id].totalVelEfectiva += s.velocidad_efectiva || 0;
+        });
+        
+        const estudiantes = Object.values(estudiantesMap).map(e => ({
+          ...e,
+          promComprension: e.totalComprension / e.sesiones.length,
+          promVelocidad: e.totalVelocidad / e.sesiones.length,
+          promVelEfectiva: e.totalVelEfectiva / e.sesiones.length
+        }));
+        
+        // Ranking por comprensión
+        const rankingComprension = [...estudiantes].sort((a, b) => b.promComprension - a.promComprension);
+        // Ranking por velocidad efectiva
+        const rankingVelEfectiva = [...estudiantes].sort((a, b) => b.promVelEfectiva - a.promVelEfectiva);
+        
+        // Mi posición
+        const miPosComprension = rankingComprension.findIndex(e => e.id === user.id) + 1;
+        const miPosVelEfectiva = rankingVelEfectiva.findIndex(e => e.id === user.id) + 1;
+        
+        grid.innerHTML = `
+          <div class="ranking-card">
+            <h4>📊 Ranking Comprensión (Grado ${grado})</h4>
+            ${renderRankingItems(rankingComprension.slice(0, 5), 'promComprension', '%', user.id)}
+            ${miPosComprension > 5 ? `<div class="ranking-item my-position"><span class="ranking-position">${miPosComprension}</span><span class="ranking-name">Tú</span><span class="ranking-value">${rankingComprension[miPosComprension-1]?.promComprension.toFixed(0) || 0}%</span></div>` : ''}
+          </div>
+          <div class="ranking-card">
+            <h4>⚡ Ranking Velocidad Efectiva (Grado ${grado})</h4>
+            ${renderRankingItems(rankingVelEfectiva.slice(0, 5), 'promVelEfectiva', '', user.id)}
+            ${miPosVelEfectiva > 5 ? `<div class="ranking-item my-position"><span class="ranking-position">${miPosVelEfectiva}</span><span class="ranking-name">Tú</span><span class="ranking-value">${rankingVelEfectiva[miPosVelEfectiva-1]?.promVelEfectiva.toFixed(0) || 0}</span></div>` : ''}
+          </div>
+        `;
+        
+      } catch (error) {
+        console.error('Error cargando rankings:', error);
+        grid.innerHTML = '<div class="empty-state">Error cargando rankings</div>';
+      }
+    }
+    
+    function renderRankingItems(items, campo, sufijo, userId) {
+      return items.map((item, idx) => {
+        const pos = idx + 1;
+        const posClass = pos === 1 ? 'gold' : pos === 2 ? 'silver' : pos === 3 ? 'bronze' : '';
+        const isMe = item.id === userId;
+        return `
+          <div class="ranking-item ${isMe ? 'my-position' : ''}">
+            <span class="ranking-position ${posClass}">${pos}</span>
+            <span class="ranking-name">${isMe ? 'Tú' : item.nombre}</span>
+            <span class="ranking-value">${item[campo].toFixed(0)}${sufijo}</span>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // Cargar historial de creatividad con calificaciones
     async function cargarHistorialCreatividad() {
       const container = document.getElementById('sessionesCreatividad');
       container.innerHTML = '<div class="empty-state">Cargando...</div>';
       
       try {
+        // Cargar todas las sesiones (finalizadas, pendiente_revision, calificada)
         const response = await fetch(
-          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_creatividad?estudiante_id=eq.${user.id}&estado=eq.finalizada&select=*,ciclos_creatividad(titulo,grado)&order=fecha_fin_sesion.desc`,
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_creatividad?estudiante_id=eq.${user.id}&select=*,ciclos_creatividad(titulo,grado)&order=fecha_fin_sesion.desc.nullslast`,
           {
             headers: {
               'apikey': CONFIG.SUPABASE_ANON_KEY,
@@ -391,30 +703,66 @@
         
         const sesiones = await response.json();
         
-        // Actualizar estadísticas
-        document.getElementById('creatividadTotal').textContent = sesiones.length;
+        // Filtrar sesiones con estado relevante
+        const sesionesRelevantes = sesiones.filter(s => 
+          ['finalizada', 'pendiente_revision', 'calificada'].includes(s.estado)
+        );
         
-        if (sesiones.length > 0) {
-          const tiempoTotal = sesiones.reduce((acc, s) => acc + (s.tiempo_visualizacion_segundos || 0), 0);
+        // Actualizar estadísticas
+        document.getElementById('creatividadTotal').textContent = sesionesRelevantes.length;
+        
+        if (sesionesRelevantes.length > 0) {
+          const tiempoTotal = sesionesRelevantes.reduce((acc, s) => acc + (s.tiempo_visualizacion_segundos || 0), 0);
           document.getElementById('creatividadTiempo').textContent = `${Math.floor(tiempoTotal / 60)} min`;
           
-          container.innerHTML = sesiones.map(s => `
-            <div class="session-card">
-              <div class="session-info">
-                <h3>${s.ciclos_creatividad?.titulo || 'Sin título'}</h3>
-                <p>${formatearFecha(s.fecha_fin_sesion)}</p>
-              </div>
-              <div class="session-stats">
+          // Calcular promedio de calificaciones (solo las calificadas)
+          const calificadas = sesionesRelevantes.filter(s => s.estado === 'calificada' && s.calificacion_docente != null);
+          if (calificadas.length > 0) {
+            const promedioCalif = calificadas.reduce((acc, s) => acc + parseFloat(s.calificacion_docente), 0) / calificadas.length;
+            document.getElementById('creatividadPromedio').textContent = `${promedioCalif.toFixed(0)}%`;
+          } else {
+            document.getElementById('creatividadPromedio').textContent = '-%';
+          }
+          
+          container.innerHTML = sesionesRelevantes.map(s => {
+            let estadoBadge = '';
+            let calificacionHtml = '';
+            
+            if (s.estado === 'calificada') {
+              estadoBadge = `<span class="badge badge-success">Calificado</span>`;
+              calificacionHtml = `
                 <div class="session-stat">
-                  <div class="session-stat-value">${formatearTiempo(s.tiempo_visualizacion_segundos || 0)}</div>
-                  <div class="session-stat-label">Tiempo</div>
+                  <div class="session-stat-value" style="color: #48bb78;">${s.calificacion_docente}%</div>
+                  <div class="session-stat-label">Calificación</div>
                 </div>
+              `;
+            } else if (s.estado === 'pendiente_revision') {
+              estadoBadge = `<span class="badge badge-warning">Esperando Revisión</span>`;
+            } else {
+              estadoBadge = `<span class="badge badge-success">Completado</span>`;
+            }
+            
+            return `
+              <div class="session-card">
+                <div class="session-info">
+                  <h3>${s.ciclos_creatividad?.titulo || 'Sin título'}</h3>
+                  <p>${formatearFecha(s.fecha_fin_sesion || s.fecha_inicio)}</p>
+                  ${s.comentario_docente ? `<p style="font-style: italic; color: #718096; margin-top: 4px;">"${s.comentario_docente}"</p>` : ''}
+                </div>
+                <div class="session-stats">
+                  <div class="session-stat">
+                    <div class="session-stat-value">${formatearTiempo(s.tiempo_visualizacion_segundos || 0)}</div>
+                    <div class="session-stat-label">Tiempo</div>
+                  </div>
+                  ${calificacionHtml}
+                </div>
+                ${estadoBadge}
               </div>
-              <span class="badge badge-success">Completado</span>
-            </div>
-          `).join('');
+            `;
+          }).join('');
         } else {
           container.innerHTML = '<div class="empty-state">No tienes actividades de creatividad completadas aún</div>';
+          document.getElementById('creatividadPromedio').textContent = '-%';
         }
         
       } catch (error) {
@@ -443,7 +791,21 @@
       return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
     
-    // Cargar historial de ejercicios digitales
+    // Calcular porcentaje de rendimiento para un juego
+    function calcularPorcentajeRendimiento(resultado, meta) {
+      if (!meta || meta === 0) return 0;
+      const porcentaje = (resultado / meta) * 100;
+      return Math.min(porcentaje, 100); // Máximo 100%
+    }
+    
+    // Obtener clase de performance según porcentaje
+    function getPerformanceClass(porcentaje) {
+      if (porcentaje >= 80) return 'performance-high';
+      if (porcentaje >= 50) return 'performance-medium';
+      return 'performance-low';
+    }
+    
+    // Cargar historial de ejercicios digitales con porcentajes
     async function cargarHistorialEjercicios() {
       const container = document.getElementById('sessionesEjercicios');
       container.innerHTML = '<div class="empty-state">Cargando...</div>';
@@ -469,13 +831,29 @@
         document.getElementById('ejerciciosMetas').textContent = metasAlcanzadas;
         
         if (resultados.length > 0) {
+          // Calcular promedio de rendimiento
+          let totalPorcentaje = 0;
+          resultados.forEach(r => {
+            const juego = r.juegos_ejercicios || {};
+            const meta = juego.meta_objetivo || 1;
+            const porcentaje = calcularPorcentajeRendimiento(r.resultado_obtenido, meta);
+            totalPorcentaje += porcentaje;
+          });
+          const promedioRendimiento = totalPorcentaje / resultados.length;
+          document.getElementById('ejerciciosPromedio').textContent = `${promedioRendimiento.toFixed(0)}%`;
+          
           container.innerHTML = resultados.map(r => {
             const juego = r.juegos_ejercicios || {};
+            const meta = juego.meta_objetivo || 1;
+            const porcentaje = calcularPorcentajeRendimiento(r.resultado_obtenido, meta);
+            const perfClass = getPerformanceClass(porcentaje);
+            
             return `
               <div class="session-card">
                 <div class="session-info">
                   <h3>${juego.nombre || 'Juego'}</h3>
                   <p>${formatearFecha(r.fecha_registro)}</p>
+                  <p style="font-size: 12px; color: #667eea;">${juego.habilidad_estimulada || ''}</p>
                 </div>
                 <div class="session-stats">
                   <div class="session-stat">
@@ -483,8 +861,14 @@
                     <div class="session-stat-label">Resultado</div>
                   </div>
                   <div class="session-stat">
-                    <div class="session-stat-value">${juego.meta_objetivo || '-'}</div>
+                    <div class="session-stat-value">${meta}</div>
                     <div class="session-stat-label">Meta</div>
+                  </div>
+                  <div class="session-stat">
+                    <div class="session-stat-value">
+                      <span class="performance-badge ${perfClass}">${porcentaje.toFixed(0)}%</span>
+                    </div>
+                    <div class="session-stat-label">Rendimiento</div>
                   </div>
                 </div>
                 <span class="badge ${r.meta_alcanzada ? 'badge-success' : 'badge-warning'}">
@@ -493,14 +877,120 @@
               </div>
             `;
           }).join('');
+          
+          // Cargar rankings de ejercicios
+          cargarRankingsEjercicios();
         } else {
           container.innerHTML = '<div class="empty-state">No tienes resultados de ejercicios aún</div>';
+          document.getElementById('ejerciciosPromedio').textContent = '0%';
+          document.getElementById('rankingEjerciciosGrid').innerHTML = '<div class="empty-state">Completa ejercicios para ver tu ranking</div>';
         }
         
       } catch (error) {
         console.error('Error cargando historial de ejercicios:', error);
         container.innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
       }
+    }
+    
+    // Cargar rankings de ejercicios digitales
+    async function cargarRankingsEjercicios() {
+      const grid = document.getElementById('rankingEjerciciosGrid');
+      
+      try {
+        const grado = await obtenerGradoUsuario();
+        if (!grado) {
+          grid.innerHTML = '<div class="empty-state">No se pudo determinar tu grado</div>';
+          return;
+        }
+        
+        // Obtener todos los resultados con info de usuario
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/resultados_juegos?select=*,usuarios:estudiante_id(id,nombre,apellidos,grado),juegos_ejercicios:juego_id(meta_objetivo)`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) throw new Error('Error al cargar rankings');
+        
+        const todosResultados = await response.json();
+        
+        // Filtrar por grado
+        const resultadosGrado = todosResultados.filter(r => r.usuarios?.grado === grado);
+        
+        // Agrupar por estudiante
+        const estudiantesMap = {};
+        resultadosGrado.forEach(r => {
+          if (!r.usuarios) return;
+          const id = r.usuarios.id;
+          if (!estudiantesMap[id]) {
+            estudiantesMap[id] = {
+              id: id,
+              nombre: `${r.usuarios.nombre} ${r.usuarios.apellidos || ''}`.trim(),
+              resultados: [],
+              metasAlcanzadas: 0,
+              totalRendimiento: 0
+            };
+          }
+          const meta = r.juegos_ejercicios?.meta_objetivo || 1;
+          const porcentaje = calcularPorcentajeRendimiento(r.resultado_obtenido, meta);
+          estudiantesMap[id].resultados.push(r);
+          estudiantesMap[id].totalRendimiento += porcentaje;
+          if (r.meta_alcanzada) estudiantesMap[id].metasAlcanzadas++;
+        });
+        
+        const estudiantes = Object.values(estudiantesMap).map(e => ({
+          ...e,
+          promRendimiento: e.totalRendimiento / e.resultados.length
+        }));
+        
+        // Ranking por metas alcanzadas
+        const rankingMetas = [...estudiantes].sort((a, b) => b.metasAlcanzadas - a.metasAlcanzadas);
+        // Ranking por promedio rendimiento
+        const rankingRendimiento = [...estudiantes].sort((a, b) => b.promRendimiento - a.promRendimiento);
+        
+        // Mi posición
+        const miPosMetas = rankingMetas.findIndex(e => e.id === user.id) + 1;
+        const miPosRendimiento = rankingRendimiento.findIndex(e => e.id === user.id) + 1;
+        
+        grid.innerHTML = `
+          <div class="ranking-card">
+            <h4>🎯 Ranking Metas Alcanzadas (Grado ${grado})</h4>
+            ${renderRankingItemsEjercicios(rankingMetas.slice(0, 5), 'metasAlcanzadas', '', user.id)}
+            ${miPosMetas > 5 ? `<div class="ranking-item my-position"><span class="ranking-position">${miPosMetas}</span><span class="ranking-name">Tú</span><span class="ranking-value">${rankingMetas[miPosMetas-1]?.metasAlcanzadas || 0}</span></div>` : ''}
+          </div>
+          <div class="ranking-card">
+            <h4>📈 Ranking Rendimiento Promedio (Grado ${grado})</h4>
+            ${renderRankingItemsEjercicios(rankingRendimiento.slice(0, 5), 'promRendimiento', '%', user.id)}
+            ${miPosRendimiento > 5 ? `<div class="ranking-item my-position"><span class="ranking-position">${miPosRendimiento}</span><span class="ranking-name">Tú</span><span class="ranking-value">${rankingRendimiento[miPosRendimiento-1]?.promRendimiento.toFixed(0) || 0}%</span></div>` : ''}
+          </div>
+        `;
+        
+      } catch (error) {
+        console.error('Error cargando rankings de ejercicios:', error);
+        grid.innerHTML = '<div class="empty-state">Error cargando rankings</div>';
+      }
+    }
+    
+    function renderRankingItemsEjercicios(items, campo, sufijo, userId) {
+      return items.map((item, idx) => {
+        const pos = idx + 1;
+        const posClass = pos === 1 ? 'gold' : pos === 2 ? 'silver' : pos === 3 ? 'bronze' : '';
+        const isMe = item.id === userId;
+        const valor = typeof item[campo] === 'number' ? 
+          (Number.isInteger(item[campo]) ? item[campo] : item[campo].toFixed(0)) : 
+          item[campo];
+        return `
+          <div class="ranking-item ${isMe ? 'my-position' : ''}">
+            <span class="ranking-position ${posClass}">${pos}</span>
+            <span class="ranking-name">${isMe ? 'Tú' : item.nombre}</span>
+            <span class="ranking-value">${valor}${sufijo}</span>
+          </div>
+        `;
+      }).join('');
     }
   </script>
 </body>

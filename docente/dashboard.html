@@ -425,6 +425,21 @@
         </div>
       </div>
       
+      <!-- Alerta de revisiones pendientes -->
+      <div id="alertaRevisionesPendientes" class="hidden" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; padding: 16px 24px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 28px;">🔔</span>
+          <div>
+            <strong style="font-size: 16px;">Tienes <span id="contadorPendientes">0</span> estudiante(s) esperando revisión de Creatividad</strong>
+            <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 14px;">Los estudiantes han completado sus ejercicios y esperan que califiques su trabajo.</p>
+          </div>
+        </div>
+        <a href="../creatividad/docente-calificar.html" 
+           style="background: white; color: #dd6b20; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; white-space: nowrap;">
+          Calificar Ahora →
+        </a>
+      </div>
+      
       <!-- Acceso a módulos -->
       <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
         <a href="../lectura-critica/rankings.html" 
@@ -434,8 +449,9 @@
         </a>
         <a href="../creatividad/docente-calificar.html" 
            style="display: inline-block; padding: 12px 24px; background: #ed8936; color: white; 
-                  border-radius: 8px; text-decoration: none; font-weight: 500;">
+                  border-radius: 8px; text-decoration: none; font-weight: 500; position: relative;">
           Calificar Creatividad
+          <span id="badgePendientes" class="hidden" style="position: absolute; top: -8px; right: -8px; background: #e53e3e; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">0</span>
         </a>
       </div>
       
@@ -539,6 +555,9 @@
       // Cargar información del colegio
       cargarInfoColegio();
       
+      // Verificar revisiones pendientes de creatividad
+      verificarRevisionesPendientes();
+      
       // Inicializar tabs
       document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -613,6 +632,39 @@
       } catch (error) {
         console.error('Error cargando información del colegio:', error);
         colegioInfo.textContent = 'Error cargando colegio';
+      }
+    }
+    
+    // Verificar revisiones pendientes de creatividad
+    async function verificarRevisionesPendientes() {
+      try {
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_creatividad?estado=eq.pendiente_revision&select=id,estudiante_id,usuarios:estudiante_id(nombre,apellidos,grado)`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const pendientes = await response.json();
+          
+          if (pendientes && pendientes.length > 0) {
+            // Mostrar alerta
+            document.getElementById('alertaRevisionesPendientes').classList.remove('hidden');
+            document.getElementById('contadorPendientes').textContent = pendientes.length;
+            
+            // Mostrar badge
+            const badge = document.getElementById('badgePendientes');
+            badge.classList.remove('hidden');
+            badge.style.display = 'flex';
+            badge.textContent = pendientes.length;
+          }
+        }
+      } catch (error) {
+        console.error('Error verificando revisiones pendientes:', error);
       }
     }
     
