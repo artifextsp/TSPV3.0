@@ -69,7 +69,31 @@ if ! git remote get-url origin > /dev/null 2>&1; then
   exit 1
 fi
 
+# Verificar si hay commits locales sin pushear
+LOCAL_COMMITS=$(git rev-list --count origin/$BRANCH..HEAD 2>/dev/null || echo "0")
+REMOTE_COMMITS=$(git rev-list --count HEAD..origin/$BRANCH 2>/dev/null || echo "0")
+
+if [ "$LOCAL_COMMITS" -gt 0 ]; then
+  echo "📦 Hay $LOCAL_COMMITS commit(s) local(es) sin subir"
+fi
+
+if [ "$REMOTE_COMMITS" -gt 0 ]; then
+  echo "⬇️  Hay $REMOTE_COMMITS commit(s) en GitHub que no tienes localmente"
+  echo "🔄 Actualizando desde GitHub primero..."
+  if ! git pull --rebase origin "$BRANCH"; then
+    echo ""
+    echo "⚠️  Error al hacer pull. Hay conflictos o cambios incompatibles."
+    echo "   Resuelve los conflictos manualmente y luego ejecuta:"
+    echo "   git push origin $BRANCH"
+    exit 1
+  fi
+  echo "✅ Actualización completada"
+fi
+
 echo "🚀 Subiendo a origin/$BRANCH..."
+echo "   (Si te pide credenciales, ingresa tu usuario y token de GitHub)"
+echo ""
+
 if git push -u origin "$BRANCH" 2>/dev/null || git push origin "$BRANCH"; then
   echo ""
   echo "============================================"
@@ -77,9 +101,19 @@ if git push -u origin "$BRANCH" 2>/dev/null || git push origin "$BRANCH"; then
   echo "============================================"
 else
   echo ""
-  echo "❌ Error al hacer push. Posibles causas:"
-  echo "   - No hay conexión a internet"
-  echo "   - No tienes permisos en el repo remoto"
-  echo "   - La rama remota tiene commits que no tienes (prueba: git pull --rebase origin $BRANCH && git push origin $BRANCH)"
+  echo "❌ Error al hacer push."
+  echo ""
+  echo "Si te pidió credenciales y falló, prueba:"
+  echo "   1. Usar SSH en lugar de HTTPS:"
+  echo "      git remote set-url origin git@github.com:artifextsp/TSPV3.0.git"
+  echo "      git push origin $BRANCH"
+  echo ""
+  echo "   2. O usar un token de acceso personal:"
+  echo "      git push https://TU_TOKEN@github.com/artifextsp/TSPV3.0.git $BRANCH"
+  echo ""
+  echo "   3. O hacer pull primero si hay conflictos:"
+  echo "      git pull --rebase origin $BRANCH"
+  echo "      git push origin $BRANCH"
+  echo ""
   exit 1
 fi
