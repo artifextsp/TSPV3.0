@@ -229,6 +229,24 @@
       });
     }
     
+    // Función para normalizar grado
+    function normalizarGrado(gradoRaw) {
+      if (!gradoRaw) return null;
+      const gradoStr = String(gradoRaw).toLowerCase().replace('°', '').trim();
+      const mapa = {
+        '3': 'tercero', 'tercero': 'tercero',
+        '4': 'cuarto', 'cuarto': 'cuarto',
+        '5': 'quinto', 'quinto': 'quinto',
+        '6': 'sexto', 'sexto': 'sexto',
+        '7': 'septimo', 'séptimo': 'septimo', 'septimo': 'septimo',
+        '8': 'octavo', 'octavo': 'octavo',
+        '9': 'noveno', 'noveno': 'noveno',
+        '10': 'decimo', 'décimo': 'decimo', 'decimo': 'decimo',
+        '11': 'undecimo', 'undécimo': 'undecimo', 'undecimo': 'undecimo'
+      };
+      return mapa[gradoStr] || gradoStr;
+    }
+    
     window.cargarRankings = async function() {
       const grado = document.getElementById('filterGrado').value;
       
@@ -255,12 +273,19 @@
           }
         );
         
-        if (!response.ok) throw new Error('Error al cargar datos');
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error API:', errorText);
+          throw new Error('Error al cargar datos');
+        }
         
         const resultados = await response.json();
         
-        // Filtrar por grado
-        const resultadosGrado = resultados.filter(r => r.usuarios?.grado === grado);
+        // Filtrar por grado (normalizado)
+        const resultadosGrado = resultados.filter(r => {
+          const gradoUsuario = normalizarGrado(r.usuarios?.grado);
+          return gradoUsuario === grado;
+        });
         
         if (resultadosGrado.length === 0) {
           document.getElementById('rankingMetas').innerHTML = '<div class="empty-state">No hay datos para este grado</div>';
@@ -277,7 +302,7 @@
           if (!estudiantesMap[id]) {
             estudiantesMap[id] = {
               id: id,
-              nombre: `${r.usuarios.nombre} ${r.usuarios.apellidos || ''}`.trim(),
+              nombre: `${r.usuarios.nombre || ''} ${r.usuarios.apellidos || ''}`.trim(),
               codigo: r.usuarios.codigo_estudiante || '',
               resultados: [],
               metasAlcanzadas: 0,
@@ -294,7 +319,7 @@
         const estudiantes = Object.values(estudiantesMap).map(e => ({
           ...e,
           juegosCompletados: e.resultados.length,
-          promRendimiento: e.totalRendimiento / e.resultados.length
+          promRendimiento: e.resultados.length > 0 ? e.totalRendimiento / e.resultados.length : 0
         }));
         
         // Rankings
@@ -307,8 +332,10 @@
         renderRanking('rankingJuegos', rankingJuegos, 'juegosCompletados', '');
         
       } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('rankingMetas').innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
+        console.error('Error cargando rankings:', error);
+        document.getElementById('rankingMetas').innerHTML = '<div class="empty-state" style="color:#e53e3e;">Error al cargar</div>';
+        document.getElementById('rankingRendimiento').innerHTML = '<div class="empty-state" style="color:#e53e3e;">Error al cargar</div>';
+        document.getElementById('rankingJuegos').innerHTML = '<div class="empty-state" style="color:#e53e3e;">Error al cargar</div>';
       }
     };
     

@@ -821,6 +821,24 @@
     </div>
   </div>
   
+  <!-- Modal: Confirmación Reseteo -->
+  <div id="modalConfirmacion" class="modal">
+    <div class="modal-content" style="text-align: center; padding: 32px;">
+      <div style="font-size: 64px; margin-bottom: 16px;">✅</div>
+      <h2 style="color: #22543d; font-size: 20px; margin-bottom: 8px;">¡Contraseña Reseteada!</h2>
+      <p style="color: #718096; margin-bottom: 16px;">La nueva contraseña del estudiante es:</p>
+      <div style="background: #c6f6d5; padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+        <span id="nuevaPasswordConfirmada" style="font-size: 28px; font-weight: 700; color: #22543d; letter-spacing: 2px;">123456</span>
+      </div>
+      <p style="color: #4a5568; font-size: 13px; margin-bottom: 20px;">
+        El estudiante <strong id="estudianteConfirmado">-</strong> puede iniciar sesión con esta contraseña.
+      </p>
+      <button class="btn btn-primary" onclick="cerrarModal('modalConfirmacion')" style="width: 100%; padding: 14px; font-size: 16px;">
+        Entendido
+      </button>
+    </div>
+  </div>
+  
   <!-- Modal: Ver Resultados -->
   <div id="modalVerResultados" class="modal">
     <div class="modal-content">
@@ -928,14 +946,20 @@
       document.getElementById('formResetPassword').addEventListener('submit', async (e) => {
         e.preventDefault();
         const estudianteId = document.getElementById('resetEstudianteId').value;
+        const estudianteNombre = document.getElementById('resetEstudianteNombre').value;
         const nuevaPassword = document.getElementById('resetPassword').value || '123456';
         
         try {
           await DocentesAPI.resetearPasswordEstudiante(estudianteId, nuevaPassword);
-          mostrarAlerta('alertEstudiantes', `✅ Contraseña reseteada: ${nuevaPassword}`, 'success');
           cerrarModal('modalResetPassword');
+          
+          // Mostrar modal de confirmación
+          document.getElementById('nuevaPasswordConfirmada').textContent = nuevaPassword;
+          document.getElementById('estudianteConfirmado').textContent = estudianteNombre;
+          document.getElementById('modalConfirmacion').classList.add('active');
+          
         } catch (error) {
-          mostrarAlerta('alertEstudiantes', `❌ Error: ${error.message}`, 'error');
+          alert('❌ Error: ' + error.message);
         }
       });
       

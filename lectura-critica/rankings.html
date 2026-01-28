@@ -279,6 +279,11 @@
         return;
       }
       
+      // Mostrar estado de carga
+      document.getElementById('rankingVE').innerHTML = '<div class="empty-state">Cargando...</div>';
+      document.getElementById('rankingComprension').innerHTML = '<div class="empty-state">Cargando...</div>';
+      document.getElementById('rankingVS').innerHTML = '<div class="empty-state">Cargando...</div>';
+      
       try {
         const rankings = await RankingsAPI.rankingsPorGrado(grado, 5);
         
@@ -293,15 +298,19 @@
         // Mostrar info del ciclo
         document.getElementById('cicloInfo').classList.remove('hidden');
         document.getElementById('cicloTitulo').textContent = `Ciclo #${rankings.ciclo.numero_ciclo}: ${rankings.ciclo.titulo}`;
-        document.getElementById('cicloMeta').textContent = `${rankings.ciclo.conteo_palabras} palabras • Lexile ${rankings.ciclo.lexile || 'N/A'}`;
+        document.getElementById('cicloMeta').textContent = `${rankings.ciclo.conteo_palabras || 0} palabras • Lexile ${rankings.ciclo.lexile || 'N/A'}`;
         
         // Mostrar rankings
-        renderRanking('rankingVE', rankings.velocidadEfectiva, 'velocidad_efectiva', 'VE');
-        renderRanking('rankingComprension', rankings.comprension, 'porcentaje_comprension', '%');
-        renderRanking('rankingVS', rankings.velocidadSimple, 'velocidad_simple', 'PPM');
+        renderRanking('rankingVE', rankings.velocidadEfectiva || [], 'velocidad_efectiva', 'VE');
+        renderRanking('rankingComprension', rankings.comprension || [], 'porcentaje_comprension', '%');
+        renderRanking('rankingVS', rankings.velocidadSimple || [], 'velocidad_simple', 'PPM');
         
       } catch (error) {
         console.error('Error cargando rankings:', error);
+        document.getElementById('cicloInfo').classList.add('hidden');
+        document.getElementById('rankingVE').innerHTML = '<div class="empty-state" style="color:#e53e3e;">Error al cargar datos</div>';
+        document.getElementById('rankingComprension').innerHTML = '<div class="empty-state" style="color:#e53e3e;">Error al cargar datos</div>';
+        document.getElementById('rankingVS').innerHTML = '<div class="empty-state" style="color:#e53e3e;">Error al cargar datos</div>';
       }
     };
     
