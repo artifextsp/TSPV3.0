@@ -80,11 +80,20 @@ fi
 if [ "$REMOTE_COMMITS" -gt 0 ]; then
   echo "⬇️  Hay $REMOTE_COMMITS commit(s) en GitHub que no tienes localmente"
   echo "🔄 Actualizando desde GitHub primero..."
-  if ! git pull --rebase origin "$BRANCH"; then
+  
+  # Intentar pull con merge (más seguro que rebase)
+  if ! git pull origin "$BRANCH" --allow-unrelated-histories --no-rebase 2>/dev/null; then
     echo ""
-    echo "⚠️  Error al hacer pull. Hay conflictos o cambios incompatibles."
-    echo "   Resuelve los conflictos manualmente y luego ejecuta:"
+    echo "⚠️  Error al hacer pull. Intentando con estrategia diferente..."
+    echo ""
+    echo "Si hay archivos sin rastrear que bloquean el merge, ejecuta manualmente:"
+    echo "   git add -A"
+    echo "   git commit -m 'Preparar merge con remoto'"
+    echo "   git pull origin $BRANCH --allow-unrelated-histories --no-rebase"
     echo "   git push origin $BRANCH"
+    echo ""
+    echo "O si prefieres sobrescribir el remoto con tu versión local:"
+    echo "   git push origin $BRANCH --force"
     exit 1
   fi
   echo "✅ Actualización completada"
