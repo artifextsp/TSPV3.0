@@ -935,18 +935,28 @@
           const codigo = usuario.codigo_estudiante || '-';
           const tiempo = s.tiempo_visualizacion_segundos ? formatearTiempo(s.tiempo_visualizacion_segundos) : '-';
           
+          // Estados que permiten repetir
+          const estadosRepetir = ['finalizada', 'calificada', 'pendiente_revision'];
+          const puedeRepetir = estadosRepetir.includes(s.estado);
+          
+          // Estilos de badge según estado
+          let badgeClass = 'badge-inactive';
+          if (s.estado === 'calificada') badgeClass = 'badge-active';
+          else if (s.estado === 'finalizada') badgeClass = 'badge-active';
+          else if (s.estado === 'pendiente_revision') badgeClass = 'badge-pdf';
+          
           return `
             <tr>
               <td>${codigo}</td>
               <td>${nombreCompleto}</td>
               <td>
-                <span class="badge ${s.estado === 'finalizada' ? 'badge-active' : 'badge-inactive'}">
+                <span class="badge ${badgeClass}">
                   ${s.estado}
                 </span>
               </td>
               <td>${tiempo}</td>
               <td class="actions">
-                ${s.estado === 'finalizada' ? 
+                ${puedeRepetir ? 
                   `<button class="btn btn-sm" style="background:#ed8936;color:white;" 
                     onclick="permitirRepetir('${cicloId}', '${s.estudiante_id}', '${nombreCompleto}')">
                     Permitir Repetir
