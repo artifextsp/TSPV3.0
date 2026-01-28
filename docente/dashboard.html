@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dashboard Docente - Thinking Skills Program</title>
   <style>
     * {
@@ -15,93 +15,231 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f7fafc;
       min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
     }
     
+    /* Header responsive */
     .header {
       background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
       color: white;
-      padding: 20px 24px;
+      padding: 16px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
     }
     
     .header h1 {
-      font-size: 24px;
+      font-size: 18px;
     }
     
     .header-info {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    #colegioInfo {
+      font-size: 12px;
+      opacity: 0.9;
+      display: none;
     }
     
     .btn-logout {
       background: rgba(255,255,255,0.2);
       color: white;
       border: 1px solid rgba(255,255,255,0.3);
-      padding: 8px 16px;
+      padding: 8px 12px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 14px;
-    }
-    
-    .btn-logout:hover {
-      background: rgba(255,255,255,0.3);
+      font-size: 12px;
     }
     
     .main-content {
+      padding: 16px;
       max-width: 1400px;
       margin: 0 auto;
-      padding: 32px 24px;
     }
     
+    /* Welcome card */
     .welcome-card {
       background: white;
       border-radius: 12px;
-      padding: 24px;
+      padding: 16px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
     
     .welcome-card h2 {
       color: #1a202c;
-      font-size: 24px;
-      margin-bottom: 8px;
+      font-size: 18px;
+      margin-bottom: 4px;
     }
     
     .welcome-card p {
       color: #718096;
-      margin-top: 4px;
+      font-size: 13px;
     }
     
+    /* Stats grid - responsive */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    
+    .stat-card h3 {
+      color: #718096;
+      font-size: 11px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+    
+    .stat-card .value {
+      color: #48bb78;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    
+    /* Alerta pendientes - responsive */
+    .alert-pending {
+      background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
+    }
+    
+    .alert-pending-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .alert-pending-icon {
+      font-size: 24px;
+    }
+    
+    .alert-pending-text strong {
+      font-size: 14px;
+      display: block;
+    }
+    
+    .alert-pending-text p {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+    
+    .alert-pending .btn-action {
+      display: block;
+      width: 100%;
+      background: white;
+      color: #dd6b20;
+      padding: 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      text-align: center;
+      font-size: 14px;
+    }
+    
+    /* Botones de módulos - grid responsive */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    
+    .module-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 8px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 11px;
+      text-align: center;
+      color: white;
+      min-height: 70px;
+      position: relative;
+    }
+    
+    .module-btn-icon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+    
+    .module-btn.lectura { background: #667eea; }
+    .module-btn.creatividad { background: #9f7aea; }
+    .module-btn.ejercicios { background: #38b2ac; }
+    .module-btn.calificar { background: #ed8936; }
+    
+    .module-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #e53e3e;
+      color: white;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    
+    /* Tabs responsive */
     .tabs {
       display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
-      border-bottom: 2px solid #e2e8f0;
+      gap: 0;
+      margin-bottom: 16px;
+      background: white;
+      border-radius: 10px;
+      padding: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
     .tab {
+      flex: 1;
       background: none;
       border: none;
-      padding: 12px 24px;
+      padding: 12px 8px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 13px;
       color: #718096;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
+      border-radius: 8px;
       transition: all 0.2s;
     }
     
-    .tab:hover {
-      color: #48bb78;
-    }
-    
     .tab.active {
-      color: #48bb78;
-      border-bottom-color: #48bb78;
+      background: #48bb78;
+      color: white;
       font-weight: 600;
     }
     
@@ -113,77 +251,147 @@
       display: block;
     }
     
+    /* Toolbar responsive */
     .toolbar {
       display: flex;
-      gap: 12px;
+      flex-direction: column;
+      gap: 10px;
       margin-bottom: 16px;
-      flex-wrap: wrap;
     }
     
     .search-box {
-      flex: 1;
-      min-width: 200px;
-      padding: 10px 16px;
+      width: 100%;
+      padding: 12px 16px;
       border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: 10px;
+      font-size: 16px;
+      background: white;
     }
     
-    .filter-group {
+    .filter-row {
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: 8px;
     }
     
-    .filter-group select {
-      padding: 10px 16px;
+    .filter-row select {
+      flex: 1;
+      padding: 12px;
       border: 1px solid #e2e8f0;
-      border-radius: 6px;
+      border-radius: 10px;
       font-size: 14px;
       background: white;
     }
     
-    .table-container {
+    /* Lista de estudiantes - cards para móvil */
+    .student-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .student-card {
       background: white;
       border-radius: 12px;
-      overflow: hidden;
+      padding: 16px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .student-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
     }
     
-    thead {
-      background: #f7fafc;
-    }
-    
-    th {
-      padding: 16px;
-      text-align: left;
+    .student-name {
+      font-size: 16px;
       font-weight: 600;
+      color: #1a202c;
+    }
+    
+    .student-code {
+      font-size: 14px;
+      color: #48bb78;
+      font-weight: 600;
+      background: #c6f6d5;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    
+    .student-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    
+    .student-info-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .student-info-label {
+      color: #718096;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    
+    .student-info-value {
       color: #2d3748;
-      font-size: 14px;
-      border-bottom: 2px solid #e2e8f0;
+      font-weight: 500;
     }
     
-    td {
-      padding: 16px;
-      border-bottom: 1px solid #e2e8f0;
+    .student-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    
+    .btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    
+    .btn-primary {
+      background: #48bb78;
+      color: white;
+    }
+    
+    .btn-warning {
+      background: #ed8936;
+      color: white;
+    }
+    
+    .btn-info {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: #e2e8f0;
       color: #4a5568;
-      font-size: 14px;
     }
     
-    tbody tr:hover {
-      background: #f7fafc;
+    .btn-full {
+      grid-column: span 2;
     }
     
     .badge {
       display: inline-block;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 11px;
       font-weight: 600;
     }
     
@@ -197,68 +405,17 @@
       color: #742a2a;
     }
     
-    .badge-warning {
-      background: #feebc8;
-      color: #7c2d12;
-    }
-    
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    
-    .btn-sm {
-      padding: 6px 12px;
-      font-size: 12px;
-    }
-    
-    .btn-primary {
-      background: #48bb78;
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      background: #38a169;
-    }
-    
-    .btn-warning {
-      background: #ed8936;
-      color: white;
-    }
-    
-    .btn-warning:hover {
-      background: #dd6b20;
-    }
-    
-    .btn-danger {
-      background: #e53e3e;
-      color: white;
-    }
-    
-    .btn-danger:hover {
-      background: #c53030;
-    }
-    
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    
     .empty-state {
       text-align: center;
-      padding: 48px;
+      padding: 40px 20px;
       color: #718096;
+      background: white;
+      border-radius: 12px;
     }
     
     .alert {
       padding: 12px 16px;
-      border-radius: 6px;
+      border-radius: 10px;
       margin-bottom: 16px;
       font-size: 14px;
     }
@@ -266,15 +423,14 @@
     .alert-success {
       background: #c6f6d5;
       color: #22543d;
-      border: 1px solid #9ae6b4;
     }
     
     .alert-error {
       background: #fed7d7;
       color: #742a2a;
-      border: 1px solid #fc8181;
     }
     
+    /* Modal responsive */
     .modal {
       display: none;
       position: fixed;
@@ -282,9 +438,9 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
       z-index: 1000;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
     }
     
@@ -294,37 +450,45 @@
     
     .modal-content {
       background: white;
-      border-radius: 12px;
+      border-radius: 20px 20px 0 0;
       padding: 24px;
-      max-width: 500px;
-      width: 90%;
+      width: 100%;
       max-height: 90vh;
       overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
     }
     
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e2e8f0;
     }
     
     .modal-header h2 {
       color: #1a202c;
-      font-size: 20px;
+      font-size: 18px;
     }
     
     .btn-close {
-      background: none;
+      background: #f7fafc;
       border: none;
-      font-size: 28px;
+      font-size: 24px;
       cursor: pointer;
       color: #718096;
-      line-height: 1;
-    }
-    
-    .btn-close:hover {
-      color: #2d3748;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .form-group {
@@ -339,19 +503,87 @@
       font-size: 14px;
     }
     
-    .form-group input {
+    .form-group input,
+    .form-group select {
       width: 100%;
-      padding: 10px 16px;
+      padding: 14px 16px;
       border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: 10px;
+      font-size: 16px;
+      background: #f7fafc;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #48bb78;
+      background: white;
     }
     
     .form-actions {
       display: flex;
       gap: 12px;
-      justify-content: flex-end;
       margin-top: 24px;
+    }
+    
+    .form-actions .btn {
+      flex: 1;
+      padding: 14px;
+    }
+    
+    /* Resultados del estudiante */
+    .results-section {
+      margin-top: 16px;
+    }
+    
+    .results-section h3 {
+      font-size: 14px;
+      color: #2d3748;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .result-card {
+      background: #f7fafc;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    
+    .result-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .result-card-title {
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 14px;
+    }
+    
+    .result-card-stats {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+    }
+    
+    .result-stat {
+      text-align: center;
+    }
+    
+    .result-stat-value {
+      font-weight: 700;
+      color: #667eea;
+      font-size: 16px;
+    }
+    
+    .result-stat-label {
+      color: #718096;
+      font-size: 10px;
     }
     
     .loading {
@@ -359,7 +591,7 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      font-size: 18px;
+      font-size: 16px;
       color: #718096;
     }
     
@@ -367,30 +599,89 @@
       display: none !important;
     }
     
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
+    /* Desktop styles */
+    @media (min-width: 768px) {
+      .header {
+        padding: 20px 24px;
+      }
+      
+      .header h1 {
+        font-size: 24px;
+      }
+      
+      #colegioInfo {
+        display: inline;
+        font-size: 14px;
+      }
+      
+      .main-content {
+        padding: 32px 24px;
+      }
+      
+      .welcome-card {
+        padding: 24px;
+      }
+      
+      .welcome-card h2 {
+        font-size: 24px;
+      }
+      
+      .welcome-card p {
+        font-size: 14px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      
+      .modules-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      
+      .module-btn {
+        flex-direction: row;
+        padding: 14px 20px;
+        font-size: 14px;
+        min-height: auto;
+      }
+      
+      .module-btn-icon {
+        margin-bottom: 0;
+        margin-right: 8px;
+      }
+      
+      .toolbar {
+        flex-direction: row;
+      }
+      
+      .search-box {
+        flex: 1;
+      }
+      
+      .filter-row {
+        width: auto;
+      }
+      
+      .student-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      
+      .modal {
+        align-items: center;
+      }
+      
+      .modal-content {
+        border-radius: 16px;
+        max-width: 500px;
+      }
     }
     
-    .stat-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .stat-card h3 {
-      color: #718096;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    
-    .stat-card .value {
-      color: #1a202c;
-      font-size: 32px;
-      font-weight: 700;
+    @media (min-width: 1024px) {
+      .student-list {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
   </style>
 </head>
@@ -401,115 +692,101 @@
   
   <div id="dashboardContent" class="hidden">
     <header class="header">
-      <h1>👨‍🏫 Dashboard Docente</h1>
-      <div class="header-info">
-        <span id="colegioInfo">Cargando...</span>
-        <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+      <div class="header-top">
+        <h1>👨‍🏫 Docente</h1>
+        <div class="header-info">
+          <span id="colegioInfo">Cargando...</span>
+          <button class="btn-logout" id="btnLogout">Salir</button>
+        </div>
       </div>
     </header>
     
     <main class="main-content">
       <div class="welcome-card">
-        <h2>¡Bienvenido, <span id="welcomeName">Docente</span>!</h2>
-        <p>Gestiona tus estudiantes, visualiza resultados y resetea contraseñas cuando sea necesario.</p>
+        <h2>¡Hola, <span id="welcomeName">Docente</span>!</h2>
+        <p>Gestiona estudiantes, resultados y calificaciones.</p>
       </div>
       
       <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
-          <h3>Total Estudiantes</h3>
+          <h3>Total</h3>
           <div class="value" id="totalEstudiantes">-</div>
         </div>
         <div class="stat-card">
-          <h3>Estudiantes Activos</h3>
+          <h3>Activos</h3>
           <div class="value" id="estudiantesActivos">-</div>
         </div>
       </div>
       
       <!-- Alerta de revisiones pendientes -->
-      <div id="alertaRevisionesPendientes" class="hidden" style="background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; padding: 16px 24px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="font-size: 28px;">🔔</span>
-          <div>
-            <strong style="font-size: 16px;">Tienes <span id="contadorPendientes">0</span> estudiante(s) esperando revisión de Creatividad</strong>
-            <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 14px;">Los estudiantes han completado sus ejercicios y esperan que califiques su trabajo.</p>
+      <div id="alertaRevisionesPendientes" class="alert-pending hidden">
+        <div class="alert-pending-content">
+          <span class="alert-pending-icon">🔔</span>
+          <div class="alert-pending-text">
+            <strong><span id="contadorPendientes">0</span> estudiante(s) esperan revisión</strong>
+            <p>Creatividad pendiente de calificar</p>
           </div>
         </div>
-        <a href="../creatividad/docente-calificar.html" 
-           style="background: white; color: #dd6b20; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; white-space: nowrap;">
+        <a href="../creatividad/docente-calificar.html" class="btn-action">
           Calificar Ahora →
         </a>
       </div>
       
-      <!-- Acceso a módulos -->
-      <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
-        <a href="../lectura-critica/rankings.html" 
-           style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; 
-                  border-radius: 8px; text-decoration: none; font-weight: 500;">
-          📊 Rankings Lectura Crítica
+      <!-- Botones de módulos -->
+      <div class="modules-grid">
+        <a href="../lectura-critica/rankings.html" class="module-btn lectura">
+          <span class="module-btn-icon">📊</span>
+          Rankings Lectura
         </a>
-        <a href="../creatividad/rankings.html" 
-           style="display: inline-block; padding: 12px 24px; background: #9f7aea; color: white; 
-                  border-radius: 8px; text-decoration: none; font-weight: 500;">
-          📊 Rankings Creatividad
+        <a href="../creatividad/rankings.html" class="module-btn creatividad">
+          <span class="module-btn-icon">🎨</span>
+          Rankings Creatividad
         </a>
-        <a href="../ejercicios/rankings.html" 
-           style="display: inline-block; padding: 12px 24px; background: #38b2ac; color: white; 
-                  border-radius: 8px; text-decoration: none; font-weight: 500;">
-          📊 Rankings Ejercicios Digitales
+        <a href="../ejercicios/rankings.html" class="module-btn ejercicios">
+          <span class="module-btn-icon">🎮</span>
+          Rankings Ejercicios
         </a>
-        <a href="../creatividad/docente-calificar.html" 
-           style="display: inline-block; padding: 12px 24px; background: #ed8936; color: white; 
-                  border-radius: 8px; text-decoration: none; font-weight: 500; position: relative;">
-          ✏️ Calificar Creatividad
-          <span id="badgePendientes" class="hidden" style="position: absolute; top: -8px; right: -8px; background: #e53e3e; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">0</span>
+        <a href="../creatividad/docente-calificar.html" class="module-btn calificar">
+          <span class="module-btn-icon">✏️</span>
+          Calificar
+          <span id="badgePendientes" class="module-badge hidden">0</span>
         </a>
       </div>
       
+      <!-- Tabs -->
       <div class="tabs">
         <button class="tab active" data-tab="estudiantes">👨‍🎓 Estudiantes</button>
-        <button class="tab" data-tab="resultados">📊 Resultados</button>
+        <button class="tab" data-tab="resultados">📊 Buscar</button>
       </div>
       
       <!-- Tab: Estudiantes -->
       <div id="tab-estudiantes" class="tab-content active">
         <div class="toolbar">
-          <input type="text" class="search-box" id="searchEstudiantes" placeholder="Buscar por nombre, código o email...">
-          <div class="filter-group">
+          <input type="text" class="search-box" id="searchEstudiantes" placeholder="🔍 Buscar por nombre o código...">
+          <div class="filter-row">
             <select id="filterGrado">
               <option value="">Todos los grados</option>
             </select>
             <select id="filterEstado">
-              <option value="">Todos los estados</option>
+              <option value="">Estado</option>
               <option value="activo">Activos</option>
               <option value="inactivo">Inactivos</option>
             </select>
           </div>
         </div>
         <div id="alertEstudiantes"></div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Nombre Completo</th>
-                <th>Email</th>
-                <th>Grado</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyEstudiantes">
-              <tr><td colspan="6" class="empty-state">Cargando...</td></tr>
-            </tbody>
-          </table>
+        <div class="student-list" id="studentList">
+          <div class="empty-state">Cargando...</div>
         </div>
       </div>
       
-      <!-- Tab: Resultados -->
+      <!-- Tab: Buscar Resultados -->
       <div id="tab-resultados" class="tab-content">
-        <div class="welcome-card">
-          <h2>📊 Resultados en Tiempo Real</h2>
-          <p>Esta funcionalidad estará disponible próximamente. Aquí podrás ver los resultados de las prácticas de tus estudiantes en tiempo real.</p>
+        <div class="toolbar">
+          <input type="text" class="search-box" id="searchResultados" placeholder="🔍 Buscar estudiante por nombre o código...">
+        </div>
+        <div class="student-list" id="resultadosList">
+          <div class="empty-state">Busca un estudiante para ver sus resultados</div>
         </div>
       </div>
     </main>
@@ -519,7 +796,7 @@
   <div id="modalResetPassword" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Resetear Contraseña</h2>
+        <h2>🔐 Resetear Contraseña</h2>
         <button class="btn-close" onclick="cerrarModal('modalResetPassword')">&times;</button>
       </div>
       <form id="formResetPassword">
@@ -529,14 +806,62 @@
           <input type="text" id="resetEstudianteNombre" readonly>
         </div>
         <div class="form-group">
+          <label>Código de Usuario</label>
+          <input type="text" id="resetEstudianteCodigo" readonly style="font-weight: bold; color: #48bb78;">
+        </div>
+        <div class="form-group">
           <label>Nueva Contraseña</label>
           <input type="text" id="resetPassword" value="123456" placeholder="123456">
         </div>
         <div class="form-actions">
-          <button type="button" class="btn" onclick="cerrarModal('modalResetPassword')">Cancelar</button>
+          <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalResetPassword')">Cancelar</button>
           <button type="submit" class="btn btn-primary">Resetear</button>
         </div>
       </form>
+    </div>
+  </div>
+  
+  <!-- Modal: Ver Resultados -->
+  <div id="modalVerResultados" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📊 Resultados</h2>
+        <button class="btn-close" onclick="cerrarModal('modalVerResultados')">&times;</button>
+      </div>
+      <div id="resultadosEstudianteContainer">
+        <div class="form-group">
+          <label>Estudiante</label>
+          <input type="text" id="resultadosEstudianteNombre" readonly>
+        </div>
+        <div class="form-group">
+          <label>Código</label>
+          <input type="text" id="resultadosEstudianteCodigo" readonly style="font-weight: bold; color: #48bb78;">
+        </div>
+        
+        <div class="results-section">
+          <h3>📚 Lectura Crítica</h3>
+          <div id="resultadosLectura">
+            <div class="empty-state">Cargando...</div>
+          </div>
+        </div>
+        
+        <div class="results-section">
+          <h3>🎨 Creatividad</h3>
+          <div id="resultadosCreatividad">
+            <div class="empty-state">Cargando...</div>
+          </div>
+        </div>
+        
+        <div class="results-section">
+          <h3>🎮 Ejercicios Digitales</h3>
+          <div id="resultadosEjercicios">
+            <div class="empty-state">Cargando...</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalVerResultados')" style="flex: 1;">Cerrar</button>
+      </div>
     </div>
   </div>
 
@@ -551,6 +876,8 @@
     const colegioInfo = document.getElementById('colegioInfo');
     const btnLogout = document.getElementById('btnLogout');
     
+    let todosEstudiantes = [];
+    
     // Solo docentes pueden acceder
     const user = requireRole('docente');
     
@@ -562,13 +889,10 @@
       
       welcomeName.textContent = user.nombre || 'Docente';
       
-      // Cargar información del colegio
       cargarInfoColegio();
-      
-      // Verificar revisiones pendientes de creatividad
       verificarRevisionesPendientes();
       
-      // Inicializar tabs
+      // Tabs
       document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
           const tabName = tab.dataset.tab;
@@ -576,31 +900,31 @@
           document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
           tab.classList.add('active');
           document.getElementById(`tab-${tabName}`).classList.add('active');
-          
-          if (tabName === 'estudiantes') {
-            cargarEstudiantes();
-          }
         });
       });
       
-      // Cargar estudiantes inicialmente
       cargarEstudiantes();
       cargarGrados();
       
-      // Búsqueda y filtros
+      // Búsqueda estudiantes
       document.getElementById('searchEstudiantes').addEventListener('input', (e) => {
-        cargarEstudiantes(e.target.value);
+        renderEstudiantes(e.target.value);
       });
       
       document.getElementById('filterGrado').addEventListener('change', () => {
-        cargarEstudiantes();
+        renderEstudiantes(document.getElementById('searchEstudiantes').value);
       });
       
       document.getElementById('filterEstado').addEventListener('change', () => {
-        cargarEstudiantes();
+        renderEstudiantes(document.getElementById('searchEstudiantes').value);
       });
       
-      // Formulario resetear contraseña
+      // Búsqueda resultados
+      document.getElementById('searchResultados').addEventListener('input', (e) => {
+        buscarEstudiantesResultados(e.target.value);
+      });
+      
+      // Form resetear
       document.getElementById('formResetPassword').addEventListener('submit', async (e) => {
         e.preventDefault();
         const estudianteId = document.getElementById('resetEstudianteId').value;
@@ -608,17 +932,15 @@
         
         try {
           await DocentesAPI.resetearPasswordEstudiante(estudianteId, nuevaPassword);
-          mostrarAlerta('alertEstudiantes', `Contraseña reseteada correctamente. Nueva contraseña: ${nuevaPassword}`, 'success');
+          mostrarAlerta('alertEstudiantes', `✅ Contraseña reseteada: ${nuevaPassword}`, 'success');
           cerrarModal('modalResetPassword');
-          cargarEstudiantes();
         } catch (error) {
-          console.error('Error reseteando contraseña:', error);
-          mostrarAlerta('alertEstudiantes', `Error: ${error.message}`, 'error');
+          mostrarAlerta('alertEstudiantes', `❌ Error: ${error.message}`, 'error');
         }
       });
       
       btnLogout.addEventListener('click', () => {
-        if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+        if (confirm('¿Cerrar sesión?')) {
           logout();
         }
       });
@@ -635,21 +957,17 @@
         
         if (asociacion && asociacion.length > 0 && asociacion[0].colegios) {
           const colegio = asociacion[0].colegios;
-          colegioInfo.textContent = `${colegio.codigo} - ${colegio.nombre}`;
-        } else {
-          colegioInfo.textContent = 'Sin colegio asignado';
+          colegioInfo.textContent = `${colegio.nombre}`;
         }
       } catch (error) {
-        console.error('Error cargando información del colegio:', error);
-        colegioInfo.textContent = 'Error cargando colegio';
+        console.error('Error:', error);
       }
     }
     
-    // Verificar revisiones pendientes de creatividad
     async function verificarRevisionesPendientes() {
       try {
         const response = await fetch(
-          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_creatividad?estado=eq.pendiente_revision&select=id,estudiante_id,usuarios:estudiante_id(nombre,apellidos,grado)`,
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_creatividad?estado=eq.pendiente_revision&select=id`,
           {
             headers: {
               'apikey': CONFIG.SUPABASE_ANON_KEY,
@@ -662,97 +980,145 @@
           const pendientes = await response.json();
           
           if (pendientes && pendientes.length > 0) {
-            // Mostrar alerta
             document.getElementById('alertaRevisionesPendientes').classList.remove('hidden');
             document.getElementById('contadorPendientes').textContent = pendientes.length;
             
-            // Mostrar badge
             const badge = document.getElementById('badgePendientes');
             badge.classList.remove('hidden');
-            badge.style.display = 'flex';
             badge.textContent = pendientes.length;
           }
         }
       } catch (error) {
-        console.error('Error verificando revisiones pendientes:', error);
+        console.error('Error:', error);
       }
     }
     
-    async function cargarEstudiantes(buscar = '') {
-      const tbody = document.getElementById('tbodyEstudiantes');
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+    async function cargarEstudiantes() {
+      const container = document.getElementById('studentList');
+      container.innerHTML = '<div class="empty-state">Cargando...</div>';
       
       try {
-        // Obtener estudiantes del colegio del docente
-        const estudiantes = await DocentesAPI.obtenerEstudiantesDelColegio(user.id);
+        todosEstudiantes = await DocentesAPI.obtenerEstudiantesDelColegio(user.id);
         
-        // Aplicar filtros
-        let estudiantesFiltrados = estudiantes;
+        document.getElementById('totalEstudiantes').textContent = todosEstudiantes.length;
+        document.getElementById('estudiantesActivos').textContent = todosEstudiantes.filter(e => e.activo).length;
         
-        // Filtro de búsqueda
-        if (buscar) {
-          const busqueda = buscar.toLowerCase();
-          estudiantesFiltrados = estudiantesFiltrados.filter(est => 
-            (est.nombre && est.nombre.toLowerCase().includes(busqueda)) ||
-            (est.apellidos && est.apellidos.toLowerCase().includes(busqueda)) ||
-            (est.codigo_estudiante && est.codigo_estudiante.toLowerCase().includes(busqueda)) ||
-            (est.email && est.email.toLowerCase().includes(busqueda))
-          );
-        }
-        
-        // Filtro de grado
-        const gradoFilter = document.getElementById('filterGrado').value;
-        if (gradoFilter) {
-          estudiantesFiltrados = estudiantesFiltrados.filter(est => est.grado === gradoFilter);
-        }
-        
-        // Filtro de estado
-        const estadoFilter = document.getElementById('filterEstado').value;
-        if (estadoFilter === 'activo') {
-          estudiantesFiltrados = estudiantesFiltrados.filter(est => est.activo === true);
-        } else if (estadoFilter === 'inactivo') {
-          estudiantesFiltrados = estudiantesFiltrados.filter(est => est.activo === false);
-        }
-        
-        // Actualizar estadísticas
-        document.getElementById('totalEstudiantes').textContent = estudiantes.length;
-        document.getElementById('estudiantesActivos').textContent = estudiantes.filter(e => e.activo).length;
-        
-        if (estudiantesFiltrados.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay estudiantes que coincidan con los filtros</td></tr>';
-          return;
-        }
-        
-        tbody.innerHTML = estudiantesFiltrados.map(est => `
-          <tr>
-            <td>${est.codigo_estudiante || '-'}</td>
-            <td>${est.nombre} ${est.apellidos || ''}</td>
-            <td>${est.email || '-'}</td>
-            <td>${est.grado || '-'}</td>
-            <td>
-              <span class="badge ${est.activo ? 'badge-success' : 'badge-danger'}">
-                ${est.activo ? 'Activo' : 'Inactivo'}
-              </span>
-            </td>
-            <td>
-              <div class="actions">
-                <button class="btn btn-sm btn-warning" onclick="abrirModalResetPassword('${est.id}', '${est.nombre} ${est.apellidos || ''}')">
-                  Resetear Password
-                </button>
-              </div>
-            </td>
-          </tr>
-        `).join('');
+        renderEstudiantes();
       } catch (error) {
-        console.error('Error cargando estudiantes:', error);
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${error.message}</td></tr>`;
+        container.innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
       }
+    }
+    
+    function renderEstudiantes(buscar = '') {
+      const container = document.getElementById('studentList');
+      let estudiantes = [...todosEstudiantes];
+      
+      // Filtros
+      if (buscar) {
+        const b = buscar.toLowerCase();
+        estudiantes = estudiantes.filter(est => 
+          (est.nombre && est.nombre.toLowerCase().includes(b)) ||
+          (est.apellidos && est.apellidos.toLowerCase().includes(b)) ||
+          (est.codigo_estudiante && est.codigo_estudiante.toLowerCase().includes(b))
+        );
+      }
+      
+      const gradoFilter = document.getElementById('filterGrado').value;
+      if (gradoFilter) {
+        estudiantes = estudiantes.filter(est => est.grado === gradoFilter);
+      }
+      
+      const estadoFilter = document.getElementById('filterEstado').value;
+      if (estadoFilter === 'activo') {
+        estudiantes = estudiantes.filter(est => est.activo === true);
+      } else if (estadoFilter === 'inactivo') {
+        estudiantes = estudiantes.filter(est => est.activo === false);
+      }
+      
+      if (estudiantes.length === 0) {
+        container.innerHTML = '<div class="empty-state">No hay estudiantes</div>';
+        return;
+      }
+      
+      container.innerHTML = estudiantes.map(est => `
+        <div class="student-card">
+          <div class="student-header">
+            <div class="student-name">${est.nombre} ${est.apellidos || ''}</div>
+            <div class="student-code">${est.codigo_estudiante || '-'}</div>
+          </div>
+          <div class="student-info">
+            <div class="student-info-item">
+              <span class="student-info-label">Grado</span>
+              <span class="student-info-value">${est.grado || '-'}</span>
+            </div>
+            <div class="student-info-item">
+              <span class="student-info-label">Estado</span>
+              <span class="badge ${est.activo ? 'badge-success' : 'badge-danger'}">${est.activo ? 'Activo' : 'Inactivo'}</span>
+            </div>
+            <div class="student-info-item">
+              <span class="student-info-label">Email</span>
+              <span class="student-info-value" style="font-size: 11px; word-break: break-all;">${est.email || '-'}</span>
+            </div>
+            <div class="student-info-item">
+              <span class="student-info-label">Usuario</span>
+              <span class="student-info-value" style="font-weight: 600; color: #48bb78;">${est.codigo_estudiante || est.email?.split('@')[0] || '-'}</span>
+            </div>
+          </div>
+          <div class="student-actions">
+            <button class="btn btn-info" onclick="verResultados('${est.id}', '${est.nombre} ${est.apellidos || ''}', '${est.codigo_estudiante || ''}')">
+              📊 Resultados
+            </button>
+            <button class="btn btn-warning" onclick="abrirModalResetPassword('${est.id}', '${est.nombre} ${est.apellidos || ''}', '${est.codigo_estudiante || ''}')">
+              🔐 Resetear
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function buscarEstudiantesResultados(buscar) {
+      const container = document.getElementById('resultadosList');
+      
+      if (!buscar || buscar.length < 2) {
+        container.innerHTML = '<div class="empty-state">Escribe al menos 2 caracteres</div>';
+        return;
+      }
+      
+      const b = buscar.toLowerCase();
+      const estudiantes = todosEstudiantes.filter(est => 
+        (est.nombre && est.nombre.toLowerCase().includes(b)) ||
+        (est.apellidos && est.apellidos.toLowerCase().includes(b)) ||
+        (est.codigo_estudiante && est.codigo_estudiante.toLowerCase().includes(b))
+      ).slice(0, 10);
+      
+      if (estudiantes.length === 0) {
+        container.innerHTML = '<div class="empty-state">No se encontraron estudiantes</div>';
+        return;
+      }
+      
+      container.innerHTML = estudiantes.map(est => `
+        <div class="student-card" onclick="verResultados('${est.id}', '${est.nombre} ${est.apellidos || ''}', '${est.codigo_estudiante || ''}')" style="cursor: pointer;">
+          <div class="student-header">
+            <div class="student-name">${est.nombre} ${est.apellidos || ''}</div>
+            <div class="student-code">${est.codigo_estudiante || '-'}</div>
+          </div>
+          <div class="student-info">
+            <div class="student-info-item">
+              <span class="student-info-label">Grado</span>
+              <span class="student-info-value">${est.grado || '-'}</span>
+            </div>
+            <div class="student-info-item">
+              <span class="student-info-label">Toca para ver resultados</span>
+              <span class="student-info-value">📊</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
     }
     
     async function cargarGrados() {
       try {
-        const estudiantes = await DocentesAPI.obtenerEstudiantesDelColegio(user.id);
-        const grados = [...new Set(estudiantes.map(e => e.grado).filter(Boolean))].sort();
+        const grados = [...new Set(todosEstudiantes.map(e => e.grado).filter(Boolean))].sort();
         const select = document.getElementById('filterGrado');
         grados.forEach(grado => {
           const option = document.createElement('option');
@@ -761,16 +1127,143 @@
           select.appendChild(option);
         });
       } catch (error) {
-        console.error('Error cargando grados:', error);
+        console.error('Error:', error);
       }
     }
     
-    window.abrirModalResetPassword = function(estudianteId, estudianteNombre) {
+    window.abrirModalResetPassword = function(estudianteId, estudianteNombre, codigo) {
       document.getElementById('resetEstudianteId').value = estudianteId;
       document.getElementById('resetEstudianteNombre').value = estudianteNombre;
+      document.getElementById('resetEstudianteCodigo').value = codigo || '-';
       document.getElementById('resetPassword').value = '123456';
       document.getElementById('modalResetPassword').classList.add('active');
     };
+    
+    window.verResultados = async function(estudianteId, nombre, codigo) {
+      document.getElementById('resultadosEstudianteNombre').value = nombre;
+      document.getElementById('resultadosEstudianteCodigo').value = codigo || '-';
+      document.getElementById('modalVerResultados').classList.add('active');
+      
+      // Cargar resultados
+      await cargarResultadosEstudiante(estudianteId);
+    };
+    
+    async function cargarResultadosEstudiante(estudianteId) {
+      // Lectura Crítica
+      const lecturaContainer = document.getElementById('resultadosLectura');
+      lecturaContainer.innerHTML = '<div class="empty-state">Cargando...</div>';
+      
+      try {
+        const lecturaResp = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_lectura?estudiante_id=eq.${estudianteId}&estado=eq.finalizada&select=*,ciclos_lectura(titulo)&order=fecha_fin_sesion.desc&limit=5`,
+          { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
+        );
+        const lecturas = await lecturaResp.json();
+        
+        if (lecturas && lecturas.length > 0) {
+          lecturaContainer.innerHTML = lecturas.map(l => `
+            <div class="result-card">
+              <div class="result-card-header">
+                <span class="result-card-title">${l.ciclos_lectura?.titulo || 'Lectura'}</span>
+              </div>
+              <div class="result-card-stats">
+                <div class="result-stat">
+                  <div class="result-stat-value">${(l.porcentaje_comprension || 0).toFixed(0)}%</div>
+                  <div class="result-stat-label">Comprensión</div>
+                </div>
+                <div class="result-stat">
+                  <div class="result-stat-value">${(l.velocidad_simple || 0).toFixed(0)}</div>
+                  <div class="result-stat-label">PPM</div>
+                </div>
+                <div class="result-stat">
+                  <div class="result-stat-value">${(l.velocidad_efectiva || 0).toFixed(0)}</div>
+                  <div class="result-stat-label">V. Efectiva</div>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          lecturaContainer.innerHTML = '<div class="result-card"><p style="color:#718096;font-size:13px;">Sin resultados aún</p></div>';
+        }
+      } catch (e) {
+        lecturaContainer.innerHTML = '<div class="result-card"><p style="color:#e53e3e;font-size:13px;">Error cargando</p></div>';
+      }
+      
+      // Creatividad
+      const creatividadContainer = document.getElementById('resultadosCreatividad');
+      creatividadContainer.innerHTML = '<div class="empty-state">Cargando...</div>';
+      
+      try {
+        const creatividadResp = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/sesiones_creatividad?estudiante_id=eq.${estudianteId}&select=*,ciclos_creatividad(titulo)&order=fecha_fin_sesion.desc.nullslast&limit=5`,
+          { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
+        );
+        const creatividades = await creatividadResp.json();
+        
+        const relevantes = creatividades.filter(c => ['finalizada', 'pendiente_revision', 'calificada'].includes(c.estado));
+        
+        if (relevantes.length > 0) {
+          creatividadContainer.innerHTML = relevantes.map(c => {
+            let estadoText = c.estado === 'calificada' ? `${c.calificacion_docente}%` : 
+                            c.estado === 'pendiente_revision' ? '⏳ Pendiente' : '✅ Finalizado';
+            return `
+              <div class="result-card">
+                <div class="result-card-header">
+                  <span class="result-card-title">${c.ciclos_creatividad?.titulo || 'Creatividad'}</span>
+                  <span class="badge ${c.estado === 'calificada' ? 'badge-success' : 'badge-warning'}">${estadoText}</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          creatividadContainer.innerHTML = '<div class="result-card"><p style="color:#718096;font-size:13px;">Sin resultados aún</p></div>';
+        }
+      } catch (e) {
+        creatividadContainer.innerHTML = '<div class="result-card"><p style="color:#e53e3e;font-size:13px;">Error cargando</p></div>';
+      }
+      
+      // Ejercicios Digitales
+      const ejerciciosContainer = document.getElementById('resultadosEjercicios');
+      ejerciciosContainer.innerHTML = '<div class="empty-state">Cargando...</div>';
+      
+      try {
+        const ejerciciosResp = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/resultados_juegos?estudiante_id=eq.${estudianteId}&select=*,juegos_ejercicios:juego_id(nombre,meta_objetivo)&order=fecha_registro.desc&limit=10`,
+          { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
+        );
+        const ejercicios = await ejerciciosResp.json();
+        
+        if (ejercicios && ejercicios.length > 0) {
+          const metasAlcanzadas = ejercicios.filter(e => e.meta_alcanzada).length;
+          ejerciciosContainer.innerHTML = `
+            <div class="result-card">
+              <div class="result-card-stats">
+                <div class="result-stat">
+                  <div class="result-stat-value">${ejercicios.length}</div>
+                  <div class="result-stat-label">Juegos</div>
+                </div>
+                <div class="result-stat">
+                  <div class="result-stat-value">${metasAlcanzadas}</div>
+                  <div class="result-stat-label">Metas</div>
+                </div>
+              </div>
+            </div>
+            ${ejercicios.slice(0,5).map(e => `
+              <div class="result-card">
+                <div class="result-card-header">
+                  <span class="result-card-title">${e.juegos_ejercicios?.nombre || 'Juego'}</span>
+                  <span class="badge ${e.meta_alcanzada ? 'badge-success' : 'badge-danger'}">${e.resultado_obtenido}/${e.juegos_ejercicios?.meta_objetivo || '-'}</span>
+                </div>
+              </div>
+            `).join('')}
+          `;
+        } else {
+          ejerciciosContainer.innerHTML = '<div class="result-card"><p style="color:#718096;font-size:13px;">Sin resultados aún</p></div>';
+        }
+      } catch (e) {
+        ejerciciosContainer.innerHTML = '<div class="result-card"><p style="color:#e53e3e;font-size:13px;">Error cargando</p></div>';
+      }
+    }
     
     window.cerrarModal = function(modalId) {
       document.getElementById(modalId).classList.remove('active');
@@ -779,10 +1272,24 @@
     function mostrarAlerta(containerId, mensaje, tipo) {
       const container = document.getElementById(containerId);
       container.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
-      setTimeout(() => {
-        container.innerHTML = '';
-      }, 5000);
+      setTimeout(() => { container.innerHTML = ''; }, 5000);
     }
+    
+    // Cerrar modales con Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+      }
+    });
+    
+    // Cerrar modal tocando fuera
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+    });
   </script>
 </body>
 </html>

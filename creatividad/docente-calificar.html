@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Calificar Creatividad - Docente</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,140 +11,166 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f7fafc;
       min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
     }
     
     .header {
       background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
       color: white;
-      padding: 20px 24px;
+      padding: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     
-    .header h1 { font-size: 24px; }
+    .header h1 { 
+      font-size: 16px;
+      font-weight: 600;
+    }
     
     .btn-back {
       background: rgba(255,255,255,0.2);
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 8px 12px;
       border-radius: 6px;
       cursor: pointer;
       text-decoration: none;
+      font-size: 13px;
     }
     
     .container {
+      padding: 16px;
       max-width: 1200px;
       margin: 0 auto;
-      padding: 24px;
     }
     
     .filter-bar {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 24px;
-      align-items: center;
-      flex-wrap: wrap;
+      margin-bottom: 16px;
     }
     
     .filter-bar select {
-      padding: 10px 16px;
+      width: 100%;
+      padding: 14px 16px;
       border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: 10px;
+      font-size: 16px;
       background: white;
     }
     
     .stats-row {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
     }
     
     .stat-card {
       background: white;
-      padding: 20px;
+      padding: 16px;
       border-radius: 12px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      flex: 1;
       text-align: center;
     }
     
     .stat-value {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 700;
       color: #ed8936;
     }
     
     .stat-label {
       color: #718096;
-      font-size: 14px;
+      font-size: 12px;
       margin-top: 4px;
     }
     
-    .card {
+    /* Lista de estudiantes pendientes - cards */
+    .pending-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .pending-card {
       background: white;
       border-radius: 12px;
+      padding: 16px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      overflow: hidden;
     }
     
-    .card-header {
-      background: #f7fafc;
-      padding: 16px 24px;
-      border-bottom: 1px solid #e2e8f0;
+    .pending-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
     }
     
-    .card-header h2 {
-      font-size: 18px;
-      color: #2d3748;
+    .pending-student {
+      flex: 1;
     }
     
-    table { width: 100%; border-collapse: collapse; }
-    
-    th, td {
-      padding: 14px 20px;
-      text-align: left;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    
-    th {
-      background: #f7fafc;
+    .pending-name {
+      font-size: 16px;
       font-weight: 600;
-      color: #4a5568;
+      color: #1a202c;
+      margin-bottom: 2px;
+    }
+    
+    .pending-code {
       font-size: 13px;
+      color: #ed8936;
+      font-weight: 600;
+    }
+    
+    .pending-activity {
+      font-size: 13px;
+      color: #718096;
+      margin-top: 4px;
+    }
+    
+    .pending-date {
+      font-size: 11px;
+      color: #a0aec0;
+      margin-top: 2px;
     }
     
     .badge {
       display: inline-block;
       padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
     }
     
     .badge-pending { background: #feebc8; color: #744210; }
     .badge-graded { background: #c6f6d5; color: #22543d; }
     
-    .btn {
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
+    .btn-calificar {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      color: white;
       border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
     }
-    
-    .btn-primary { background: #ed8936; color: white; }
-    .btn-primary:hover { background: #dd6b20; }
     
     .empty-state {
       text-align: center;
-      padding: 48px;
+      padding: 40px 20px;
       color: #718096;
+      background: white;
+      border-radius: 12px;
     }
     
-    /* Modal */
+    /* Modal responsive */
     .modal {
       display: none;
       position: fixed;
@@ -152,9 +178,9 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
       z-index: 1000;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
     }
     
@@ -162,10 +188,17 @@
     
     .modal-content {
       background: white;
-      border-radius: 12px;
-      max-width: 500px;
-      width: 90%;
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
       padding: 24px;
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
     }
     
     .modal-header {
@@ -173,16 +206,27 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e2e8f0;
     }
     
-    .modal-header h2 { font-size: 20px; color: #2d3748; }
+    .modal-header h2 { 
+      font-size: 18px; 
+      color: #2d3748; 
+    }
     
     .btn-close {
-      background: none;
+      background: #f7fafc;
       border: none;
       font-size: 24px;
       cursor: pointer;
       color: #718096;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .form-group {
@@ -194,28 +238,48 @@
       margin-bottom: 8px;
       font-weight: 500;
       color: #2d3748;
-    }
-    
-    .form-group input,
-    .form-group textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
       font-size: 14px;
     }
     
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 16px;
+      background: #f7fafc;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #ed8936;
+      background: white;
+    }
+    
     .grade-input {
-      font-size: 24px !important;
+      font-size: 32px !important;
       text-align: center;
-      max-width: 120px;
+      font-weight: 700;
+      color: #ed8936;
     }
     
     .form-actions {
       display: flex;
       gap: 12px;
-      justify-content: flex-end;
       margin-top: 24px;
+    }
+    
+    .form-actions .btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
     }
     
     .btn-secondary {
@@ -223,10 +287,15 @@
       color: #4a5568;
     }
     
+    .btn-primary {
+      background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      color: white;
+    }
+    
     .student-info {
       background: #f7fafc;
       padding: 16px;
-      border-radius: 8px;
+      border-radius: 10px;
       margin-bottom: 20px;
     }
     
@@ -242,12 +311,53 @@
     }
     
     .hidden { display: none !important; }
+    
+    /* Desktop */
+    @media (min-width: 768px) {
+      .header {
+        padding: 20px 24px;
+      }
+      
+      .header h1 {
+        font-size: 24px;
+      }
+      
+      .container {
+        padding: 24px;
+      }
+      
+      .filter-bar select {
+        width: auto;
+        min-width: 250px;
+      }
+      
+      .pending-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      
+      .modal {
+        align-items: center;
+      }
+      
+      .modal-content {
+        border-radius: 16px;
+        max-width: 500px;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .pending-list {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
   </style>
 </head>
 <body>
   <header class="header">
-    <h1>Calificar Creatividad</h1>
-    <a href="../docente/dashboard.html" class="btn-back">← Volver al Dashboard</a>
+    <h1>✏️ Calificar Creatividad</h1>
+    <a href="../docente/dashboard.html" class="btn-back">← Volver</a>
   </header>
   
   <div class="container">
@@ -255,13 +365,12 @@
       <select id="filtroGrado" onchange="cargarPendientes()">
         <option value="">Seleccionar grado...</option>
       </select>
-      <span id="statusText" style="color: #718096; font-size: 14px;"></span>
     </div>
     
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-value" id="pendientesCount">0</div>
-        <div class="stat-label">Pendientes de Revisión</div>
+        <div class="stat-label">Pendientes</div>
       </div>
       <div class="stat-card">
         <div class="stat-value" id="calificadosCount">0</div>
@@ -269,25 +378,8 @@
       </div>
     </div>
     
-    <div class="card">
-      <div class="card-header">
-        <h2>Trabajos Pendientes de Calificación</h2>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Estudiante</th>
-            <th>Actividad</th>
-            <th>Fecha Solicitud</th>
-            <th>Estado</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody id="tablaPendientes">
-          <tr><td colspan="6" class="empty-state">Selecciona un grado para ver los trabajos pendientes</td></tr>
-        </tbody>
-      </table>
+    <div class="pending-list" id="pendingList">
+      <div class="empty-state">Selecciona un grado para ver los trabajos pendientes</div>
     </div>
   </div>
   
@@ -295,7 +387,7 @@
   <div id="modalCalificar" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Calificar Trabajo</h2>
+        <h2>✏️ Calificar</h2>
         <button class="btn-close" onclick="cerrarModal()">&times;</button>
       </div>
       
@@ -319,7 +411,7 @@
         
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Calificación</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
         </div>
       </form>
     </div>
@@ -331,7 +423,7 @@
     
     const user = getUser();
     
-    // Verificar permisos - el rol puede estar en 'role' o 'tipo_usuario'
+    // Verificar permisos
     const userRole = (user?.role || user?.tipo_usuario || '').toLowerCase();
     const rolesPermitidos = ['docente', 'admin', 'super_admin', 'administrador', 'rector'];
     
@@ -345,11 +437,9 @@
     // Inicializar
     document.addEventListener('DOMContentLoaded', () => {
       cargarSelectGrados();
-      
       document.getElementById('formCalificar').addEventListener('submit', guardarCalificacion);
     });
     
-    // Cargar grados en el select
     function cargarSelectGrados() {
       const select = document.getElementById('filtroGrado');
       GRADOS.forEach(grado => {
@@ -360,17 +450,16 @@
       });
     }
     
-    // Cargar trabajos pendientes
     window.cargarPendientes = async function() {
       const grado = document.getElementById('filtroGrado').value;
-      const tbody = document.getElementById('tablaPendientes');
+      const container = document.getElementById('pendingList');
       
       if (!grado) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Selecciona un grado</td></tr>';
+        container.innerHTML = '<div class="empty-state">Selecciona un grado</div>';
         return;
       }
       
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Cargando...</td></tr>';
+      container.innerHTML = '<div class="empty-state">Cargando...</div>';
       
       try {
         const pendientes = await SesionesCreatividadAPI.obtenerPendientesRevision(grado);
@@ -383,41 +472,42 @@
         document.getElementById('pendientesCount').textContent = filtrados.length;
         
         if (filtrados.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay trabajos pendientes de calificación para este grado</td></tr>';
+          container.innerHTML = '<div class="empty-state">🎉 No hay trabajos pendientes para este grado</div>';
           return;
         }
         
-        tbody.innerHTML = filtrados.map(s => {
+        container.innerHTML = filtrados.map(s => {
           const estudiante = s.usuarios || {};
           const ciclo = s.ciclos_creatividad || {};
           const nombreCompleto = `${estudiante.nombre || ''} ${estudiante.apellidos || ''}`.trim();
           const fechaSolicitud = s.fecha_solicitud_revision 
-            ? new Date(s.fecha_solicitud_revision).toLocaleDateString('es-CO')
-            : '-';
+            ? new Date(s.fecha_solicitud_revision).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
+            : '';
           
           return `
-            <tr>
-              <td><strong>${estudiante.codigo_estudiante || '-'}</strong></td>
-              <td>${nombreCompleto}</td>
-              <td>${ciclo.titulo || '-'}</td>
-              <td>${fechaSolicitud}</td>
-              <td><span class="badge badge-pending">Pendiente</span></td>
-              <td>
-                <button class="btn btn-primary" onclick="abrirCalificar('${s.id}', '${nombreCompleto}', '${ciclo.titulo || ''}')">
-                  Calificar
-                </button>
-              </td>
-            </tr>
+            <div class="pending-card">
+              <div class="pending-header">
+                <div class="pending-student">
+                  <div class="pending-name">${nombreCompleto}</div>
+                  <div class="pending-code">${estudiante.codigo_estudiante || '-'}</div>
+                  <div class="pending-activity">${ciclo.titulo || '-'}</div>
+                  ${fechaSolicitud ? `<div class="pending-date">Solicitud: ${fechaSolicitud}</div>` : ''}
+                </div>
+                <span class="badge badge-pending">Pendiente</span>
+              </div>
+              <button class="btn-calificar" onclick="abrirCalificar('${s.id}', '${nombreCompleto}', '${ciclo.titulo || ''}')">
+                Calificar
+              </button>
+            </div>
           `;
         }).join('');
         
       } catch (error) {
         console.error('Error cargando pendientes:', error);
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${error.message}</td></tr>`;
+        container.innerHTML = `<div class="empty-state" style="color: #e53e3e;">Error: ${error.message}</div>`;
       }
     };
     
-    // Abrir modal de calificación
     window.abrirCalificar = function(sesionId, nombreEstudiante, actividad) {
       document.getElementById('sesionId').value = sesionId;
       document.getElementById('studentName').textContent = nombreEstudiante;
@@ -425,14 +515,17 @@
       document.getElementById('calificacion').value = '';
       document.getElementById('comentario').value = '';
       document.getElementById('modalCalificar').classList.add('active');
+      
+      // Focus en el input de calificación
+      setTimeout(() => {
+        document.getElementById('calificacion').focus();
+      }, 300);
     };
     
-    // Cerrar modal
     window.cerrarModal = function() {
       document.getElementById('modalCalificar').classList.remove('active');
     };
     
-    // Guardar calificación
     async function guardarCalificacion(e) {
       e.preventDefault();
       
@@ -453,7 +546,7 @@
           comentario || null
         );
         
-        alert('Calificación guardada exitosamente');
+        alert('✅ Calificación guardada');
         cerrarModal();
         cargarPendientes();
         
@@ -466,6 +559,11 @@
     // Cerrar modal con Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') cerrarModal();
+    });
+    
+    // Cerrar modal tocando fuera
+    document.getElementById('modalCalificar').addEventListener('click', (e) => {
+      if (e.target.id === 'modalCalificar') cerrarModal();
     });
   </script>
 </body>
