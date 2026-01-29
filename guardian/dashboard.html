@@ -807,11 +807,13 @@
     async function inicializar() {
       try {
         // Cargar estudiantes asociados
+        // El sistema usa la tabla `acudientes` que ya existe
+        // Intentar primero por ID, luego por email (más común para acudientes)
         let estudiantes = await AccesoGuardianAPI.obtenerEstudiantes(user.id);
         
-        // Si no hay en acceso_guardianes, buscar en acudientes
-        if (!estudiantes || estudiantes.length === 0) {
-          estudiantes = await AccesoGuardianAPI.obtenerEstudiantesDesdeAcudientes(user.id);
+        // Si no encuentra por ID, intentar por email
+        if ((!estudiantes || estudiantes.length === 0) && user.email) {
+          estudiantes = await AccesoGuardianAPI.obtenerEstudiantesPorEmail(user.email);
         }
         
         loadingState.classList.add('hidden');

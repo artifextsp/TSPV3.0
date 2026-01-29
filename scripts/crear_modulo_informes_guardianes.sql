@@ -130,21 +130,24 @@ CREATE TABLE IF NOT EXISTS resumen_ciclo_estudiante (
 );
 
 -- ============================================
--- 4. TABLA DE ACCESO DE GUARDIANES
--- Control de qué estudiantes puede ver cada guardián
+-- 4. NOTA SOBRE ACCESO DE GUARDIANES
 -- ============================================
-
-CREATE TABLE IF NOT EXISTS acceso_guardianes (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  guardian_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-  estudiante_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-  relacion TEXT DEFAULT 'acudiente',
-  acceso_activo BOOLEAN DEFAULT true,
-  fecha_autorizacion TIMESTAMPTZ DEFAULT NOW(),
-  autorizado_por UUID REFERENCES usuarios(id),
-  
-  UNIQUE(guardian_id, estudiante_id)
-);
+-- 
+-- El sistema YA TIENE la tabla `acudientes` que relaciona guardianes con estudiantes.
+-- No necesitamos crear una nueva tabla `acceso_guardianes`.
+-- 
+-- La tabla `acudientes` funciona así:
+-- - Un acudiente puede tener múltiples hijos (múltiples registros con mismo email)
+-- - Cada registro tiene: id, email, estudiante_id
+-- - El sistema de autenticación ya maneja esto correctamente
+-- 
+-- Para asociar un guardián a un estudiante, simplemente:
+-- 1. Asegúrate de que el estudiante tenga `email_acudiente` en la tabla `usuarios`
+-- 2. Ejecuta el script `crear_tabla_acudientes.sql` que migra automáticamente
+-- 3. O inserta manualmente en `acudientes`:
+--    INSERT INTO acudientes (nombre, apellidos, email, estudiante_id, password_hash, activo)
+--    VALUES ('Nombre', 'Apellido', 'email@ejemplo.com', 'uuid-del-estudiante', 'hash-de-password', true);
+--
 
 -- ============================================
 -- 5. VISTA: RANKING POR GRADO (para comparativos)
@@ -364,8 +367,8 @@ $$ LANGUAGE plpgsql;
 -- ============================================
 
 CREATE INDEX IF NOT EXISTS idx_resumen_ciclo_estudiante ON resumen_ciclo_estudiante(estudiante_id, ciclo_numero);
-CREATE INDEX IF NOT EXISTS idx_acceso_guardianes_guardian ON acceso_guardianes(guardian_id);
-CREATE INDEX IF NOT EXISTS idx_acceso_guardianes_estudiante ON acceso_guardianes(estudiante_id);
+
+-- NOTA: Los índices de la tabla `acudientes` ya están creados en `crear_tabla_acudientes.sql`
 
 -- ============================================
 -- 9. RLS POLICIES
@@ -374,13 +377,13 @@ CREATE INDEX IF NOT EXISTS idx_acceso_guardianes_estudiante ON acceso_guardianes
 ALTER TABLE benchmarks_grado ENABLE ROW LEVEL SECURITY;
 ALTER TABLE habilidades_cognitivas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE resumen_ciclo_estudiante ENABLE ROW LEVEL SECURITY;
-ALTER TABLE acceso_guardianes ENABLE ROW LEVEL SECURITY;
 
 -- Políticas permisivas para desarrollo
 CREATE POLICY "Benchmarks visibles para todos" ON benchmarks_grado FOR SELECT USING (true);
 CREATE POLICY "Habilidades visibles para todos" ON habilidades_cognitivas FOR SELECT USING (true);
 CREATE POLICY "Resumen visible para todos" ON resumen_ciclo_estudiante FOR ALL USING (true);
-CREATE POLICY "Acceso guardianes visible" ON acceso_guardianes FOR ALL USING (true);
+
+-- NOTA: La tabla `acudientes` ya tiene sus propias políticas RLS configuradas
 
 -- ============================================
 -- COMENTARIOS
@@ -389,4 +392,3 @@ CREATE POLICY "Acceso guardianes visible" ON acceso_guardianes FOR ALL USING (tr
 COMMENT ON TABLE benchmarks_grado IS 'Metas de referencia por grado para cada métrica del programa';
 COMMENT ON TABLE habilidades_cognitivas IS 'Catálogo de las 10 habilidades cognitivas entrenadas en ejercicios digitales';
 COMMENT ON TABLE resumen_ciclo_estudiante IS 'Cache de métricas agregadas por ciclo para reportes rápidos';
-COMMENT ON TABLE acceso_guardianes IS 'Control de acceso de guardianes a información de estudiantes';

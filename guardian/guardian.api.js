@@ -42,32 +42,65 @@ async function apiRequest(endpoint, options = {}) {
 export const AccesoGuardianAPI = {
   /**
    * Obtener estudiantes asociados a un guardián
+   * 
+   * IMPORTANTE: El sistema usa la tabla `acudientes` que ya existe.
+   * Un acudiente puede tener múltiples hijos (múltiples registros con mismo email).
+   * 
+   * @param {string} guardianId - Puede ser:
+   *   - El `id` de la tabla `acudientes` (si el usuario está autenticado como acudiente)
+   *   - El `email` del acudiente (para buscar todos sus hijos)
    */
   async obtenerEstudiantes(guardianId) {
-    const accesos = await apiRequest(
-      `acceso_guardianes?guardian_id=eq.${guardianId}&acceso_activo=eq.true&select=*,estudiante:estudiante_id(id,nombre,apellidos,grado,codigo_estudiante,email,activo)`
+    // Intentar primero por ID (si es UUID)
+    let acudientes = await apiRequest(
+      `acudientes?id=eq.${guardianId}&activo=eq.true&select=*,estudiante:estudiante_id(id,nombre,apellidos,grado,codigo_estudiante,email,activo)`
     );
-    return accesos?.map(a => a.estudiante).filter(Boolean) || [];
+    
+    // Si no encuentra por ID, intentar por email (un acudiente puede tener múltiples hijos)
+    if (!acudientes || acudientes.length === 0) {
+      acudientes = await apiRequest(
+        `acudientes?email=eq.${guardianId}&activo=eq.true&select=*,estudiante:estudiante_id(id,nombre,apellidos,grado,codigo_estudiante,email,activo)`
+      );
+    }
+    
+    // Si aún no encuentra, intentar por username
+    if (!acudientes || acudientes.length === 0) {
+      acudientes = await apiRequest(
+        `acudientes?username=eq.${guardianId.toUpperCase()}&activo=eq.true&select=*,estudiante:estudiante_id(id,nombre,apellidos,grado,codigo_estudiante,email,activo)`
+      );
+    }
+    
+    return acudientes?.map(a => a.estudiante).filter(Boolean) || [];
+  },
+
+  /**
+   * Obtener estudiantes por email del acudiente
+   * (Un acudiente puede tener múltiples hijos)
+   */
+  async obtenerEstudiantesPorEmail(email) {
+    const acudientes = await apiRequest(
+      `acudientes?email=eq.${email.toLowerCase()}&activo=eq.true&select=*,estudiante:estudiante_id(id,nombre,apellidos,grado,codigo_estudiante,email,activo)`
+    );
+    return acudientes?.map(a => a.estudiante).filter(Boolean) || [];
   },
 
   /**
    * Verificar si un guardián tiene acceso a un estudiante
    */
   async verificarAcceso(guardianId, estudianteId) {
-    const resultado = await apiRequest(
-      `acceso_guardianes?guardian_id=eq.${guardianId}&estudiante_id=eq.${estudianteId}&acceso_activo=eq.true&select=id`
+    // Buscar por ID del acudiente
+    let resultado = await apiRequest(
+      `acudientes?id=eq.${guardianId}&estudiante_id=eq.${estudianteId}&activo=eq.true&select=id`
     );
+    
+    // Si no encuentra, buscar por email
+    if (!resultado || resultado.length === 0) {
+      resultado = await apiRequest(
+        `acudientes?email=eq.${guardianId}&estudiante_id=eq.${estudianteId}&activo=eq.true&select=id`
+      );
+    }
+    
     return resultado && resultado.length > 0;
-  },
-
-  /**
-   * Obtener acceso desde tabla acudientes (legacy)
-   */
-  async obtenerEstudiantesDesdeAcudientes(guardianId) {
-    const acudientes = await apiRequest(
-      `acudientes?usuario_id=eq.${guardianId}&select=*,estudiante:estudiante_id(id,nombre,apellidos,grado,codigo_estudiante,email,activo)`
-    );
-    return acudientes?.map(a => a.estudiante).filter(Boolean) || [];
   }
 };
 
