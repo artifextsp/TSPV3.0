@@ -289,7 +289,13 @@
       hideMessages();
       
       const email = emailInput.value.trim();
-      const password = passwordInput.value;
+      const password = passwordInput.value.trim(); // ⚠️ IMPORTANTE: Eliminar espacios
+      
+      // Log para debugging (solo mostrar longitud, no la contraseña)
+      console.log('[LOGIN] Email/Username:', email);
+      console.log('[LOGIN] Longitud contraseña:', password.length);
+      console.log('[LOGIN] Contraseña tiene espacios al inicio:', password !== passwordInput.value.trimStart());
+      console.log('[LOGIN] Contraseña tiene espacios al final:', password !== passwordInput.value.trimEnd());
       
       // Validación básica
       if (!email || !password) {

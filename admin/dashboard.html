@@ -597,7 +597,12 @@
       <div id="tab-acudientes" class="tab-content">
         <div class="toolbar">
           <input type="text" class="search-box" id="searchAcudientes" placeholder="Buscar acudientes...">
-          <button class="btn btn-primary" onclick="abrirModalAcudiente()">+ Nuevo Acudiente</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary" onclick="abrirModalAcudiente()">+ Nuevo Acudiente</button>
+            <a href="gestionar-acudientes.html" class="btn btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center;">
+              👨‍👩‍👧‍👦 Asociar Múltiples Hijos
+            </a>
+          </div>
         </div>
         <div id="alertAcudientes"></div>
         <div class="table-container">

@@ -285,7 +285,7 @@ export const EjerciciosDetalleAPI = {
    */
   async obtenerResultadosPorCiclo(estudianteId, numeroCiclo) {
     return await apiRequest(
-      `resultados_juegos?estudiante_id=eq.${estudianteId}&select=*,juegos_ejercicios(id,nombre,url,habilidad_estimulada,meta_objetivo,tipo_meta,ciclos_ejercicios(numero_ciclo))&order=fecha_registro.desc`
+      `resultados_juegos?estudiante_id=eq.${estudianteId}&select=*,juegos_ejercicios(id,nombre,url_juego,habilidad_estimulada,meta_objetivo,tipo_meta,ciclos_ejercicios(numero_ciclo))&order=fecha_registro.desc`
     );
   },
 
@@ -294,7 +294,7 @@ export const EjerciciosDetalleAPI = {
    */
   async obtenerHistorial(estudianteId) {
     return await apiRequest(
-      `resultados_juegos?estudiante_id=eq.${estudianteId}&select=*,juegos_ejercicios(id,nombre,url,habilidad_estimulada,meta_objetivo,tipo_meta,ciclos_ejercicios(numero_ciclo,titulo,grado))&order=fecha_registro.desc`
+      `resultados_juegos?estudiante_id=eq.${estudianteId}&select=*,juegos_ejercicios(id,nombre,url_juego,habilidad_estimulada,meta_objetivo,tipo_meta,ciclos_ejercicios(numero_ciclo,titulo,grado))&order=fecha_registro.desc`
     );
   },
 

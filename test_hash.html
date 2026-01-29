@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Hash - ACU031</title>
+</head>
+<body>
+  <h1>Test de Hash para ACU031</h1>
+  <div id="resultado"></div>
+  
+  <script type="module">
+    import { hashPassword } from './auth/auth.utils.js';
+    import { CONFIG } from './config/supabase.config.js';
+    
+    const resultado = document.getElementById('resultado');
+    
+    async function testHash() {
+      resultado.innerHTML = '<p>Cargando...</p>';
+      
+      // Hash esperado de "temporal123"
+      const hashEsperado = 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
+      
+      // Generar hash de "temporal123"
+      const hashGenerado = await hashPassword('temporal123');
+      
+      // Buscar acudiente ACU031
+      const fields = CONFIG.ACUDIENTE_FIELDS.join(',');
+      const queryUrl = `${CONFIG.API_BASE}/${CONFIG.ACUDIENTES_TABLE}?username=eq.ACU031&select=${fields}`;
+      
+      try {
+        const response = await fetch(queryUrl, {
+          method: 'GET',
+          headers: CONFIG.HEADERS,
+          mode: 'cors',
+          credentials: 'omit'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const acudientes = await response.json();
+        
+        if (!acudientes || acudientes.length === 0) {
+          resultado.innerHTML = '<p style="color: red;">❌ No se encontró ACU031</p>';
+          return;
+        }
+        
+        const acudiente = acudientes[0];
+        const hashAlmacenado = (acudiente.password_hash || '').trim();
+        
+        resultado.innerHTML = `
+          <h2>Resultados:</h2>
+          <div style="font-family: monospace; background: #f5f5f5; padding: 20px; border-radius: 8px;">
+            <p><strong>Username:</strong> ${acudiente.username || 'N/A'}</p>
+            <p><strong>Email:</strong> ${acudiente.email || 'N/A'}</p>
+            <p><strong>Hash esperado (temporal123):</strong></p>
+            <p style="word-break: break-all;">${hashEsperado}</p>
+            <p><strong>Hash generado ahora:</strong></p>
+            <p style="word-break: break-all;">${hashGenerado}</p>
+            <p><strong>Hash almacenado en BD:</strong></p>
+            <p style="word-break: break-all;">${hashAlmacenado || 'NO ENCONTRADO'}</p>
+            <p><strong>¿Hash generado = Hash esperado?:</strong> ${hashGenerado === hashEsperado ? '✅ SÍ' : '❌ NO'}</p>
+            <p><strong>¿Hash generado = Hash almacenado?:</strong> ${hashGenerado === hashAlmacenado ? '✅ SÍ' : '❌ NO'}</p>
+            <p><strong>¿Hash esperado = Hash almacenado?:</strong> ${hashEsperado === hashAlmacenado ? '✅ SÍ' : '❌ NO'}</p>
+            <p><strong>Longitud hash almacenado:</strong> ${hashAlmacenado.length}</p>
+            <p><strong>Longitud hash generado:</strong> ${hashGenerado.length}</p>
+            <p><strong>Longitud hash esperado:</strong> ${hashEsperado.length}</p>
+            ${hashAlmacenado && hashAlmacenado !== hashEsperado ? `
+              <h3 style="color: red;">⚠️ PROBLEMA DETECTADO</h3>
+              <p>El hash almacenado NO coincide con el esperado.</p>
+              <p>Ejecuta este SQL para corregirlo:</p>
+              <pre style="background: #fff; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+UPDATE acudientes
+SET password_hash = 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3',
+    primera_vez = true
+WHERE username = 'ACU031'
+  AND activo = true;</pre>
+            ` : ''}
+            ${!acudiente.password_hash ? `
+              <h3 style="color: red;">⚠️ PROBLEMA CRÍTICO</h3>
+              <p>El campo password_hash NO está presente en los datos recuperados.</p>
+              <p>Campos disponibles: ${Object.keys(acudiente).join(', ')}</p>
+            ` : ''}
+          </div>
+        `;
+        
+      } catch (error) {
+        resultado.innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
+        console.error('Error:', error);
+      }
+    }
+    
+    testHash();
+  </script>
+</body>
+</html>

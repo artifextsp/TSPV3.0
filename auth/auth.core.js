@@ -233,6 +233,10 @@ async function findAcudiente(identifier, isUsername) {
       queryUrl = `${CONFIG.API_BASE}/${CONFIG.ACUDIENTES_TABLE}?email=eq.${encodeURIComponent(identifier.toLowerCase())}&select=${fields}`;
     }
     
+    Logger.log('🔍 Buscando acudiente:', identifier, isUsername ? '(username)' : '(email)');
+    Logger.log('📡 URL:', queryUrl);
+    Logger.log('📋 Campos solicitados:', fields);
+    
     const response = await fetch(queryUrl, {
       method: 'GET',
       headers: CONFIG.HEADERS,
@@ -241,6 +245,9 @@ async function findAcudiente(identifier, isUsername) {
     });
     
     if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Sin detalles');
+      Logger.error('❌ Error en respuesta:', response.status, response.statusText);
+      Logger.error('Detalles:', errorText);
       if (response.status === 401 || response.status === 403) {
         Logger.error('Error de autenticación con la base de datos');
         return null;
@@ -249,10 +256,27 @@ async function findAcudiente(identifier, isUsername) {
     }
     
     const acudientes = await response.json();
-    return acudientes && acudientes.length > 0 ? acudientes[0] : null;
+    Logger.log('📥 Acudientes encontrados:', acudientes ? acudientes.length : 0);
+    
+    if (acudientes && acudientes.length > 0) {
+      const acudiente = acudientes[0];
+      Logger.log('✅ Acudiente encontrado:', acudiente.username || acudiente.email);
+      Logger.log('🔐 Password hash presente:', !!acudiente.password_hash);
+      if (acudiente.password_hash) {
+        Logger.log('🔐 Hash (primeros 20 chars):', acudiente.password_hash.substring(0, 20) + '...');
+        Logger.log('🔐 Longitud hash:', acudiente.password_hash.length);
+      } else {
+        Logger.warn('⚠️ NO se encontró password_hash en los datos recuperados');
+        Logger.warn('Campos disponibles:', Object.keys(acudiente));
+      }
+      return acudiente;
+    }
+    
+    Logger.warn('⚠️ No se encontró acudiente con:', identifier);
+    return null;
     
   } catch (error) {
-    Logger.error('Error al buscar acudiente:', error);
+    Logger.error('❌ Error al buscar acudiente:', error);
     return null;
   }
 }
@@ -487,29 +511,59 @@ async function verifyPassword(inputPassword, userData, hasher = null) {
   
   if (!storedPassword) {
     Logger.warn('No se encontró campo de contraseña. Considera usar Supabase Auth.');
+    Logger.warn('Campos disponibles en userData:', Object.keys(userData));
     return false;
   }
+  
+  // Limpiar el hash almacenado (eliminar espacios al inicio/final)
+  const storedPasswordClean = String(storedPassword).trim();
+  
+  Logger.log('🔐 Verificando contraseña:');
+  Logger.log('  - Contraseña ingresada:', inputPassword ? '***' : 'vacía');
+  Logger.log('  - Hash almacenado (primeros 20 chars):', storedPasswordClean.substring(0, 20) + '...');
+  Logger.log('  - Longitud hash almacenado:', storedPasswordClean.length);
   
   // Si hay hasher personalizado, usarlo
   if (hasher && typeof hasher === 'function') {
     const hashedInput = await hasher(inputPassword);
-    return hashedInput === storedPassword;
+    Logger.log('  - Hash generado (primeros 20 chars):', hashedInput.substring(0, 20) + '...');
+    const match = hashedInput === storedPasswordClean;
+    Logger.log('  - ¿Coinciden?:', match);
+    return match;
   }
   
   // Hash SHA-256 por defecto
   const hashedInput = await hashPassword(inputPassword);
+  Logger.log('  - Hash SHA-256 generado (primeros 20 chars):', hashedInput.substring(0, 20) + '...');
+  Logger.log('  - Longitud hash generado:', hashedInput.length);
   
-  // Comparar con contraseña almacenada
-  if (hashedInput === storedPassword) {
+  // Comparar con contraseña almacenada (sin espacios)
+  const match = hashedInput === storedPasswordClean;
+  Logger.log('  - ¿Coinciden?:', match);
+  
+  if (match) {
+    Logger.success('✅ Contraseña correcta');
     return true;
   }
   
+  // Debug: mostrar diferencias si no coinciden
+  if (!match && CONFIG.DEBUG_MODE) {
+    Logger.warn('⚠️ Los hashes no coinciden. Comparando caracter por caracter...');
+    for (let i = 0; i < Math.min(hashedInput.length, storedPasswordClean.length); i++) {
+      if (hashedInput[i] !== storedPasswordClean[i]) {
+        Logger.warn(`  Diferencia en posición ${i}: generado="${hashedInput[i]}" vs almacenado="${storedPasswordClean[i]}"`);
+        break;
+      }
+    }
+  }
+  
   // Fallback: comparación directa (solo para desarrollo, NO usar en producción)
-  if (inputPassword === storedPassword) {
+  if (inputPassword === storedPasswordClean) {
     Logger.warn('Contraseña almacenada en texto plano detectada. INSEGURO.');
     return true;
   }
   
+  Logger.warn('❌ Contraseña incorrecta');
   return false;
 }
 
@@ -831,10 +885,16 @@ export async function changePassword(currentPassword, newPassword) {
   }
   
   try {
-    Logger.log('Cambiando contraseña para usuario:', user.id);
+    Logger.log('Cambiando contraseña para usuario:', user.id, 'Rol:', user.role);
     
-    const fields = CONFIG.USER_FIELDS.join(',');
-    const queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?id=eq.${user.id}&select=${fields}`;
+    // Determinar si es acudiente o usuario normal
+    const isAcudiente = user.role === 'acudiente' || user.role === 'guardian';
+    const table = isAcudiente ? CONFIG.ACUDIENTES_TABLE : CONFIG.USERS_TABLE;
+    const fields = isAcudiente ? CONFIG.ACUDIENTE_FIELDS.join(',') : CONFIG.USER_FIELDS.join(',');
+    
+    Logger.log('Buscando en tabla:', table);
+    
+    const queryUrl = `${CONFIG.API_BASE}/${table}?id=eq.${user.id}&select=${fields}`;
     
     const response = await fetch(queryUrl, {
       method: 'GET',
@@ -844,25 +904,35 @@ export async function changePassword(currentPassword, newPassword) {
     });
     
     if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Sin detalles');
+      Logger.error('Error al buscar usuario:', errorText);
       return errorResult('Error al verificar contraseña actual', 'VERIFY_ERROR');
     }
     
     const users = await response.json();
     if (!users || users.length === 0) {
+      Logger.error('Usuario no encontrado en tabla:', table);
       return errorResult('Usuario no encontrado', 'USER_NOT_FOUND');
     }
     
     const userData = users[0];
+    Logger.log('Usuario encontrado, verificando contraseña...');
+    
     const isCurrentPasswordValid = await verifyPassword(currentPassword, userData);
     
     if (!isCurrentPasswordValid) {
+      Logger.warn('Contraseña actual incorrecta');
       return errorResult('La contraseña actual es incorrecta', 'INVALID_CURRENT_PASSWORD');
     }
     
-    const updateUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?id=eq.${user.id}`;
+    Logger.log('Contraseña actual correcta, actualizando...');
+    
+    const updateUrl = `${CONFIG.API_BASE}/${table}?id=eq.${user.id}`;
     const updateBody = mismaContrasena
       ? { primera_vez: false }
       : { password_hash: await hashPassword(newPassword), primera_vez: false };
+    
+    Logger.log('Actualizando en:', updateUrl);
     
     const updateResponse = await fetch(updateUrl, {
       method: 'PATCH',
@@ -873,6 +943,8 @@ export async function changePassword(currentPassword, newPassword) {
     });
     
     if (!updateResponse.ok) {
+      const errorText = await updateResponse.text().catch(() => 'Sin detalles');
+      Logger.error('Error al actualizar contraseña:', errorText);
       return errorResult('Error al actualizar la contraseña', 'UPDATE_ERROR');
     }
     

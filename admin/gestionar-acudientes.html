@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Gestionar Acudientes - Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header h1 { font-size: 18px; }
+    
+    .btn-back {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+    
+    .card h2 {
+      font-size: 18px;
+      color: #1a202c;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #2d3748;
+      font-size: 14px;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #5a67d8;
+    }
+    
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+      background: #cbd5e0;
+    }
+    
+    .btn-success {
+      background: #48bb78;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #38a169;
+    }
+    
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    
+    .alert-success {
+      background: #c6f6d5;
+      color: #22543d;
+      border: 1px solid #9ae6b4;
+    }
+    
+    .alert-error {
+      background: #fed7d7;
+      color: #742a2a;
+      border: 1px solid #fc8181;
+    }
+    
+    .alert-info {
+      background: #bee3f8;
+      color: #2a4365;
+      border: 1px solid #90cdf4;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    th {
+      background: #f7fafc;
+      font-weight: 600;
+      color: #4a5568;
+      font-size: 13px;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .badge-success {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .badge-info {
+      background: #bee3f8;
+      color: #2a4365;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #718096;
+    }
+    
+    .students-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 12px;
+      background: #f7fafc;
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+    
+    .student-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .student-info {
+      flex: 1;
+    }
+    
+    .student-name {
+      font-weight: 500;
+      color: #2d3748;
+    }
+    
+    .student-code {
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    .btn-remove {
+      background: #fed7d7;
+      color: #742a2a;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .btn-remove:hover {
+      background: #fc8181;
+    }
+    
+    .search-box {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .modal-header h3 {
+      font-size: 18px;
+      color: #1a202c;
+    }
+    
+    .btn-close {
+      background: #f7fafc;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #718096;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .hidden { display: none !important; }
+    
+    @media (max-width: 768px) {
+      .header h1 { font-size: 16px; }
+      .container { padding: 16px; }
+      .card { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>👨‍👩‍👧 Gestionar Acudientes</h1>
+    <a href="dashboard.html" class="btn-back">← Volver</a>
+  </header>
+  
+  <div class="container">
+    <div id="alertContainer"></div>
+    
+    <!-- Buscar Acudiente -->
+    <div class="card">
+      <h2>🔍 Buscar Acudiente</h2>
+      <div class="form-group">
+        <label>Buscar por nombre, apellidos, email o username</label>
+        <input type="text" id="searchEmail" placeholder="Ej: Juan Pérez, juan@email.com, ACU001" class="search-box" onkeyup="if(event.key === 'Enter') buscarAcudiente()">
+        <small style="color: #718096; font-size: 12px; display: block; margin-top: 4px;">
+          Puedes buscar por nombre, apellidos, email o username del acudiente
+        </small>
+      </div>
+      <button class="btn btn-primary" onclick="buscarAcudiente()">Buscar</button>
+    </div>
+    
+    <!-- Información del Acudiente -->
+    <div id="acudienteInfo" class="card hidden">
+      <h2>📋 Información del Acudiente</h2>
+      <div id="acudienteDetails"></div>
+      
+      <h3 style="margin-top: 24px; margin-bottom: 16px; font-size: 16px;">👨‍👧 Hijos Asociados</h3>
+      <div id="hijosList"></div>
+      
+      <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+        <h3 style="margin-bottom: 16px; font-size: 16px;">➕ Agregar Hijo</h3>
+        <div class="form-group">
+          <label>Buscar Estudiante</label>
+          <input type="text" id="searchEstudiante" placeholder="Código o nombre del estudiante" class="search-box" onkeyup="buscarEstudiantes(this.value)">
+        </div>
+        <div id="estudiantesResultados" style="max-height: 300px; overflow-y: auto;"></div>
+      </div>
+    </div>
+    
+    <!-- Lista de Acudientes con Múltiples Hijos -->
+    <div class="card">
+      <h2>👨‍👩‍👧‍👦 Acudientes con Múltiples Hijos</h2>
+      <div id="acudientesMultiples"></div>
+    </div>
+  </div>
+  
+  <!-- Modal: Confirmar Asociación -->
+  <div id="modalConfirmar" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Confirmar Asociación</h3>
+        <button class="btn-close" onclick="cerrarModal()">&times;</button>
+      </div>
+      <div id="modalConfirmarContent"></div>
+      <div style="display: flex; gap: 12px; margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="cerrarModal()" style="flex: 1;">Cancelar</button>
+        <button class="btn btn-success" onclick="confirmarAsociacion()" style="flex: 1;">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireRole } from '../auth/auth.core.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    
+    const user = requireRole('admin');
+    
+    if (!user) {
+      window.location.href = '../index.html';
+    }
+    
+    let acudienteActual = null;
+    let estudianteSeleccionado = null;
+    
+    // Cargar acudientes con múltiples hijos
+    cargarAcudientesMultiples();
+    
+    // Exponer funciones al ámbito global para que funcionen con onclick
+    window.buscarAcudiente = async function() {
+      const buscar = document.getElementById('searchEmail').value.trim();
+      
+      if (!buscar || buscar.length < 2) {
+        mostrarAlerta('Ingresa al menos 2 caracteres para buscar', 'error');
+        return;
+      }
+      
+      try {
+        // Construir parámetros de búsqueda múltiple (nombre, apellidos, email, username)
+        const params = new URLSearchParams();
+        params.append('activo', 'eq.true');
+        params.append('or', `(nombre.ilike.%${buscar}%,apellidos.ilike.%${buscar}%,email.ilike.%${buscar}%,username.ilike.%${buscar}%)`);
+        params.append('select', '*,estudiante:estudiante_id(id,codigo_estudiante,nombre,apellidos,grado)');
+        params.append('order', 'nombre.asc,apellidos.asc');
+        
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/acudientes?${params.toString()}`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) throw new Error('Error al buscar');
+        
+        const acudientes = await response.json();
+        
+        if (!acudientes || acudientes.length === 0) {
+          mostrarAlerta(`No se encontró ningún acudiente con "${buscar}"`, 'error');
+          document.getElementById('acudienteInfo').classList.add('hidden');
+          return;
+        }
+        
+        // Si hay múltiples resultados, agrupar por email
+        // Si todos tienen el mismo email, mostrar como un solo acudiente con múltiples hijos
+        const emailsUnicos = [...new Set(acudientes.map(a => a.email))];
+        
+        if (emailsUnicos.length === 1) {
+          // Todos tienen el mismo email, agrupar como un solo acudiente
+          acudienteActual = {
+            email: acudientes[0].email,
+            nombre: acudientes[0].nombre,
+            apellidos: acudientes[0].apellidos,
+            celular: acudientes[0].celular,
+            username: acudientes[0].username,
+            hijos: acudientes.map(a => a.estudiante).filter(Boolean)
+          };
+          mostrarInfoAcudiente();
+        } else {
+          // Múltiples acudientes encontrados, mostrar lista para seleccionar
+          mostrarListaAcudientes(acudientes);
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al buscar acudiente: ' + error.message, 'error');
+      }
+    };
+    
+    function mostrarListaAcudientes(acudientes) {
+      const container = document.getElementById('acudienteInfo');
+      const details = document.getElementById('acudienteDetails');
+      const hijosList = document.getElementById('hijosList');
+      
+      container.classList.remove('hidden');
+      
+      // Agrupar por email (normalizado para evitar problemas con espacios)
+      const acudientesMap = {};
+      acudientes.forEach(a => {
+        // Normalizar email: trim y lowercase para agrupar correctamente
+        const emailNormalizado = (a.email || '').trim().toLowerCase();
+        if (!acudientesMap[emailNormalizado]) {
+          acudientesMap[emailNormalizado] = {
+            email: emailNormalizado, // Usar email normalizado como clave
+            emailOriginal: a.email,  // Guardar email original para mostrar
+            nombre: a.nombre,
+            apellidos: a.apellidos,
+            celular: a.celular,
+            username: a.username,
+            hijos: []
+          };
+        }
+        if (a.estudiante) {
+          acudientesMap[emailNormalizado].hijos.push(a.estudiante);
+        }
+      });
+      
+      const acudientesAgrupados = Object.values(acudientesMap);
+      
+      details.innerHTML = `
+        <div style="margin-bottom: 16px;">
+          <p style="color: #718096; font-size: 14px; margin-bottom: 12px;">
+            Se encontraron ${acudientesAgrupados.length} acudiente(s). Selecciona uno:
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 8px;" id="listaAcudientesEncontrados">
+            ${acudientesAgrupados.map((acu, index) => {
+              // Usar el email normalizado para la búsqueda (ya está normalizado en el map)
+              const emailParaBuscar = acu.email.trim().toLowerCase();
+              const emailParaMostrar = acu.emailOriginal || acu.email;
+              return `
+              <div class="student-item acudiente-item-lista" style="cursor: pointer;" data-email="${emailParaBuscar}" data-index="${index}">
+                <div class="student-info">
+                  <div class="student-name">${acu.nombre} ${acu.apellidos || ''}</div>
+                  <div class="student-code">${emailParaMostrar} • ${acu.username || 'Sin username'} • ${acu.hijos.length} hijo(s)</div>
+                </div>
+                <button class="btn btn-sm btn-primary btn-seleccionar-acudiente" style="padding: 6px 12px; font-size: 12px;" data-email="${emailParaBuscar}">Seleccionar</button>
+              </div>
+            `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+      
+      hijosList.innerHTML = '';
+      
+      // Agregar event listeners usando event delegation después de renderizar
+      setTimeout(() => {
+        const lista = document.getElementById('listaAcudientesEncontrados');
+        if (lista) {
+          // Remover listeners anteriores si existen
+          const nuevaLista = lista.cloneNode(true);
+          lista.parentNode.replaceChild(nuevaLista, lista);
+          
+          // Agregar nuevo listener usando event delegation
+          nuevaLista.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-seleccionar-acudiente');
+            const item = e.target.closest('.acudiente-item-lista');
+            
+            if (btn) {
+              e.stopPropagation();
+              e.preventDefault();
+              const email = btn.getAttribute('data-email');
+              if (email && window.seleccionarAcudienteDeLista) {
+                console.log('Seleccionando acudiente:', email);
+                window.seleccionarAcudienteDeLista(email);
+              }
+            } else if (item && !e.target.closest('button')) {
+              const email = item.getAttribute('data-email');
+              if (email && window.seleccionarAcudienteDeLista) {
+                console.log('Seleccionando acudiente (click en item):', email);
+                window.seleccionarAcudienteDeLista(email);
+              }
+            }
+          });
+        }
+      }, 50);
+    }
+    
+    window.seleccionarAcudienteDeLista = async function(email) {
+      try {
+        console.log('🔍 Buscando acudiente con email:', email);
+        
+        // Mostrar indicador de carga
+        const details = document.getElementById('acudienteDetails');
+        details.innerHTML = '<div class="empty-state">Cargando información del acudiente...</div>';
+        
+        // Limpiar y normalizar el email
+        const emailLimpio = email.trim().toLowerCase();
+        console.log('📧 Email normalizado:', emailLimpio);
+        
+        // Buscar nuevamente solo por email para obtener todos los registros
+        // Primero intentar con eq exacto (más confiable)
+        const params = new URLSearchParams();
+        params.append('email', `eq.${emailLimpio}`);
+        params.append('activo', 'eq.true');
+        params.append('select', '*,estudiante:estudiante_id(id,codigo_estudiante,nombre,apellidos,grado)');
+        params.append('order', 'created_at.asc');
+        
+        const url = `${CONFIG.SUPABASE_URL}/rest/v1/acudientes?${params.toString()}`;
+        console.log('📡 URL de búsqueda:', url);
+        
+        const response = await fetch(url, {
+          headers: {
+            'apikey': CONFIG.SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+          }
+        });
+        
+        console.log('📥 Respuesta status:', response.status, response.statusText);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ Error en respuesta:', errorText);
+          throw new Error(`Error ${response.status}: ${errorText.substring(0, 100)}`);
+        }
+        
+        let acudientes = await response.json();
+        console.log('📋 Acudientes encontrados:', acudientes);
+        
+        if (!acudientes || acudientes.length === 0) {
+          console.warn('⚠️ No se encontraron acudientes con búsqueda exacta, intentando con ilike...');
+          // Intentar búsqueda alternativa con ilike (case-insensitive)
+          const paramsIlike = new URLSearchParams();
+          paramsIlike.append('email', `ilike.${emailLimpio}`);
+          paramsIlike.append('activo', 'eq.true');
+          paramsIlike.append('select', '*,estudiante:estudiante_id(id,codigo_estudiante,nombre,apellidos,grado)');
+          paramsIlike.append('order', 'created_at.asc');
+          
+          const urlIlike = `${CONFIG.SUPABASE_URL}/rest/v1/acudientes?${paramsIlike.toString()}`;
+          console.log('📡 URL búsqueda ilike:', urlIlike);
+          
+          const responseIlike = await fetch(urlIlike, {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          });
+          
+          if (responseIlike.ok) {
+            const acudientesIlike = await responseIlike.json();
+            console.log('📋 Resultados búsqueda ilike:', acudientesIlike);
+            if (acudientesIlike && acudientesIlike.length > 0) {
+              console.log('✅ Encontrado con búsqueda ilike:', acudientesIlike);
+              acudientes = acudientesIlike;
+            }
+          } else {
+            const errorText = await responseIlike.text();
+            console.error('❌ Error en búsqueda ilike:', errorText);
+          }
+        }
+        
+        if (!acudientes || acudientes.length === 0) {
+          mostrarAlerta(`No se encontró información del acudiente con email: ${email}`, 'error');
+          details.innerHTML = `
+            <div class="empty-state">
+              <p style="color: #e53e3e;">⚠️ No se encontró información del acudiente</p>
+              <p style="font-size: 12px; color: #718096; margin-top: 8px;">
+                Email buscado: ${email}
+              </p>
+              <p style="font-size: 12px; color: #718096;">
+                Intenta buscar nuevamente o verifica que el acudiente existe en el sistema.
+              </p>
+            </div>
+          `;
+          return;
+        }
+        
+        acudienteActual = {
+          email: acudientes[0].email,
+          nombre: acudientes[0].nombre,
+          apellidos: acudientes[0].apellidos,
+          celular: acudientes[0].celular,
+          username: acudientes[0].username,
+          hijos: acudientes.map(a => a.estudiante).filter(Boolean)
+        };
+        
+        console.log('✅ Acudiente seleccionado:', acudienteActual);
+        
+        // Actualizar el campo de búsqueda con el email seleccionado
+        document.getElementById('searchEmail').value = email;
+        
+        // Mostrar información del acudiente seleccionado
+        mostrarInfoAcudiente();
+        
+        // Mostrar mensaje de éxito
+        mostrarAlerta(`✅ Acudiente "${acudienteActual.nombre} ${acudienteActual.apellidos}" seleccionado correctamente`, 'success');
+        
+        // Limpiar resultados de búsqueda de estudiantes si había alguno
+        document.getElementById('estudiantesResultados').innerHTML = '';
+        document.getElementById('searchEstudiante').value = '';
+        
+      } catch (error) {
+        console.error('❌ Error al seleccionar acudiente:', error);
+        const details = document.getElementById('acudienteDetails');
+        details.innerHTML = `
+          <div class="empty-state">
+            <p style="color: #e53e3e;">❌ Error al cargar acudiente</p>
+            <p style="font-size: 12px; color: #718096; margin-top: 8px;">
+              ${error.message}
+            </p>
+            <p style="font-size: 12px; color: #718096;">
+              Revisa la consola para más detalles.
+            </p>
+          </div>
+        `;
+        mostrarAlerta('Error al cargar acudiente: ' + error.message, 'error');
+      }
+    };
+    
+    function mostrarInfoAcudiente() {
+      const container = document.getElementById('acudienteInfo');
+      const details = document.getElementById('acudienteDetails');
+      const hijosList = document.getElementById('hijosList');
+      
+      container.classList.remove('hidden');
+      
+      details.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+          <div>
+            <label style="font-size: 12px; color: #718096;">Nombre</label>
+            <p style="font-weight: 500; color: #2d3748;">${acudienteActual.nombre} ${acudienteActual.apellidos}</p>
+          </div>
+          <div>
+            <label style="font-size: 12px; color: #718096;">Email</label>
+            <p style="font-weight: 500; color: #2d3748;">${acudienteActual.email}</p>
+          </div>
+          <div>
+            <label style="font-size: 12px; color: #718096;">Celular</label>
+            <p style="font-weight: 500; color: #2d3748;">${acudienteActual.celular || '-'}</p>
+          </div>
+          <div>
+            <label style="font-size: 12px; color: #718096;">Username</label>
+            <p style="font-weight: 500; color: #2d3748;">${acudienteActual.username || '-'}</p>
+          </div>
+        </div>
+      `;
+      
+      if (acudienteActual.hijos.length === 0) {
+        hijosList.innerHTML = '<div class="empty-state">No hay hijos asociados</div>';
+      } else {
+        hijosList.innerHTML = `
+          <div class="students-list">
+            ${acudienteActual.hijos.map(h => `
+              <div class="student-item">
+                <div class="student-info">
+                  <div class="student-name">${h.nombre} ${h.apellidos || ''}</div>
+                  <div class="student-code">${h.codigo_estudiante} • ${h.grado || '-'}</div>
+                </div>
+                <button class="btn-remove" onclick="desasociarHijo('${h.id}')">Quitar</button>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    }
+    
+    // Exponer función de búsqueda de estudiantes al ámbito global
+    window.buscarEstudiantes = async function(buscar) {
+      const container = document.getElementById('estudiantesResultados');
+      
+      if (!buscar || buscar.length < 2) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      // Validar que hay un acudiente seleccionado
+      if (!acudienteActual) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p style="color: #e53e3e; font-weight: 500;">⚠️ Primero selecciona un acudiente</p>
+            <p style="font-size: 12px; color: #718096; margin-top: 8px;">
+              Busca un acudiente arriba y haz clic en "Seleccionar" para poder agregar hijos
+            </p>
+          </div>
+        `;
+        return;
+      }
+      
+      try {
+        // Buscar estudiantes por código_estudiante (más confiable que tipo_usuario)
+        // Construir parámetros de búsqueda similar a admin.api.js
+        const params = new URLSearchParams();
+        params.append('codigo_estudiante', 'like.EST%');
+        params.append('activo', 'eq.true');
+        params.append('or', `(codigo_estudiante.ilike.%${buscar}%,nombre.ilike.%${buscar}%,apellidos.ilike.%${buscar}%)`);
+        params.append('select', 'id,codigo_estudiante,nombre,apellidos,grado');
+        params.append('limit', '10');
+        
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/usuarios?${params.toString()}`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error en respuesta:', errorText);
+          throw new Error('Error al buscar estudiantes');
+        }
+        
+        const estudiantes = await response.json();
+        
+        if (!estudiantes || !Array.isArray(estudiantes)) {
+          console.error('Respuesta inválida:', estudiantes);
+          container.innerHTML = '<div class="empty-state">Error: Respuesta inválida del servidor</div>';
+          return;
+        }
+        
+        // Filtrar estudiantes que ya están asociados
+        const estudiantesDisponibles = estudiantes.filter(e => 
+          !acudienteActual || !acudienteActual.hijos || !acudienteActual.hijos.some(h => h.id === e.id)
+        );
+        
+        if (estudiantesDisponibles.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <p>No se encontraron estudiantes con "${buscar}"</p>
+              <p style="font-size: 12px; color: #718096; margin-top: 8px;">
+                Intenta buscar por nombre, apellidos o código de estudiante (ej: EST0001)
+              </p>
+            </div>
+          `;
+          return;
+        }
+        
+        container.innerHTML = `
+          <div class="students-list">
+            ${estudiantesDisponibles.map(e => {
+              const nombreCompleto = `${e.nombre || ''} ${e.apellidos || ''}`.trim();
+              const nombreEscapado = nombreCompleto.replace(/'/g, "\\'");
+              return `
+              <div class="student-item" style="cursor: pointer;" onclick="seleccionarEstudiante('${e.id}', '${e.codigo_estudiante}', '${nombreEscapado}')">
+                <div class="student-info">
+                  <div class="student-name">${nombreCompleto}</div>
+                  <div class="student-code">${e.codigo_estudiante} • ${e.grado || '-'}</div>
+                </div>
+                <button class="btn btn-sm btn-success" style="padding: 6px 12px; font-size: 12px;">Agregar</button>
+              </div>
+            `;
+            }).join('')}
+          </div>
+        `;
+        
+      } catch (error) {
+        console.error('Error:', error);
+        container.innerHTML = '<div class="empty-state">Error al buscar estudiantes</div>';
+      }
+    };
+    
+    window.seleccionarEstudiante = function(estudianteId, codigo, nombre) {
+      if (!acudienteActual) {
+        mostrarAlerta('Primero busca un acudiente', 'error');
+        return;
+      }
+      
+      estudianteSeleccionado = { id: estudianteId, codigo, nombre };
+      
+      const nombreAcudiente = `${acudienteActual.nombre || ''} ${acudienteActual.apellidos || ''}`.trim();
+      
+      document.getElementById('modalConfirmarContent').innerHTML = `
+        <p>¿Asociar al estudiante <strong>${nombre || codigo}</strong> (${codigo}) al acudiente <strong>${nombreAcudiente}</strong>?</p>
+        <p style="margin-top: 12px; color: #718096; font-size: 13px;">El acudiente podrá ver los resultados de este estudiante en su dashboard.</p>
+      `;
+      
+      document.getElementById('modalConfirmar').classList.add('active');
+    };
+    
+    window.confirmarAsociacion = async function() {
+      if (!estudianteSeleccionado || !acudienteActual) return;
+      
+      try {
+        // Obtener datos del acudiente existente para copiar
+        const emailEncoded = encodeURIComponent(acudienteActual.email);
+        const acudienteExistente = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/acudientes?email=eq.${emailEncoded}&activo=eq.true&select=*&limit=1`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        ).then(r => r.json());
+        
+        if (!acudienteExistente || acudienteExistente.length === 0) {
+          throw new Error('No se encontró el acudiente');
+        }
+        
+        const datosAcudiente = acudienteExistente[0];
+        
+        // Crear nuevo registro con el mismo email pero diferente estudiante_id
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/acudientes`,
+          {
+            method: 'POST',
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({
+              nombre: datosAcudiente.nombre,
+              apellidos: datosAcudiente.apellidos,
+              email: datosAcudiente.email,
+              celular: datosAcudiente.celular,
+              password_hash: datosAcudiente.password_hash,
+              username: null,  // No asignar username automáticamente (se puede asignar después si es necesario)
+              estudiante_id: estudianteSeleccionado.id,
+              activo: true,
+              primera_vez: false  // No es primera vez si ya existe el acudiente
+            })
+          }
+        );
+        
+        if (!response.ok) {
+          const error = await response.text();
+          if (error.includes('acudientes_email_estudiante_unique')) {
+            throw new Error('Este estudiante ya está asociado a este acudiente');
+          }
+          throw new Error(error);
+        }
+        
+        mostrarAlerta(`✅ Estudiante ${estudianteSeleccionado.nombre} asociado correctamente`, 'success');
+        window.cerrarModal();
+        
+        // Recargar información
+        await window.buscarAcudiente();
+        cargarAcudientesMultiples();
+        
+        // Limpiar búsqueda
+        document.getElementById('searchEstudiante').value = '';
+        document.getElementById('estudiantesResultados').innerHTML = '';
+        
+      } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error: ' + error.message, 'error');
+      }
+    };
+    
+    window.desasociarHijo = async function(estudianteId) {
+      if (!acudienteActual) {
+        mostrarAlerta('No hay acudiente seleccionado', 'error');
+        return;
+      }
+      
+      if (!confirm('¿Desasociar este estudiante del acudiente?')) return;
+      
+      try {
+        // Codificar el email para evitar problemas con caracteres especiales
+        const emailEncoded = encodeURIComponent(acudienteActual.email);
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/acudientes?email=eq.${emailEncoded}&estudiante_id=eq.${estudianteId}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) throw new Error('Error al desasociar');
+        
+        mostrarAlerta('✅ Estudiante desasociado correctamente', 'success');
+        
+        // Recargar información
+        await window.buscarAcudiente();
+        cargarAcudientesMultiples();
+        
+      } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error: ' + error.message, 'error');
+      }
+    };
+    
+    async function cargarAcudientesMultiples() {
+      const container = document.getElementById('acudientesMultiples');
+      container.innerHTML = '<div class="empty-state">Cargando...</div>';
+      
+      try {
+        // Obtener todos los acudientes activos
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/acudientes?activo=eq.true&select=email,nombre,apellidos,estudiante:estudiante_id(id,codigo_estudiante,nombre,apellidos,grado)&order=email.asc`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        
+        if (!response.ok) throw new Error('Error al cargar');
+        
+        const acudientes = await response.json();
+        
+        // Agrupar por email
+        const acudientesMap = {};
+        acudientes.forEach(a => {
+          if (!acudientesMap[a.email]) {
+            acudientesMap[a.email] = {
+              email: a.email,
+              nombre: a.nombre,
+              apellidos: a.apellidos,
+              hijos: []
+            };
+          }
+          if (a.estudiante) {
+            acudientesMap[a.email].hijos.push(a.estudiante);
+          }
+        });
+        
+        // Filtrar solo los que tienen más de un hijo
+        const multiples = Object.values(acudientesMap).filter(a => a.hijos.length > 1);
+        
+        if (multiples.length === 0) {
+          container.innerHTML = '<div class="empty-state">No hay acudientes con múltiples hijos</div>';
+          return;
+        }
+        
+        container.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Acudiente</th>
+                <th>Email</th>
+                <th>Cantidad de Hijos</th>
+                <th>Hijos</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${multiples.map(a => `
+                <tr>
+                  <td>${a.nombre} ${a.apellidos}</td>
+                  <td>${a.email}</td>
+                  <td><span class="badge badge-info">${a.hijos.length}</span></td>
+                  <td>
+                    ${a.hijos.map(h => `
+                      <div style="font-size: 12px; margin: 2px 0;">
+                        ${h.codigo_estudiante} - ${h.nombre} ${h.apellidos || ''} (${h.grado || '-'})
+                      </div>
+                    `).join('')}
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-secondary" onclick="editarAcudiente('${a.email}')" style="padding: 6px 12px; font-size: 12px;">
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+        
+      } catch (error) {
+        console.error('Error:', error);
+        container.innerHTML = `<div class="empty-state">Error: ${error.message}</div>`;
+      }
+    }
+    
+    window.editarAcudiente = function(email) {
+      document.getElementById('searchEmail').value = email;
+      // Buscar directamente por email cuando viene del botón "Editar"
+      seleccionarAcudienteDeLista(email);
+      document.getElementById('searchEmail').scrollIntoView({ behavior: 'smooth' });
+    };
+    
+    window.cerrarModal = function() {
+      document.getElementById('modalConfirmar').classList.remove('active');
+      estudianteSeleccionado = null;
+    };
+    
+    function mostrarAlerta(mensaje, tipo) {
+      const container = document.getElementById('alertContainer');
+      container.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 5000);
+    }
+    
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') cerrarModal();
+    });
+  </script>
+</body>
+</html>
