@@ -85,13 +85,22 @@ const ROLES_CONFIG = {
   },
   
   /**
-   * ACUDIENTES
+   * ACUDIENTES / GUARDIANES
    * Visualizan resultados de prácticas de su hijo/a
    */
   acudiente: {
-    dashboard: 'acudiente/dashboard.html',
+    dashboard: 'guardian/dashboard.html',
     loginPage: 'index.html',
-    changePassword: 'acudiente/cambiar_password.html'
+    changePassword: 'guardian/cambiar_password.html'
+  },
+  
+  /**
+   * ALIAS: Guardian (mismo que acudiente)
+   */
+  guardian: {
+    dashboard: 'guardian/dashboard.html',
+    loginPage: 'index.html',
+    changePassword: 'guardian/cambiar_password.html'
   }
 };
 

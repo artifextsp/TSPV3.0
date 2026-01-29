@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Informes - Thinking Skills Program</title>
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --success: #48bb78;
+      --warning: #ed8936;
+      --danger: #e53e3e;
+      --gray-50: #f7fafc;
+      --gray-100: #edf2f7;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e0;
+      --gray-500: #718096;
+      --gray-700: #4a5568;
+      --gray-900: #1a202c;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gray-50);
+      min-height: 100vh;
+      color: var(--gray-900);
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Header */
+    .header {
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+    }
+    
+    .logo-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+    
+    .logo-text span {
+      color: var(--gray-500);
+      font-weight: 400;
+      font-size: 14px;
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn-ghost {
+      background: transparent;
+      color: var(--gray-700);
+    }
+    
+    .btn-ghost:hover {
+      background: var(--gray-100);
+    }
+    
+    /* Main Container */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+    
+    /* Student Selector */
+    .student-selector {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    
+    .student-selector h2 {
+      font-size: 14px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    
+    .students-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    
+    .student-card {
+      border: 2px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .student-card:hover {
+      border-color: var(--primary);
+      background: #f8f9ff;
+    }
+    
+    .student-card.selected {
+      border-color: var(--primary);
+      background: linear-gradient(135deg, #f8f9ff 0%, #f0f3ff 100%);
+    }
+    
+    .student-avatar {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    
+    .student-info h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+    }
+    
+    .student-info p {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+    
+    /* Dashboard Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    
+    .tab {
+      padding: 12px 20px;
+      border: none;
+      background: white;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-500);
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    
+    .tab:hover {
+      background: var(--gray-100);
+    }
+    
+    .tab.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    /* Quick Summary */
+    .quick-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    @media (max-width: 768px) {
+      .quick-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .summary-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+    
+    .summary-card.lectura::before { background: var(--primary); }
+    .summary-card.creatividad::before { background: #9f7aea; }
+    .summary-card.ejercicios::before { background: #38b2ac; }
+    
+    .summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    
+    .summary-title {
+      font-size: 13px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .summary-trend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    
+    .trend-up { background: #c6f6d5; color: #22543d; }
+    .trend-down { background: #fed7d7; color: #742a2a; }
+    .trend-same { background: var(--gray-100); color: var(--gray-500); }
+    
+    .summary-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--gray-900);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    
+    .summary-label {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+    
+    .summary-meta {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-100);
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+    
+    .summary-meta strong {
+      color: var(--gray-700);
+    }
+    
+    /* Content Sections */
+    .section {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gray-900);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .section-title-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    
+    .section-title-icon.lectura { background: #ebf4ff; }
+    .section-title-icon.creatividad { background: #faf5ff; }
+    .section-title-icon.ejercicios { background: #e6fffa; }
+    
+    /* Metric Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    
+    .metric-card {
+      background: var(--gray-50);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .metric-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    
+    .metric-label {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+    
+    .metric-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    
+    .status-excellent { background: #c6f6d5; color: #22543d; }
+    .status-good { background: #bee3f8; color: #2a4365; }
+    .status-needs-work { background: #feebc8; color: #744210; }
+    .status-low { background: #fed7d7; color: #742a2a; }
+    
+    /* Tooltip */
+    .tooltip-trigger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      background: var(--gray-200);
+      border-radius: 50%;
+      font-size: 11px;
+      color: var(--gray-500);
+      cursor: help;
+      margin-left: 6px;
+    }
+    
+    /* Cycle Navigator */
+    .cycle-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .cycle-nav button {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--gray-200);
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--gray-500);
+    }
+    
+    .cycle-nav button:hover {
+      background: var(--gray-100);
+    }
+    
+    .cycle-nav button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .cycle-indicator {
+      font-size: 14px;
+      color: var(--gray-700);
+      font-weight: 500;
+    }
+    
+    /* Alerts */
+    .alerts-container {
+      margin-bottom: 24px;
+    }
+    
+    .alert-card {
+      background: linear-gradient(135deg, #fff5f5 0%, #ffe9e9 100%);
+      border: 1px solid #fc8181;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .alert-icon {
+      font-size: 20px;
+    }
+    
+    .alert-content h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #742a2a;
+      margin-bottom: 4px;
+    }
+    
+    .alert-content p {
+      font-size: 13px;
+      color: #9b2c2c;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gray-500);
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .empty-state h3 {
+      font-size: 18px;
+      color: var(--gray-700);
+      margin-bottom: 8px;
+    }
+    
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--gray-200);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .hidden { display: none !important; }
+    
+    /* Export Button */
+    .btn-export {
+      background: var(--gray-900);
+      color: white;
+    }
+    
+    .btn-export:hover {
+      background: var(--gray-700);
+    }
+    
+    /* Comparison Bar */
+    .comparison-bar {
+      background: var(--gray-100);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      margin-top: 12px;
+    }
+    
+    .comparison-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    
+    .comparison-marker {
+      position: absolute;
+      top: -4px;
+      width: 2px;
+      height: 16px;
+      background: var(--gray-500);
+      transform: translateX(-50%);
+    }
+    
+    .comparison-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--gray-500);
+      margin-top: 6px;
+    }
+    
+    /* History Chart Placeholder */
+    .chart-container {
+      height: 200px;
+      background: var(--gray-50);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-500);
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading State -->
+  <div id="loadingState" class="loading">
+    <div class="loading-spinner"></div>
+    <p>Cargando información...</p>
+  </div>
+  
+  <!-- Main Content -->
+  <div id="mainContent" class="hidden">
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon">🧠</div>
+          <div class="logo-text">
+            Thinking Skills
+            <span>Informe de Progreso</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-export" onclick="exportarPDF()">
+            📄 Exportar PDF
+          </button>
+          <button class="btn btn-ghost" id="btnLogout">
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <main class="main">
+      <!-- Student Selector -->
+      <section class="student-selector">
+        <h2>Seleccionar Estudiante</h2>
+        <div class="students-grid" id="studentsGrid">
+          <!-- Students will be loaded here -->
+        </div>
+      </section>
+      
+      <!-- Dashboard Content (hidden until student selected) -->
+      <div id="dashboardContent" class="hidden">
+        <!-- Alerts -->
+        <div class="alerts-container" id="alertsContainer"></div>
+        
+        <!-- Quick Summary -->
+        <div class="quick-summary">
+          <div class="summary-card lectura">
+            <div class="summary-header">
+              <span class="summary-title">📚 Lectura Crítica</span>
+              <span class="summary-trend trend-up" id="trendLectura">↑ Mejorando</span>
+            </div>
+            <div class="summary-value" id="summaryLecturaValue">--</div>
+            <div class="summary-label">Velocidad Efectiva</div>
+            <div class="summary-meta">
+              Comprensión: <strong id="summaryComprension">--%</strong> • 
+              Velocidad: <strong id="summaryVelocidad">-- PPM</strong>
+            </div>
+          </div>
+          
+          <div class="summary-card creatividad">
+            <div class="summary-header">
+              <span class="summary-title">🎨 Creatividad</span>
+              <span class="summary-trend trend-same" id="trendCreatividad">→ Estable</span>
+            </div>
+            <div class="summary-value" id="summaryCreatividadValue">--%</div>
+            <div class="summary-label">Calificación Docente</div>
+            <div class="summary-meta" id="summaryCreatividadMeta">
+              Último ciclo completado
+            </div>
+          </div>
+          
+          <div class="summary-card ejercicios">
+            <div class="summary-header">
+              <span class="summary-title">🎮 Ejercicios Digitales</span>
+              <span class="summary-trend trend-up" id="trendEjercicios">↑ Mejorando</span>
+            </div>
+            <div class="summary-value" id="summaryEjerciciosValue">--%</div>
+            <div class="summary-label">Rendimiento Promedio</div>
+            <div class="summary-meta">
+              Metas alcanzadas: <strong id="summaryMetas">-/-</strong>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab active" data-tab="ciclo">📊 Ciclo Actual</button>
+          <button class="tab" data-tab="comparativo">📈 Comparativo</button>
+          <button class="tab" data-tab="historial">📅 Historial</button>
+        </div>
+        
+        <!-- Tab: Ciclo Actual -->
+        <div id="tabCiclo" class="tab-content">
+          <!-- Cycle Navigator -->
+          <div class="section">
+            <div class="section-header">
+              <h3 class="section-title">Navegador de Ciclos</h3>
+              <div class="cycle-nav">
+                <button onclick="cicloAnterior()" id="btnCicloAnterior">←</button>
+                <span class="cycle-indicator" id="cycleIndicator">Ciclo 1 de 1</span>
+                <button onclick="cicloSiguiente()" id="btnCicloSiguiente">→</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Lectura Section -->
+          <div class="section" id="sectionLectura">
+            <div class="section-header">
+              <h3 class="section-title">
+                <span class="section-title-icon lectura">📚</span>
+                Lectura Crítica
+              </h3>
+            </div>
+            <div class="metrics-grid" id="metricsLectura">
+              <div class="metric-card">
+                <div class="metric-value" id="metricVS">--</div>
+                <div class="metric-label">
+                  Velocidad Simple
+                  <span class="tooltip-trigger" title="Palabras por minuto leídas">?</span>
+                </div>
+                <span class="metric-status status-good">PPM</span>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value" id="metricComprension">--%</div>
+                <div class="metric-label">
+                  Comprensión
+                  <span class="tooltip-trigger" title="Porcentaje de respuestas correctas">?</span>
+                </div>
+                <span class="metric-status status-good" id="statusComprension">Adecuado</span>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value" id="metricVE">--</div>
+                <div class="metric-label">
+                  Velocidad Efectiva
+                  <span class="tooltip-trigger" title="Palabras realmente comprendidas por minuto">?</span>
+                </div>
+                <span class="metric-status status-good" id="statusVE">Adecuado</span>
+              </div>
+            </div>
+            <div id="lecturaDetalle" style="margin-top: 20px;"></div>
+          </div>
+          
+          <!-- Creatividad Section -->
+          <div class="section" id="sectionCreatividad">
+            <div class="section-header">
+              <h3 class="section-title">
+                <span class="section-title-icon creatividad">🎨</span>
+                Creatividad
+              </h3>
+            </div>
+            <div id="creatividadContent">
+              <div class="empty-state">
+                <div class="empty-state-icon">🎨</div>
+                <p>No hay actividad de creatividad en este ciclo</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Ejercicios Section -->
+          <div class="section" id="sectionEjercicios">
+            <div class="section-header">
+              <h3 class="section-title">
+                <span class="section-title-icon ejercicios">🎮</span>
+                Ejercicios Digitales
+              </h3>
+            </div>
+            <div id="ejerciciosContent">
+              <div class="empty-state">
+                <div class="empty-state-icon">🎮</div>
+                <p>No hay ejercicios digitales en este ciclo</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab: Comparativo -->
+        <div id="tabComparativo" class="tab-content hidden">
+          <div class="section">
+            <div class="section-header">
+              <h3 class="section-title">Comparativo vs. Compañeros de Grado</h3>
+            </div>
+            <div id="comparativoContent">
+              <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <p>Cargando comparativo...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab: Historial -->
+        <div id="tabHistorial" class="tab-content hidden">
+          <div class="section">
+            <div class="section-header">
+              <h3 class="section-title">Historial de Progreso</h3>
+            </div>
+            <div id="historialContent">
+              <div class="chart-container">
+                Gráfico de historial
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireRole, getUser, logout } from '../auth/auth.core.js';
+    import { 
+      AccesoGuardianAPI, 
+      BenchmarksAPI,
+      ResumenCicloAPI,
+      LecturaDetalleAPI,
+      CreatividadDetalleAPI,
+      EjerciciosDetalleAPI,
+      ComparativosAPI,
+      DESCRIPCIONES_METRICAS 
+    } from './guardian.api.js';
+    
+    const loadingState = document.getElementById('loadingState');
+    const mainContent = document.getElementById('mainContent');
+    
+    let estudianteSeleccionado = null;
+    let cicloActual = 1;
+    let totalCiclos = 1;
+    let datosResumen = [];
+    let benchmarks = null;
+    
+    // Verificar autenticación
+    const user = getUser();
+    
+    if (!user) {
+      loadingState.innerHTML = '<p>Redirigiendo al login...</p>';
+      setTimeout(() => {
+        window.location.href = '../index.html';
+      }, 1000);
+    } else {
+      inicializar();
+    }
+    
+    async function inicializar() {
+      try {
+        // Cargar estudiantes asociados
+        let estudiantes = await AccesoGuardianAPI.obtenerEstudiantes(user.id);
+        
+        // Si no hay en acceso_guardianes, buscar en acudientes
+        if (!estudiantes || estudiantes.length === 0) {
+          estudiantes = await AccesoGuardianAPI.obtenerEstudiantesDesdeAcudientes(user.id);
+        }
+        
+        loadingState.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        
+        renderizarEstudiantes(estudiantes);
+        
+        // Setup tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            cambiarTab(tabName);
+          });
+        });
+        
+        // Logout
+        document.getElementById('btnLogout').addEventListener('click', () => {
+          if (confirm('¿Cerrar sesión?')) {
+            logout();
+          }
+        });
+        
+      } catch (error) {
+        console.error('Error inicializando:', error);
+        loadingState.innerHTML = `<p style="color: #e53e3e;">Error: ${error.message}</p>`;
+      }
+    }
+    
+    function renderizarEstudiantes(estudiantes) {
+      const grid = document.getElementById('studentsGrid');
+      
+      if (!estudiantes || estudiantes.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">👨‍👩‍👧</div>
+            <h3>Sin estudiantes asociados</h3>
+            <p>No tienes estudiantes vinculados a tu cuenta. Contacta al administrador.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      grid.innerHTML = estudiantes.map(est => {
+        const iniciales = `${est.nombre?.charAt(0) || ''}${est.apellidos?.charAt(0) || ''}`.toUpperCase();
+        return `
+          <div class="student-card" onclick="seleccionarEstudiante('${est.id}')" data-id="${est.id}">
+            <div class="student-avatar">${iniciales}</div>
+            <div class="student-info">
+              <h3>${est.nombre} ${est.apellidos || ''}</h3>
+              <p>${est.grado || 'Sin grado'} • ${est.codigo_estudiante || ''}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Si solo hay un estudiante, seleccionarlo automáticamente
+      if (estudiantes.length === 1) {
+        seleccionarEstudiante(estudiantes[0].id);
+      }
+    }
+    
+    window.seleccionarEstudiante = async function(estudianteId) {
+      // UI: marcar seleccionado
+      document.querySelectorAll('.student-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.id === estudianteId);
+      });
+      
+      estudianteSeleccionado = estudianteId;
+      document.getElementById('dashboardContent').classList.remove('hidden');
+      
+      // Cargar datos del estudiante
+      await cargarDatosEstudiante();
+    };
+    
+    async function cargarDatosEstudiante() {
+      if (!estudianteSeleccionado) return;
+      
+      try {
+        // Cargar historial de resumen
+        datosResumen = await ResumenCicloAPI.obtenerHistorial(estudianteSeleccionado) || [];
+        
+        // Si no hay resúmenes, cargar directamente de sesiones
+        if (datosResumen.length === 0) {
+          const historialLectura = await LecturaDetalleAPI.obtenerHistorial(estudianteSeleccionado);
+          if (historialLectura && historialLectura.length > 0) {
+            // Crear resúmenes básicos desde el historial
+            datosResumen = historialLectura.map(s => ({
+              ciclo_numero: s.ciclos_lectura?.numero_ciclo || 1,
+              lectura_completada: true,
+              lectura_velocidad_simple: s.velocidad_simple,
+              lectura_comprension: s.porcentaje_comprension,
+              lectura_velocidad_efectiva: s.velocidad_efectiva
+            }));
+          }
+        }
+        
+        totalCiclos = datosResumen.length > 0 ? Math.max(...datosResumen.map(d => d.ciclo_numero)) : 1;
+        cicloActual = totalCiclos;
+        
+        // Cargar benchmarks
+        const estudianteCard = document.querySelector(`.student-card[data-id="${estudianteSeleccionado}"]`);
+        const gradoText = estudianteCard?.querySelector('.student-info p')?.textContent || '';
+        const grado = extraerGrado(gradoText);
+        if (grado) {
+          benchmarks = await BenchmarksAPI.obtenerPorGrado(grado);
+        }
+        
+        // Cargar alertas
+        const alertas = await ResumenCicloAPI.obtenerAlertas(estudianteSeleccionado);
+        renderizarAlertas(alertas);
+        
+        // Actualizar UI
+        actualizarResumenRapido();
+        actualizarNavegadorCiclo();
+        cargarDetalleCiclo();
+        
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+      }
+    }
+    
+    function extraerGrado(texto) {
+      const gradosMap = {
+        'tercero': 'tercero', '3': 'tercero', '3°': 'tercero',
+        'cuarto': 'cuarto', '4': 'cuarto', '4°': 'cuarto',
+        'quinto': 'quinto', '5': 'quinto', '5°': 'quinto',
+        'sexto': 'sexto', '6': 'sexto', '6°': 'sexto',
+        'septimo': 'septimo', '7': 'septimo', '7°': 'septimo',
+        'octavo': 'octavo', '8': 'octavo', '8°': 'octavo',
+        'noveno': 'noveno', '9': 'noveno', '9°': 'noveno',
+        'decimo': 'decimo', '10': 'decimo', '10°': 'decimo',
+        'undecimo': 'undecimo', '11': 'undecimo', '11°': 'undecimo'
+      };
+      
+      const palabras = texto.toLowerCase().split(/[\s•]+/);
+      for (const palabra of palabras) {
+        if (gradosMap[palabra]) return gradosMap[palabra];
+      }
+      return null;
+    }
+    
+    function actualizarResumenRapido() {
+      const ultimoCiclo = datosResumen.find(d => d.ciclo_numero === totalCiclos) || {};
+      
+      // Lectura
+      const ve = ultimoCiclo.lectura_velocidad_efectiva;
+      document.getElementById('summaryLecturaValue').textContent = ve ? Math.round(ve) : '--';
+      document.getElementById('summaryComprension').textContent = ultimoCiclo.lectura_comprension ? `${Math.round(ultimoCiclo.lectura_comprension)}%` : '--%';
+      document.getElementById('summaryVelocidad').textContent = ultimoCiclo.lectura_velocidad_simple ? `${Math.round(ultimoCiclo.lectura_velocidad_simple)} PPM` : '-- PPM';
+      
+      // Tendencia lectura
+      const trendLectura = document.getElementById('trendLectura');
+      if (ultimoCiclo.tendencia_lectura === 'mejora') {
+        trendLectura.className = 'summary-trend trend-up';
+        trendLectura.textContent = '↑ Mejorando';
+      } else if (ultimoCiclo.tendencia_lectura === 'baja') {
+        trendLectura.className = 'summary-trend trend-down';
+        trendLectura.textContent = '↓ Bajando';
+      } else {
+        trendLectura.className = 'summary-trend trend-same';
+        trendLectura.textContent = '→ Estable';
+      }
+      
+      // Creatividad
+      const creatividad = ultimoCiclo.creatividad_calificacion;
+      document.getElementById('summaryCreatividadValue').textContent = creatividad ? `${Math.round(creatividad)}%` : '--%';
+      
+      // Ejercicios
+      const ejercicios = ultimoCiclo.ejercicios_promedio;
+      document.getElementById('summaryEjerciciosValue').textContent = ejercicios ? `${Math.round(ejercicios)}%` : '--%';
+      document.getElementById('summaryMetas').textContent = `${ultimoCiclo.ejercicios_metas_alcanzadas || 0}/${ultimoCiclo.ejercicios_completados || 0}`;
+    }
+    
+    function actualizarNavegadorCiclo() {
+      document.getElementById('cycleIndicator').textContent = `Ciclo ${cicloActual} de ${totalCiclos}`;
+      document.getElementById('btnCicloAnterior').disabled = cicloActual <= 1;
+      document.getElementById('btnCicloSiguiente').disabled = cicloActual >= totalCiclos;
+    }
+    
+    window.cicloAnterior = function() {
+      if (cicloActual > 1) {
+        cicloActual--;
+        actualizarNavegadorCiclo();
+        cargarDetalleCiclo();
+      }
+    };
+    
+    window.cicloSiguiente = function() {
+      if (cicloActual < totalCiclos) {
+        cicloActual++;
+        actualizarNavegadorCiclo();
+        cargarDetalleCiclo();
+      }
+    };
+    
+    async function cargarDetalleCiclo() {
+      const datosCiclo = datosResumen.find(d => d.ciclo_numero === cicloActual) || {};
+      
+      // Actualizar métricas de lectura
+      document.getElementById('metricVS').textContent = datosCiclo.lectura_velocidad_simple ? Math.round(datosCiclo.lectura_velocidad_simple) : '--';
+      document.getElementById('metricComprension').textContent = datosCiclo.lectura_comprension ? `${Math.round(datosCiclo.lectura_comprension)}%` : '--%';
+      document.getElementById('metricVE').textContent = datosCiclo.lectura_velocidad_efectiva ? Math.round(datosCiclo.lectura_velocidad_efectiva) : '--';
+      
+      // Actualizar estados
+      actualizarEstadoMetrica('statusComprension', datosCiclo.lectura_comprension, benchmarks);
+      actualizarEstadoMetrica('statusVE', datosCiclo.lectura_velocidad_efectiva, benchmarks, 've');
+    }
+    
+    function actualizarEstadoMetrica(elementId, valor, benchmarks, tipo = 'comprension') {
+      const element = document.getElementById(elementId);
+      if (!element || valor === undefined || valor === null) return;
+      
+      let estado = 'good';
+      let texto = 'Adecuado';
+      
+      if (benchmarks) {
+        const meta = tipo === 've' ? benchmarks.velocidad_efectiva_meta : benchmarks.comprension_meta;
+        const excelente = tipo === 've' ? benchmarks.velocidad_efectiva_excelente : benchmarks.comprension_excelente;
+        const minimo = tipo === 've' ? benchmarks.velocidad_efectiva_min : benchmarks.comprension_min;
+        
+        if (valor >= excelente) {
+          estado = 'excellent';
+          texto = 'Excelente';
+        } else if (valor >= meta) {
+          estado = 'good';
+          texto = 'Bueno';
+        } else if (valor >= minimo) {
+          estado = 'needs-work';
+          texto = 'En desarrollo';
+        } else {
+          estado = 'low';
+          texto = 'Necesita apoyo';
+        }
+      }
+      
+      element.className = `metric-status status-${estado}`;
+      element.textContent = texto;
+    }
+    
+    function renderizarAlertas(alertas) {
+      const container = document.getElementById('alertsContainer');
+      
+      if (!alertas || alertas.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      container.innerHTML = alertas.slice(0, 3).map(alerta => `
+        <div class="alert-card">
+          <span class="alert-icon">⚠️</span>
+          <div class="alert-content">
+            <h4>${alerta.mensaje || 'Atención requerida'}</h4>
+            <p>Detectado en ciclo ${alerta.ciclo}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function cambiarTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      
+      document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+      document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.remove('hidden');
+      
+      if (tabName === 'comparativo') {
+        cargarComparativo();
+      } else if (tabName === 'historial') {
+        cargarHistorial();
+      }
+    }
+    
+    async function cargarComparativo() {
+      const container = document.getElementById('comparativoContent');
+      container.innerHTML = '<div class="empty-state"><p>Cargando comparativo...</p></div>';
+      
+      try {
+        const estudianteCard = document.querySelector(`.student-card[data-id="${estudianteSeleccionado}"]`);
+        const gradoText = estudianteCard?.querySelector('.student-info p')?.textContent || '';
+        const grado = extraerGrado(gradoText);
+        
+        if (!grado) {
+          container.innerHTML = '<div class="empty-state"><p>No se pudo determinar el grado</p></div>';
+          return;
+        }
+        
+        const comparativo = await ComparativosAPI.obtenerComparativoGrado(estudianteSeleccionado, grado);
+        
+        if (comparativo.sinDatos) {
+          container.innerHTML = '<div class="empty-state"><p>No hay suficientes datos para comparar</p></div>';
+          return;
+        }
+        
+        const posicion = await ComparativosAPI.obtenerPosicionHistorica(estudianteSeleccionado, grado);
+        
+        container.innerHTML = `
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-value">${comparativo.estudiante.velocidadEfectiva}</div>
+              <div class="metric-label">Velocidad Efectiva Promedio</div>
+              <div class="comparison-bar">
+                <div class="comparison-fill" style="width: ${Math.min((comparativo.estudiante.velocidadEfectiva / (comparativo.grado.velocidadEfectiva * 1.5)) * 100, 100)}%; background: ${comparativo.diferencia.velocidadEfectiva >= 0 ? 'var(--success)' : 'var(--warning)'}"></div>
+              </div>
+              <div class="comparison-legend">
+                <span>Promedio grado: ${comparativo.grado.velocidadEfectiva}</span>
+                <span style="color: ${comparativo.diferencia.velocidadEfectiva >= 0 ? 'var(--success)' : 'var(--danger)'}">
+                  ${comparativo.diferencia.velocidadEfectiva >= 0 ? '+' : ''}${comparativo.diferencia.velocidadEfectiva}
+                </span>
+              </div>
+            </div>
+            
+            <div class="metric-card">
+              <div class="metric-value">${comparativo.estudiante.comprension}%</div>
+              <div class="metric-label">Comprensión Promedio</div>
+              <div class="comparison-bar">
+                <div class="comparison-fill" style="width: ${comparativo.estudiante.comprension}%; background: ${comparativo.diferencia.comprension >= 0 ? 'var(--success)' : 'var(--warning)'}"></div>
+              </div>
+              <div class="comparison-legend">
+                <span>Promedio grado: ${comparativo.grado.comprension}%</span>
+                <span style="color: ${comparativo.diferencia.comprension >= 0 ? 'var(--success)' : 'var(--danger)'}">
+                  ${comparativo.diferencia.comprension >= 0 ? '+' : ''}${comparativo.diferencia.comprension}%
+                </span>
+              </div>
+            </div>
+            
+            <div class="metric-card">
+              <div class="metric-value">#${posicion.posicion || '-'}</div>
+              <div class="metric-label">Posición en el Grado</div>
+              <div style="margin-top: 12px; text-align: center;">
+                <span class="metric-status ${posicion.percentil >= 70 ? 'status-excellent' : posicion.percentil >= 50 ? 'status-good' : 'status-needs-work'}">
+                  Percentil ${posicion.percentil || '-'}
+                </span>
+              </div>
+              <div class="comparison-legend">
+                <span>De ${posicion.total || '-'} estudiantes</span>
+              </div>
+            </div>
+          </div>
+        `;
+        
+      } catch (error) {
+        console.error('Error cargando comparativo:', error);
+        container.innerHTML = `<div class="empty-state"><p>Error: ${error.message}</p></div>`;
+      }
+    }
+    
+    async function cargarHistorial() {
+      const container = document.getElementById('historialContent');
+      
+      if (datosResumen.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No hay historial disponible</p></div>';
+        return;
+      }
+      
+      // Crear tabla de historial
+      const historial = datosResumen.sort((a, b) => b.ciclo_numero - a.ciclo_numero);
+      
+      container.innerHTML = `
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: var(--gray-50);">
+                <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--gray-700);">Ciclo</th>
+                <th style="padding: 12px; text-align: center;">Vel. Efectiva</th>
+                <th style="padding: 12px; text-align: center;">Comprensión</th>
+                <th style="padding: 12px; text-align: center;">Creatividad</th>
+                <th style="padding: 12px; text-align: center;">Ejercicios</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${historial.map(h => `
+                <tr style="border-bottom: 1px solid var(--gray-100);">
+                  <td style="padding: 12px; font-weight: 500;">Ciclo ${h.ciclo_numero}</td>
+                  <td style="padding: 12px; text-align: center;">
+                    ${h.lectura_velocidad_efectiva ? Math.round(h.lectura_velocidad_efectiva) : '-'}
+                    ${getTendenciaIcon(h.tendencia_lectura)}
+                  </td>
+                  <td style="padding: 12px; text-align: center;">
+                    ${h.lectura_comprension ? Math.round(h.lectura_comprension) + '%' : '-'}
+                  </td>
+                  <td style="padding: 12px; text-align: center;">
+                    ${h.creatividad_calificacion ? Math.round(h.creatividad_calificacion) + '%' : '-'}
+                  </td>
+                  <td style="padding: 12px; text-align: center;">
+                    ${h.ejercicios_promedio ? Math.round(h.ejercicios_promedio) + '%' : '-'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+    
+    function getTendenciaIcon(tendencia) {
+      if (tendencia === 'mejora') return '<span style="color: var(--success);">↑</span>';
+      if (tendencia === 'baja') return '<span style="color: var(--danger);">↓</span>';
+      return '';
+    }
+    
+    window.exportarPDF = function() {
+      alert('Función de exportación a PDF en desarrollo. Próximamente disponible.');
+    };
+  </script>
+</body>
+</html>
