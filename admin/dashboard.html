@@ -474,6 +474,35 @@
     .student-selected .btn-clear:hover {
       text-decoration: underline;
     }
+    /* Módulo Cobros */
+    .cobros-checkpoint-card {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      max-width: 600px;
+    }
+    .cobros-subtabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .cobros-subtab {
+      padding: 10px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 15px;
+      color: #718096;
+    }
+    .cobros-subtab:hover { color: #667eea; }
+    .cobros-subtab.active { color: #667eea; border-bottom-color: #667eea; }
+    .cobros-tab-content { display: none; }
+    .cobros-tab-content.active { display: block; }
+    .badge-warning { background: #feebc8; color: #7c2d12; }
+    .badge-info { background: #bee3f8; color: #2c5282; }
   </style>
 </head>
 <body>
@@ -513,6 +542,110 @@
         <button class="tab" data-tab="colegios">🏫 Colegios</button>
         <button class="tab" data-tab="docentes">👨‍🏫 Docentes</button>
         <button class="tab" data-tab="acudientes">👨‍👩‍👧 Acudientes</button>
+        <button class="tab" data-tab="cobros">💰 Cobros / Mensualidades</button>
+      </div>
+      
+      <!-- Contenido: Cobros (checkpoint + Parámetros, Estudiantes, Saldos) -->
+      <div id="tab-cobros" class="tab-content">
+        <!-- Pantalla checkpoint (punto de entrada) -->
+        <div id="cobros-checkpoint" class="cobros-checkpoint-card">
+          <h2 style="margin-bottom: 16px;">🔒 Checkpoint de seguridad</h2>
+          <p style="color: #4a5568; margin-bottom: 20px;">Crea un punto de recuperación antes de asignar cobros o hacer cambios masivos. Si algo falla, podrás revertir al último checkpoint.</p>
+          <div id="alertCobrosCheckpoint"></div>
+          <div id="cobros-checkpoint-info" class="alert alert-warning" style="margin-bottom: 20px;">Cargando...</div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" id="btnCrearCheckpointCobros">Crear punto de recuperación ahora</button>
+            <button type="button" class="btn btn-warning" id="btnRevertirCheckpointCobros" style="display: none;">Revertir al último checkpoint</button>
+            <button type="button" class="btn btn-success" id="btnEntrarModuloCobros">Entrar al módulo</button>
+          </div>
+        </div>
+        <!-- Módulo cobros (pestañas Parámetros, Estudiantes, Saldos) -->
+        <div id="cobros-modulo" class="hidden">
+          <div class="cobros-subtabs">
+            <button type="button" class="tab cobros-subtab active" data-cobros-tab="parametros">Parámetros</button>
+            <button type="button" class="tab cobros-subtab" data-cobros-tab="estudiantes">Estudiantes</button>
+            <button type="button" class="tab cobros-subtab" data-cobros-tab="saldos">Saldos</button>
+          </div>
+          <div id="cobros-tab-parametros" class="cobros-tab-content active">
+            <div id="alertCobrosParametros"></div>
+            <div class="table-container" style="max-width: 800px;">
+              <div class="form-group">
+                <label>Valor base mensualidad</label>
+                <input type="number" id="cobrosValorBase" min="0" step="1000" placeholder="Ej: 400000">
+              </div>
+              <div class="form-group">
+                <label>URL plataforma (resultados estudiante)</label>
+                <input type="url" id="cobrosLinkPlataforma" placeholder="https://...">
+              </div>
+              <div class="form-group">
+                <label>Link videotutorial 1</label>
+                <input type="url" id="cobrosLinkVideo1" placeholder="https://...">
+              </div>
+              <div class="form-group">
+                <label>Link videotutorial 2</label>
+                <input type="url" id="cobrosLinkVideo2" placeholder="https://...">
+              </div>
+              <div class="form-group">
+                <label>Mensaje WhatsApp para el acudiente</label>
+                <textarea id="cobrosMensajeWhatsApp" rows="14" placeholder="El mensaje se rellena con los datos del estudiante y acudiente al enviar por WhatsApp."></textarea>
+                <small style="color:#718096; display:block; margin-top:4px;">Variables: {{nombre_acudiente}}, {{nombre_estudiante}}, {{mes_cobro}}, {{valor_a_cobrar}}, {{estado_mensualidad}}, {{link_plataforma}}, {{link_video_1}}, {{link_video_2}}</small>
+              </div>
+              <div class="form-group">
+                <label><input type="checkbox" id="cobrosBecasActivo" checked> Becas activas (aplicar % beca al cobro)</label>
+              </div>
+              <button type="button" class="btn btn-primary" id="btnGuardarParametrosCobros">Guardar parámetros</button>
+            </div>
+          </div>
+          <div id="cobros-tab-estudiantes" class="cobros-tab-content">
+            <div id="alertCobrosEstudiantes"></div>
+            <div class="toolbar" style="margin-bottom: 16px;">
+              <label>Mes:</label>
+              <select id="cobrosMes" style="margin-right: 8px;"></select>
+              <select id="cobrosAnio" style="margin-right: 16px;"></select>
+              <button type="button" class="btn btn-primary" id="btnCargarCobros">Cargar cobros</button>
+              <button type="button" class="btn btn-success" id="btnGenerarCobrosMes">Generar cobros del mes</button>
+              <button type="button" class="btn btn-warning" id="btnRecalcularGuardarCobros" title="Recalcula valor = mensualidad + saldo (con beca) y guarda en BD">Recalcular y guardar valores</button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Estudiante</th>
+                    <th>Acudiente</th>
+                    <th>Valor</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyCobrosEstudiantes">
+                  <tr><td colspan="5" class="empty-state">Selecciona mes y año y pulsa Cargar cobros</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div id="cobros-tab-saldos" class="cobros-tab-content">
+            <div id="alertCobrosSaldos"></div>
+            <p style="color:#718096; font-size:13px; margin-bottom:12px;">Los saldos y % beca se usan para calcular el valor a cobrar (mensualidad + saldo, con descuento de beca).</p>
+            <div class="toolbar" style="margin-bottom: 16px;">
+              <button type="button" class="btn btn-primary" id="btnCargarSaldosCobros">Cargar saldos</button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Estudiante</th>
+                    <th>Saldo</th>
+                    <th>% Beca</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyCobrosSaldos">
+                  <tr><td colspan="4" class="empty-state">Pulsa «Cargar saldos» para ver la lista.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
       
       <!-- Contenido: Estudiantes -->
@@ -825,7 +958,7 @@
   
   <script type="module">
     import { requireRole, getUser, logout } from '../auth/auth.core.js';
-    import { EstudiantesAPI, ColegiosAPI, DocentesAPI, AcudientesAPI } from './admin.api.js';
+    import { EstudiantesAPI, ColegiosAPI, DocentesAPI, AcudientesAPI, CobrosAPI } from './admin.api.js';
     import { CONFIG } from '../config/supabase.config.js';
     
     // Variables globales
@@ -876,19 +1009,21 @@
       }
     });
     
-    // Sistema de pestañas
-    document.querySelectorAll('.tab').forEach(tab => {
+    // Sistema de pestañas (solo las pestañas principales dentro de .tabs; no las sub-pestañas de Cobros)
+    document.querySelectorAll('.tabs .tab').forEach(tab => {
       tab.addEventListener('click', () => {
         const tabName = tab.dataset.tab;
-        
-        // Actualizar pestañas
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        if (!tabName) return;
+
+        // Actualizar pestañas principales
+        document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        
+
         // Actualizar contenido
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.getElementById(`tab-${tabName}`).classList.add('active');
-        
+        const content = document.getElementById('tab-' + tabName);
+        if (content) content.classList.add('active');
+
         // Cargar datos según la pestaña
         if (tabName === 'estudiantes') {
           cargarEstudiantes();
@@ -898,6 +1033,13 @@
           cargarDocentes();
         } else if (tabName === 'acudientes') {
           cargarAcudientes();
+        } else if (tabName === 'cobros') {
+          // Entrada directa al módulo (Parámetros, Estudiantes, Saldos); checkpoint es solo retorno de programación
+          document.getElementById('cobros-checkpoint').classList.add('hidden');
+          const mod = document.getElementById('cobros-modulo');
+          if (mod) mod.classList.remove('hidden');
+          cargarParametrosCobros();
+          llenarSelectoresMesAnio();
         }
       });
     });
@@ -1761,6 +1903,309 @@
         }
       });
     });
+
+    // ============================================
+    // MÓDULO COBROS
+    // ============================================
+
+    let cobrosParametros = null;
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+    // Plantilla prediseñada: enfoque en resultados; estado y valor como información adicional
+    const PLANTILLA_MENSAJE_WHATSAPP_COBROS = `*Thinking Skills Program*
+Estimado(a) {{nombre_acudiente}},
+
+Los resultados y el avance de *{{nombre_estudiante}}* ya están disponibles. Puede consultarlos aquí:
+{{link_plataforma}}
+
+Si desea apoyo con el uso de la plataforma, puede revisar nuestro videotutorial:
+{{link_video_1}}
+
+—
+*Información adicional:* Mensualidad {{mes_cobro}}: {{estado_mensualidad}}. Valor: $` + `{{valor_a_cobrar}}
+
+Saludos cordiales,
+Equipo Thinking Skills Program`;
+
+    async function cargarCheckpointCobros() {
+      const info = document.getElementById('cobros-checkpoint-info');
+      const btnRevertir = document.getElementById('btnRevertirCheckpointCobros');
+      try {
+        const cp = await CobrosAPI.obtenerUltimoCheckpoint();
+        if (cp) {
+          const fecha = cp.created_at ? new Date(cp.created_at).toLocaleString('es') : 'N/A';
+          info.innerHTML = `Último checkpoint: <strong>${cp.descripcion || 'Sin descripción'}</strong> — ${fecha}`;
+          info.className = 'alert alert-success';
+          btnRevertir.style.display = 'inline-block';
+        } else {
+          info.innerHTML = 'No hay checkpoint creado. Crea uno antes de asignar cobros.';
+          info.className = 'alert alert-warning';
+          btnRevertir.style.display = 'none';
+        }
+      } catch (e) {
+        info.innerHTML = 'Error al cargar checkpoint: ' + (e.message || '');
+        info.className = 'alert alert-error';
+        btnRevertir.style.display = 'none';
+      }
+    }
+
+    document.getElementById('btnCrearCheckpointCobros').addEventListener('click', async () => {
+      const desc = prompt('Descripción del checkpoint (opcional):', 'Checkpoint manual');
+      if (desc === null) return;
+      try {
+        await CobrosAPI.crearCheckpoint(desc || 'Checkpoint manual');
+        mostrarAlerta('alertCobrosCheckpoint', 'Checkpoint creado correctamente', 'success');
+        cargarCheckpointCobros();
+      } catch (e) {
+        mostrarAlerta('alertCobrosCheckpoint', 'Error: ' + (e.message || ''), 'error');
+      }
+    });
+
+    document.getElementById('btnRevertirCheckpointCobros').addEventListener('click', async () => {
+      if (!confirm('¿Revertir al último checkpoint? Se restaurarán cobros y saldos al estado guardado.')) return;
+      try {
+        await CobrosAPI.revertirAlUltimoCheckpoint();
+        mostrarAlerta('alertCobrosCheckpoint', 'Checkpoint restaurado', 'success');
+        cargarCheckpointCobros();
+        if (document.getElementById('cobros-modulo').classList.contains('hidden') === false) {
+          cargarCobrosEstudiantes();
+          cargarSaldosCobros();
+        }
+      } catch (e) {
+        mostrarAlerta('alertCobrosCheckpoint', 'Error: ' + (e.message || ''), 'error');
+      }
+    });
+
+    document.getElementById('btnEntrarModuloCobros').addEventListener('click', () => {
+      document.getElementById('cobros-checkpoint').classList.add('hidden');
+      document.getElementById('cobros-modulo').classList.remove('hidden');
+      cargarParametrosCobros();
+      llenarSelectoresMesAnio();
+      cargarSaldosCobros();
+    });
+
+    document.querySelectorAll('.cobros-subtab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.cobrosTab;
+        if (!name) return;
+        document.querySelectorAll('.cobros-subtab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.cobros-tab-content').forEach(c => c.classList.remove('active'));
+        const panel = document.getElementById('cobros-tab-' + name);
+        if (panel) panel.classList.add('active');
+        if (name === 'estudiantes') cargarCobrosEstudiantes();
+        if (name === 'saldos') { /* no cargar automático: evita error CORS al solo abrir la pestaña */ }
+      });
+    });
+
+    function llenarSelectoresMesAnio() {
+      const selMes = document.getElementById('cobrosMes');
+      const selAnio = document.getElementById('cobrosAnio');
+      if (selMes.options.length > 0) return;
+      MESES.forEach((m, i) => { const o = document.createElement('option'); o.value = i + 1; o.textContent = m; selMes.appendChild(o); });
+      const anio = new Date().getFullYear();
+      for (let a = anio; a >= anio - 2; a--) {
+        const o = document.createElement('option'); o.value = a; o.textContent = a; selAnio.appendChild(o);
+      }
+    }
+
+    async function cargarParametrosCobros() {
+      try {
+        cobrosParametros = await CobrosAPI.obtenerParametros();
+        const msgEl = document.getElementById('cobrosMensajeWhatsApp');
+        const msg = cobrosParametros && cobrosParametros.mensaje_whatsapp && String(cobrosParametros.mensaje_whatsapp).trim();
+        const esPlantillaAntigua = msg && (msg.includes('recordatorio de mensualidad') || msg.includes('recordatorio de cobro')) && !msg.includes('resultados y el avance');
+        if (cobrosParametros) {
+          document.getElementById('cobrosValorBase').value = cobrosParametros.valor_base_mensualidad ?? '';
+          document.getElementById('cobrosLinkPlataforma').value = cobrosParametros.link_plataforma ?? '';
+          document.getElementById('cobrosLinkVideo1').value = cobrosParametros.link_video_1 ?? '';
+          document.getElementById('cobrosLinkVideo2').value = cobrosParametros.link_video_2 ?? '';
+          msgEl.value = (!msg || esPlantillaAntigua) ? PLANTILLA_MENSAJE_WHATSAPP_COBROS : cobrosParametros.mensaje_whatsapp;
+          document.getElementById('cobrosBecasActivo').checked = cobrosParametros.becas_activo !== false;
+        } else if (msgEl) {
+          msgEl.value = PLANTILLA_MENSAJE_WHATSAPP_COBROS;
+        }
+      } catch (e) {
+        console.error('Error cargando parámetros cobros:', e);
+        const msgEl = document.getElementById('cobrosMensajeWhatsApp');
+        if (msgEl && !msgEl.value.trim()) msgEl.value = PLANTILLA_MENSAJE_WHATSAPP_COBROS;
+      }
+    }
+
+    document.getElementById('btnGuardarParametrosCobros').addEventListener('click', async () => {
+      const datos = {
+        valor_base_mensualidad: Number(document.getElementById('cobrosValorBase').value) || 0,
+        link_plataforma: document.getElementById('cobrosLinkPlataforma').value || null,
+        link_video_1: document.getElementById('cobrosLinkVideo1').value || null,
+        link_video_2: document.getElementById('cobrosLinkVideo2').value || null,
+        mensaje_whatsapp: document.getElementById('cobrosMensajeWhatsApp').value || null,
+        becas_activo: document.getElementById('cobrosBecasActivo').checked
+      };
+      try {
+        await CobrosAPI.actualizarParametros(datos);
+        cobrosParametros = await CobrosAPI.obtenerParametros();
+        mostrarAlerta('alertCobrosParametros', 'Parámetros guardados', 'success');
+      } catch (e) {
+        mostrarAlerta('alertCobrosParametros', 'Error: ' + (e.message || ''), 'error');
+      }
+    });
+
+    async function cargarCobrosEstudiantes() {
+      const anio = document.getElementById('cobrosAnio').value;
+      const mes = document.getElementById('cobrosMes').value;
+      const tbody = document.getElementById('tbodyCobrosEstudiantes');
+      if (!anio || !mes) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Selecciona mes y año y pulsa Cargar cobros</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Cargando...</td></tr>';
+      try {
+        const rows = await CobrosAPI.getCobrosDelPeriodo(anio, mes);
+        if (!rows || rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay cobros para este periodo. Pulsa "Generar cobros del mes".</td></tr>';
+          return;
+        }
+        const nombreMes = MESES[Number(mes) - 1] || mes;
+        tbody.innerHTML = rows.map(c => {
+          const u = c.usuarios || {};
+          const nombreEst = `${u.nombre || ''} ${u.apellidos || ''}`.trim() || 'N/A';
+          const estadoClass = c.estado === 'al_dia' ? 'badge-success' : c.estado === 'enviado' ? 'badge-info' : 'badge-warning';
+          return `<tr>
+            <td>${nombreEst}</td>
+            <td>${c.acudiente ? c.acudiente.nombre : 'N/A'}</td>
+            <td>$${Number(c.valor_final).toLocaleString('es-CO')}</td>
+            <td><span class="badge ${estadoClass}">${c.estado || 'pendiente'}</span></td>
+            <td>
+              <div class="actions">
+                <button type="button" class="btn btn-sm btn-success" onclick="abrirWhatsAppCobro('${c.id}','${(c.acudiente && c.acudiente.celular) ? c.acudiente.celular.replace(/'/g, "\\'") : ''}','${nombreEst.replace(/'/g, "\\'")}','${(c.acudiente && c.acudiente.nombre) ? c.acudiente.nombre.replace(/'/g, "\\'") : 'N/A'}','${c.valor_final}','${nombreMes} ${anio}','${(c.estado || 'pendiente').replace(/'/g, "\\'")}')">WhatsApp</button>
+                <button type="button" class="btn btn-sm btn-primary" onclick="marcarAlDiaCobro('${c.id}')">Al día</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Error: ${e.message}</td></tr>`;
+      }
+    }
+
+    document.getElementById('btnCargarCobros').addEventListener('click', () => cargarCobrosEstudiantes());
+
+    document.getElementById('btnGenerarCobrosMes').addEventListener('click', async () => {
+      const anio = document.getElementById('cobrosAnio').value;
+      const mes = document.getElementById('cobrosMes').value;
+      if (!anio || !mes) { mostrarAlerta('alertCobrosEstudiantes', 'Selecciona mes y año', 'error'); return; }
+      const valorBaseForm = Number(document.getElementById('cobrosValorBase').value) || 0;
+      if (valorBaseForm <= 0) {
+        mostrarAlerta('alertCobrosEstudiantes', 'Configura el valor base en la pestaña Parámetros (ej: 40000) y vuelve a generar.', 'error');
+        return;
+      }
+      try {
+        const r = await CobrosAPI.generarCobrosDelMes(anio, mes, { valorBaseOverride: valorBaseForm });
+        mostrarAlerta('alertCobrosEstudiantes', r.mensaje || 'Listo', 'success');
+        cargarCobrosEstudiantes();
+      } catch (e) {
+        mostrarAlerta('alertCobrosEstudiantes', 'Error: ' + (e.message || ''), 'error');
+      }
+    });
+
+    document.getElementById('btnRecalcularGuardarCobros').addEventListener('click', async () => {
+      const anio = document.getElementById('cobrosAnio').value;
+      const mes = document.getElementById('cobrosMes').value;
+      if (!anio || !mes) { mostrarAlerta('alertCobrosEstudiantes', 'Selecciona mes y año', 'error'); return; }
+      const valorBaseForm = Number(document.getElementById('cobrosValorBase').value) || 0;
+      if (valorBaseForm <= 0) {
+        mostrarAlerta('alertCobrosEstudiantes', 'Configura el valor base en Parámetros (ej: 40000).', 'error');
+        return;
+      }
+      try {
+        const r = await CobrosAPI.recalcularYGuardarCobrosDelMes(anio, mes, { valorBaseOverride: valorBaseForm });
+        mostrarAlerta('alertCobrosEstudiantes', r.mensaje || 'Valores guardados en BD', 'success');
+        cargarCobrosEstudiantes();
+      } catch (e) {
+        mostrarAlerta('alertCobrosEstudiantes', 'Error: ' + (e.message || ''), 'error');
+      }
+    });
+
+    window.marcarAlDiaCobro = async function(id) {
+      try {
+        await CobrosAPI.marcarAlDia(id);
+        mostrarAlerta('alertCobrosEstudiantes', 'Marcado al día', 'success');
+        cargarCobrosEstudiantes();
+      } catch (e) {
+        mostrarAlerta('alertCobrosEstudiantes', 'Error: ' + (e.message || ''), 'error');
+      }
+    };
+
+    function estadoMensualidadTexto(estado) {
+      const t = { pendiente: 'Pendiente de pago', al_dia: 'Al día', enviado: 'Recordatorio enviado' };
+      return t[estado] || estado || 'Pendiente de pago';
+    }
+
+    window.abrirWhatsAppCobro = function(cobroId, celular, nombreEstudiante, nombreAcudiente, valorFinal, mesCobro, estadoCobro) {
+      if (!celular || celular.trim() === '') {
+        mostrarAlerta('alertCobrosEstudiantes', 'El acudiente no tiene celular registrado', 'error');
+        return;
+      }
+      cobrosParametros = cobrosParametros || {};
+      const linkPlataforma = document.getElementById('cobrosLinkPlataforma').value || cobrosParametros.link_plataforma || 'N/A';
+      const linkVideo1 = document.getElementById('cobrosLinkVideo1').value || cobrosParametros.link_video_1 || 'N/A';
+      const linkVideo2 = document.getElementById('cobrosLinkVideo2').value || cobrosParametros.link_video_2 || 'N/A';
+      const plantilla = document.getElementById('cobrosMensajeWhatsApp').value || cobrosParametros.mensaje_whatsapp || '';
+      const valorFormateado = Number(valorFinal) ? Number(valorFinal).toLocaleString('es-CO') : String(valorFinal || '');
+      const mensaje = CobrosAPI.reemplazarPlaceholders(plantilla, {
+        nombre_acudiente: nombreAcudiente,
+        nombre_estudiante: nombreEstudiante,
+        mes_cobro: mesCobro,
+        valor_a_cobrar: valorFormateado,
+        estado_mensualidad: estadoMensualidadTexto(estadoCobro),
+        link_plataforma: linkPlataforma,
+        link_video_1: linkVideo1,
+        link_video_2: linkVideo2
+      });
+      const url = CobrosAPI.urlWhatsApp(celular, mensaje);
+      if (url) window.open(url, '_blank');
+    };
+
+    document.getElementById('btnCargarSaldosCobros').addEventListener('click', () => cargarSaldosCobros());
+
+    async function cargarSaldosCobros() {
+      const tbody = document.getElementById('tbodyCobrosSaldos');
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Cargando...</td></tr>';
+      try {
+        const rows = await CobrosAPI.listarEstudiantesConSaldos();
+        if (!rows || rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No hay estudiantes activos. Los saldos se crean al guardar desde aquí.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows.map(r => {
+          const nombre = (r.nombre && r.nombre.trim()) ? r.nombre : (r.codigo_estudiante || 'N/A');
+          return `<tr>
+            <td>${nombre}</td>
+            <td><input type="number" id="saldo-${r.estudiante_id}" value="${Number(r.saldo) || 0}" step="1000" style="width:100px;"></td>
+            <td><input type="number" id="beca-${r.estudiante_id}" value="${Number(r.porcentaje_beca) || 0}" min="0" max="100" step="1" style="width:70px;"> %</td>
+            <td><button type="button" class="btn btn-sm btn-primary" onclick="guardarSaldoCobro('${r.estudiante_id}')">Guardar</button></td>
+          </tr>`;
+        }).join('');
+      } catch (e) {
+        const esCorsOFetch = (e.message || '').toLowerCase().includes('fetch') || (e.message || '').toLowerCase().includes('failed');
+        const texto = esCorsOFetch
+          ? 'No es un error de SQL: el navegador bloquea la conexión por CORS (origen 127.0.0.1 no permitido por Supabase). Soluciones: (1) Sirve la app desde el mismo dominio donde esté publicada, o (2) Usa un túnel (ej. ngrok) para obtener una URL pública, o (3) En Supabase → Project Settings → API revisa si hay opción para orígenes permitidos y añade http://127.0.0.1:5500'
+          : ('Error: ' + (e.message || ''));
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-state">${texto}</td></tr>`;
+      }
+    }
+
+    window.guardarSaldoCobro = async function(estudianteId) {
+      const saldo = document.getElementById('saldo-' + estudianteId);
+      const beca = document.getElementById('beca-' + estudianteId);
+      if (!saldo || !beca) return;
+      try {
+        await CobrosAPI.actualizarSaldo(estudianteId, { saldo: saldo.value, porcentaje_beca: beca.value });
+        mostrarAlerta('alertCobrosSaldos', 'Saldo actualizado', 'success');
+      } catch (e) {
+        mostrarAlerta('alertCobrosSaldos', 'Error: ' + (e.message || ''), 'error');
+      }
+    };
   </script>
 </body>
 </html>

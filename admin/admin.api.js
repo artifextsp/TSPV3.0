@@ -23,7 +23,11 @@ const TABLES = {
   COLEGIOS: 'colegios',
   ESTUDIANTES_COLEGIOS: 'estudiantes_colegios',
   DOCENTES_COLEGIOS: 'docentes_colegios',
-  ACUDIENTES: 'acudientes'
+  ACUDIENTES: 'acudientes',
+  PARAMETROS_COBRO: 'parametros_cobro',
+  COBROS_MENSUALES: 'cobros_mensuales',
+  SALDOS_ESTUDIANTE: 'saldos_estudiante',
+  CHECKPOINT_COBROS: 'checkpoint_cobros'
 };
 
 // ============================================
@@ -909,6 +913,397 @@ export const AcudientesAPI = {
 };
 
 // ============================================
+// MÓDULO: COBROS / MENSUALIDADES
+// ============================================
+
+export const CobrosAPI = {
+  /** Tablas del módulo */
+  TABLES: {
+    PARAMETROS: 'parametros_cobro',
+    COBROS: 'cobros_mensuales',
+    SALDOS: 'saldos_estudiante',
+    CHECKPOINT: 'checkpoint_cobros'
+  },
+
+  /**
+   * Obtener parámetros de cobro (una sola fila)
+   */
+  async obtenerParametros() {
+    const rows = await apiRequest(`${TABLES.PARAMETROS_COBRO}?limit=1`);
+    return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+  },
+
+  /**
+   * Actualizar parámetros de cobro
+   */
+  async actualizarParametros(datos) {
+    const actual = await this.obtenerParametros();
+    const now = new Date().toISOString();
+    const body = {
+      ...datos,
+      updated_at: now
+    };
+    if (actual) {
+      return await apiRequest(`${TABLES.PARAMETROS_COBRO}?id=eq.${actual.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body)
+      });
+    }
+    return await apiRequest(`${TABLES.PARAMETROS_COBRO}`, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+  },
+
+  /**
+   * Cobros de un periodo (anio, mes) con datos de estudiante y acudiente
+   */
+  async getCobrosDelPeriodo(anio, mes) {
+    const params = new URLSearchParams();
+    params.append('anio', `eq.${anio}`);
+    params.append('mes', `eq.${mes}`);
+    params.append('select', 'id,estudiante_id,anio,mes,valor_base,valor_final,estado,enviado_at,created_at,usuarios:estudiante_id(id,nombre,apellidos,codigo_estudiante,grado)');
+    params.append('order', 'estudiante_id');
+    let rows = await apiRequest(`${TABLES.COBROS_MENSUALES}?${params.toString()}`);
+    if (!rows || rows.length === 0) return [];
+    const estudianteIds = [...new Set(rows.map(r => r.estudiante_id).filter(Boolean))];
+    const paramsAcu = new URLSearchParams();
+    paramsAcu.append('estudiante_id', `in.(${estudianteIds.join(',')})`);
+    paramsAcu.append('activo', 'eq.true');
+    paramsAcu.append('select', 'estudiante_id,nombre,apellidos,celular,email,username');
+    const acudientes = await apiRequest(`${TABLES.ACUDIENTES}?${paramsAcu.toString()}`);
+    const acuPorEst = {};
+    (acudientes || []).forEach(a => {
+      if (!acuPorEst[a.estudiante_id]) acuPorEst[a.estudiante_id] = [];
+      acuPorEst[a.estudiante_id].push(a);
+    });
+    return rows.map(c => {
+      const acu = acuPorEst[c.estudiante_id];
+      const acudiente = acu && acu[0];
+      const nombreAcudiente = acudiente ? `${acudiente.nombre || ''} ${acudiente.apellidos || ''}`.trim() : 'N/A';
+      return {
+        ...c,
+        acudiente: acudiente ? { nombre: nombreAcudiente, celular: acudiente.celular, email: acudiente.email, username: acudiente.username } : { nombre: 'N/A', celular: '', email: '', username: '' }
+      };
+    });
+  },
+
+  /**
+   * Calcula valor_final para un estudiante: (mensualidad base + saldo) × (1 − % beca).
+   */
+  _calcularValorCobro(valorBase, saldoRow, becasActivo) {
+    const saldo = saldoRow ? Number(saldoRow.saldo) || 0 : 0;
+    const porcentajeBeca = becasActivo && saldoRow ? Number(saldoRow.porcentaje_beca) || 0 : 0;
+    return Math.round((valorBase + saldo) * (1 - porcentajeBeca / 100));
+  },
+
+  /**
+   * Generar o actualizar cobros del mes.
+   * - Si el estudiante no tiene cobro: se crea con valor = (base + saldo) × (1 − beca).
+   * - Si ya tiene cobro con valor 0: se actualiza con ese mismo cálculo.
+   * opciones.valorBaseOverride: valor base desde el formulario (ej. 40000) si no se ha guardado en parámetros.
+   */
+  async generarCobrosDelMes(anio, mes, opciones = {}) {
+    const parametros = await this.obtenerParametros();
+    const valorBaseGuardado = parametros ? Number(parametros.valor_base_mensualidad) || 0 : 0;
+    const valorBase = (opciones.valorBaseOverride != null && Number(opciones.valorBaseOverride) > 0)
+      ? Number(opciones.valorBaseOverride)
+      : valorBaseGuardado;
+    const paramsEst = new URLSearchParams();
+    paramsEst.append('codigo_estudiante', 'like.EST%');
+    paramsEst.append('activo', 'eq.true');
+    paramsEst.append('select', 'id');
+    const estudiantes = await apiRequest(`${TABLES.USUARIOS}?${paramsEst.toString()}`);
+    if (!estudiantes || estudiantes.length === 0) return { generados: 0, actualizados: 0, mensaje: 'No hay estudiantes activos' };
+    const paramsExistentes = new URLSearchParams();
+    paramsExistentes.append('anio', `eq.${anio}`);
+    paramsExistentes.append('mes', `eq.${mes}`);
+    paramsExistentes.append('select', 'id,estudiante_id,valor_base,valor_final');
+    const existentes = await apiRequest(`${TABLES.COBROS_MENSUALES}?${paramsExistentes.toString()}`);
+    const cobroPorEst = {};
+    (existentes || []).forEach(c => { cobroPorEst[c.estudiante_id] = c; });
+    const saldosMap = await this._getSaldosMap();
+    const becasActivo = parametros && parametros.becas_activo;
+    const aInsertar = [];
+    let actualizados = 0;
+    const now = new Date().toISOString();
+    for (const est of estudiantes) {
+      const saldoRow = saldosMap[est.id];
+      const valorBaseNum = valorBase;
+      const valorFinal = this._calcularValorCobro(valorBaseNum, saldoRow, becasActivo);
+      const cobroExistente = cobroPorEst[est.id];
+      if (cobroExistente) {
+        const vf = Number(cobroExistente.valor_final);
+        const vb = Number(cobroExistente.valor_base);
+        const enCero = (vf === 0 || isNaN(vf)) && (vb === 0 || isNaN(vb));
+        if (enCero) {
+          await apiRequest(`${TABLES.COBROS_MENSUALES}?id=eq.${cobroExistente.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ valor_base: valorBaseNum, valor_final: valorFinal, updated_at: now })
+          });
+          actualizados++;
+        }
+        continue;
+      }
+      aInsertar.push({
+        estudiante_id: est.id,
+        anio: Number(anio),
+        mes: Number(mes),
+        valor_base: valorBaseNum,
+        valor_final: valorFinal,
+        estado: 'pendiente'
+      });
+    }
+    if (aInsertar.length > 0) {
+      await apiRequest(`${TABLES.COBROS_MENSUALES}`, {
+        method: 'POST',
+        body: JSON.stringify(aInsertar)
+      });
+    }
+    const partes = [];
+    if (aInsertar.length > 0) partes.push(`${aInsertar.length} creados`);
+    if (actualizados > 0) partes.push(`${actualizados} actualizados de 0 al valor correcto`);
+    const mensaje = partes.length > 0
+      ? `Cobros ${mes}/${anio}: ${partes.join(', ')}.`
+      : (actualizados === 0 && aInsertar.length === 0 ? 'Todos los estudiantes ya tienen cobro con valor asignado para este mes.' : '');
+    return { generados: aInsertar.length, actualizados, mensaje: mensaje || `Listo.` };
+  },
+
+  /**
+   * Recalcular y guardar en BD los valores de todos los cobros del mes (valor_base + saldo, con beca).
+   * Útil cuando cambias parámetros o saldos y quieres que la tabla quede persistida.
+   */
+  async recalcularYGuardarCobrosDelMes(anio, mes, opciones = {}) {
+    const parametros = await this.obtenerParametros();
+    const valorBaseGuardado = parametros ? Number(parametros.valor_base_mensualidad) || 0 : 0;
+    const valorBase = (opciones.valorBaseOverride != null && Number(opciones.valorBaseOverride) > 0)
+      ? Number(opciones.valorBaseOverride)
+      : valorBaseGuardado;
+    const paramsCobros = new URLSearchParams();
+    paramsCobros.append('anio', `eq.${anio}`);
+    paramsCobros.append('mes', `eq.${mes}`);
+    paramsCobros.append('select', 'id,estudiante_id,valor_base,valor_final');
+    const cobros = await apiRequest(`${TABLES.COBROS_MENSUALES}?${paramsCobros.toString()}`);
+    if (!cobros || cobros.length === 0) return { actualizados: 0, mensaje: 'No hay cobros para este mes.' };
+    const saldosMap = await this._getSaldosMap();
+    const becasActivo = parametros && parametros.becas_activo;
+    const now = new Date().toISOString();
+    let actualizados = 0;
+    for (const c of cobros) {
+      const saldoRow = saldosMap[c.estudiante_id];
+      const valorFinal = this._calcularValorCobro(valorBase, saldoRow, becasActivo);
+      await apiRequest(`${TABLES.COBROS_MENSUALES}?id=eq.${c.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ valor_base: valorBase, valor_final: valorFinal, updated_at: now })
+      });
+      actualizados++;
+    }
+    return { actualizados, mensaje: `Se guardaron los valores de ${actualizados} cobros para ${mes}/${anio}.` };
+  },
+
+  async _getSaldosMap() {
+    const rows = await apiRequest(`${TABLES.SALDOS_ESTUDIANTE}?select=estudiante_id,saldo,porcentaje_beca`);
+    const map = {};
+    (rows || []).forEach(r => { map[r.estudiante_id] = r; });
+    return map;
+  },
+
+  /**
+   * Marcar cobro como enviado (WhatsApp)
+   */
+  async marcarEnviado(cobroId) {
+    const now = new Date().toISOString();
+    return await apiRequest(`${TABLES.COBROS_MENSUALES}?id=eq.${cobroId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ estado: 'enviado', enviado_at: now, updated_at: now })
+    });
+  },
+
+  /**
+   * Marcar cobro como al día (pagado)
+   */
+  async marcarAlDia(cobroId) {
+    const now = new Date().toISOString();
+    return await apiRequest(`${TABLES.COBROS_MENSUALES}?id=eq.${cobroId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ estado: 'al_dia', updated_at: now })
+    });
+  },
+
+  /**
+   * Listar saldos por estudiante (con nombre). Solo filas existentes.
+   */
+  async listarSaldos() {
+    const params = new URLSearchParams();
+    params.append('select', 'id,estudiante_id,saldo,porcentaje_beca,updated_at,usuarios:estudiante_id(id,nombre,apellidos,codigo_estudiante)');
+    params.append('order', 'estudiante_id');
+    const rows = await apiRequest(`${TABLES.SALDOS_ESTUDIANTE}?${params.toString()}`);
+    return rows || [];
+  },
+
+  /**
+   * Listar todos los estudiantes activos (EST%) con su saldo y % beca (0 si no tienen fila)
+   */
+  async listarEstudiantesConSaldos() {
+    const [estudiantes, saldosRows] = await Promise.all([
+      apiRequest(`${TABLES.USUARIOS}?codigo_estudiante=like.EST%&activo=eq.true&select=id,nombre,apellidos,codigo_estudiante&order=codigo_estudiante`),
+      apiRequest(`${TABLES.SALDOS_ESTUDIANTE}?select=estudiante_id,saldo,porcentaje_beca`)
+    ]);
+    const saldosMap = {};
+    (saldosRows || []).forEach(r => { saldosMap[r.estudiante_id] = r; });
+    return (estudiantes || []).map(est => {
+      const s = saldosMap[est.id];
+      return {
+        estudiante_id: est.id,
+        nombre: `${est.nombre || ''} ${est.apellidos || ''}`.trim(),
+        codigo_estudiante: est.codigo_estudiante,
+        saldo: s ? Number(s.saldo) : 0,
+        porcentaje_beca: s ? Number(s.porcentaje_beca) : 0
+      };
+    });
+  },
+
+  /**
+   * Obtener o crear saldo para un estudiante; actualizar saldo y/o porcentaje_beca
+   */
+  async actualizarSaldo(estudianteId, datos) {
+    const params = new URLSearchParams();
+    params.append('estudiante_id', `eq.${estudianteId}`);
+    params.append('select', 'id');
+    const existente = await apiRequest(`${TABLES.SALDOS_ESTUDIANTE}?${params.toString()}`);
+    const now = new Date().toISOString();
+    const saldo = datos.saldo !== undefined ? Number(datos.saldo) : 0;
+    const porcentajeBeca = datos.porcentaje_beca !== undefined ? Number(datos.porcentaje_beca) : 0;
+    if (existente && existente.length > 0) {
+      const body = { updated_at: now };
+      if (datos.saldo !== undefined) body.saldo = saldo;
+      if (datos.porcentaje_beca !== undefined) body.porcentaje_beca = porcentajeBeca;
+      return await apiRequest(`${TABLES.SALDOS_ESTUDIANTE}?id=eq.${existente[0].id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body)
+      });
+    }
+    return await apiRequest(`${TABLES.SALDOS_ESTUDIANTE}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        estudiante_id: estudianteId,
+        saldo,
+        porcentaje_beca: porcentajeBeca,
+        updated_at: now
+      })
+    });
+  },
+
+  /**
+   * Checkpoint: crear punto de recuperación
+   */
+  async crearCheckpoint(descripcion) {
+    const [cobros, saldos] = await Promise.all([
+      apiRequest(`${TABLES.COBROS_MENSUALES}?select=*`),
+      apiRequest(`${TABLES.SALDOS_ESTUDIANTE}?select=*`)
+    ]);
+    return await apiRequest(`${TABLES.CHECKPOINT_COBROS}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        descripcion: descripcion || 'Checkpoint manual',
+        snapshot_cobros: cobros || [],
+        snapshot_saldos: saldos || []
+      })
+    });
+  },
+
+  /**
+   * Checkpoint: obtener el último
+   */
+  async obtenerUltimoCheckpoint() {
+    const params = new URLSearchParams();
+    params.append('order', 'created_at.desc');
+    params.append('limit', '1');
+    params.append('select', '*');
+    const rows = await apiRequest(`${TABLES.CHECKPOINT_COBROS}?${params.toString()}`);
+    return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+  },
+
+  /**
+   * Checkpoint: revertir al último (restaura cobros y saldos desde el snapshot)
+   */
+  async revertirAlUltimoCheckpoint() {
+    const cp = await this.obtenerUltimoCheckpoint();
+    if (!cp) throw new Error('No hay checkpoint para revertir');
+    const cobros = cp.snapshot_cobros || [];
+    const saldos = cp.snapshot_saldos || [];
+    const actuales = await apiRequest(`${TABLES.COBROS_MENSUALES}?select=id,estudiante_id,anio,mes`);
+    const actualMap = {};
+    (actuales || []).forEach(c => { actualMap[`${c.estudiante_id}-${c.anio}-${c.mes}`] = c; });
+    for (const row of cobros) {
+      const key = `${row.estudiante_id}-${row.anio}-${row.mes}`;
+      const actual = actualMap[key];
+      const payload = {
+        valor_base: row.valor_base,
+        valor_final: row.valor_final,
+        estado: row.estado,
+        enviado_at: row.enviado_at || null,
+        updated_at: new Date().toISOString()
+      };
+      if (actual) {
+        await apiRequest(`${TABLES.COBROS_MENSUALES}?id=eq.${actual.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+      } else {
+        await apiRequest(`${TABLES.COBROS_MENSUALES}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            estudiante_id: row.estudiante_id,
+            anio: row.anio,
+            mes: row.mes,
+            valor_base: row.valor_base,
+            valor_final: row.valor_final,
+            estado: row.estado,
+            enviado_at: row.enviado_at || null
+          })
+        });
+      }
+    }
+    for (const row of saldos) {
+      const exist = await apiRequest(`${TABLES.SALDOS_ESTUDIANTE}?estudiante_id=eq.${row.estudiante_id}&select=id`);
+      if (exist && exist.length > 0) {
+        await apiRequest(`${TABLES.SALDOS_ESTUDIANTE}?id=eq.${exist[0].id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ saldo: row.saldo, porcentaje_beca: row.porcentaje_beca, updated_at: new Date().toISOString() })
+        });
+      } else {
+        await apiRequest(`${TABLES.SALDOS_ESTUDIANTE}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            estudiante_id: row.estudiante_id,
+            saldo: row.saldo,
+            porcentaje_beca: row.porcentaje_beca
+          })
+        });
+      }
+    }
+    return { ok: true, mensaje: 'Checkpoint restaurado' };
+  },
+
+  /**
+   * Reemplazar placeholders en mensaje WhatsApp
+   */
+  reemplazarPlaceholders(plantilla, datos) {
+    if (!plantilla || typeof plantilla !== 'string') return '';
+    return plantilla.replace(/\{\{(\w+)\}\}/g, (_, key) => (datos[key] != null && datos[key] !== '' ? String(datos[key]) : 'N/A'));
+  },
+
+  /**
+   * Construir URL WhatsApp (wa.me)
+   */
+  urlWhatsApp(numero, mensaje) {
+    const num = String(numero || '').replace(/\D/g, '');
+    const prefijo = num.length <= 10 ? '57' : '';
+    const full = prefijo + num;
+    if (!full) return null;
+    return `https://wa.me/${full}?text=${encodeURIComponent(mensaje)}`;
+  }
+};
+
+// ============================================
 // EXPORTACIONES
 // ============================================
 
@@ -916,5 +1311,6 @@ export default {
   EstudiantesAPI,
   ColegiosAPI,
   DocentesAPI,
-  AcudientesAPI
+  AcudientesAPI,
+  CobrosAPI
 };

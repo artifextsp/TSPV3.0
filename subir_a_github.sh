@@ -17,7 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Mensaje de commit (argumento o por defecto)
-COMMIT_MSG="${1:-Actualización TSP: módulos creatividad, ejercicios digitales, edición de ciclos y metas, cambio de contraseña}"
+COMMIT_MSG="${1:-Módulo Cobros: Parámetros, Estudiantes, Saldos, generación/recalculo, mensaje WhatsApp, guías CORS}"
 
 echo "============================================"
 echo "  Subir cambios a GitHub - Thinking Skills Program"
