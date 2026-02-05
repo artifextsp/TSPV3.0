@@ -886,7 +886,37 @@
         
         if (!response.ok) {
           const error = await response.text();
-          if (error.includes('acudientes_email_estudiante_unique')) {
+          if (response.status === 409 || error.includes('acudientes_email_estudiante_unique')) {
+            // Ya existe la fila (email + estudiante_id). Puede estar inactiva: activarla.
+            const emailEncoded2 = encodeURIComponent(acudienteActual.email);
+            const checkResp = await fetch(
+              `${CONFIG.SUPABASE_URL}/rest/v1/acudientes?email=eq.${emailEncoded2}&estudiante_id=eq.${estudianteSeleccionado.id}&select=id,activo`,
+              { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
+            ).then(r => r.json());
+            if (checkResp && checkResp.length > 0) {
+              const fila = checkResp[0];
+              if (fila.activo === false) {
+                await fetch(
+                  `${CONFIG.SUPABASE_URL}/rest/v1/acudientes?id=eq.${fila.id}`,
+                  {
+                    method: 'PATCH',
+                    headers: {
+                      'apikey': CONFIG.SUPABASE_ANON_KEY,
+                      'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ activo: true })
+                  }
+                );
+                mostrarAlerta(`✅ Estudiante ${estudianteSeleccionado.nombre} asociado correctamente (reactivado)`, 'success');
+                window.cerrarModal();
+                await window.buscarAcudiente();
+                cargarAcudientesMultiples();
+                document.getElementById('searchEstudiante').value = '';
+                document.getElementById('estudiantesResultados').innerHTML = '';
+                return;
+              }
+            }
             throw new Error('Este estudiante ya está asociado a este acudiente');
           }
           throw new Error(error);

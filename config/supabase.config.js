@@ -169,7 +169,16 @@ const CONFIG = {
    */
   get API_BASE() {
     return `${this.SUPABASE_URL}/rest/v1`;
-  }
+  },
+
+  /**
+   * Proxy CORS (opcional). Si está definido, las peticiones a la API REST se hacen
+   * a través de esta URL para evitar CORS en GitHub Pages / producción.
+   * Despliega el proxy en Vercel (carpeta api/) y pon aquí la URL, por ejemplo:
+   * API_PROXY_URL: 'https://tspv3-xxx.vercel.app/api/supabase-proxy'
+   * Ver PROXY_CORS_README.md para pasos completos.
+   */
+  API_PROXY_URL: null
 };
 
 // ============================================

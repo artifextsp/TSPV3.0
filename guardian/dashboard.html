@@ -862,7 +862,313 @@
       border-radius: 20px;
       margin-left: 8px;
     }
+    
+    /* ============================================
+       ESTILOS PARA GRÁFICOS CHART.JS
+       ============================================ */
+    
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    @media (max-width: 900px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .chart-container {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    
+    .chart-container canvas {
+      max-height: 280px;
+    }
+    
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .chart-subtitle {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 8px;
+    }
+    
+    .chart-full-width {
+      grid-column: 1 / -1;
+    }
+    
+    /* Tarjetas de Habilidades */
+    .habilidades-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+    
+    @media (max-width: 900px) {
+      .habilidades-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .habilidad-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: box-shadow 0.2s ease;
+    }
+    
+    .habilidad-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+    
+    .habilidad-header {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .habilidad-header:hover {
+      background: var(--gray-50);
+    }
+    
+    .habilidad-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .habilidad-icon {
+      font-size: 24px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gray-100);
+      border-radius: var(--radius-sm);
+    }
+    
+    .habilidad-nombre {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+    
+    .habilidad-descripcion {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 2px;
+    }
+    
+    .habilidad-resultado {
+      text-align: right;
+    }
+    
+    .habilidad-porcentaje {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .habilidad-tendencia {
+      font-size: 11px;
+      color: var(--gray-500);
+    }
+    
+    .habilidad-expand-btn {
+      background: none;
+      border: none;
+      font-size: 16px;
+      color: var(--gray-400);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      padding: 4px;
+    }
+    
+    .habilidad-card.expanded .habilidad-expand-btn {
+      transform: rotate(180deg);
+    }
+    
+    .habilidad-chart-container {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      border-top: 1px solid var(--gray-100);
+    }
+    
+    .habilidad-card.expanded .habilidad-chart-container {
+      max-height: 300px;
+    }
+    
+    .habilidad-chart-inner {
+      padding: 16px 20px;
+    }
+    
+    .habilidad-chart-inner canvas {
+      max-height: 200px;
+    }
+    
+    /* Tooltip personalizado */
+    .chart-tooltip-container {
+      position: absolute;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      box-shadow: var(--shadow-lg);
+      pointer-events: none;
+      z-index: 1000;
+      font-size: 13px;
+    }
+    
+    /* Botón ver detalle en gráficos */
+    .chart-detail-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 11px;
+      padding: 4px 10px;
+      background: var(--gray-100);
+      color: var(--gray-600);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .chart-detail-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+    
+    /* Leyenda de gráficos */
+    .chart-legend {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 12px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--gray-600);
+    }
+    
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    
+    /* ============================================
+       ACCESIBILIDAD Y RESPONSIVE ADICIONAL
+       ============================================ */
+    
+    /* Focus visible para navegación por teclado */
+    .habilidad-header:focus,
+    .habilidad-expand-btn:focus,
+    .chart-detail-btn:focus,
+    button:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    /* Reducir movimiento para usuarios con preferencia */
+    @media (prefers-reduced-motion: reduce) {
+      .habilidad-chart-container {
+        transition: none;
+      }
+      .habilidad-expand-btn {
+        transition: none;
+      }
+    }
+    
+    /* Tablet landscape */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .charts-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .charts-grid .chart-container:last-child {
+        grid-column: 1 / -1;
+      }
+      .habilidades-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    /* Móvil pequeño */
+    @media (max-width: 480px) {
+      .chart-container {
+        padding: 12px;
+      }
+      .chart-title {
+        font-size: 13px;
+      }
+      .chart-subtitle {
+        font-size: 11px;
+      }
+      .habilidad-header {
+        padding: 12px 14px;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .habilidad-info {
+        flex: 1 1 100%;
+      }
+      .habilidad-porcentaje {
+        font-size: 18px;
+      }
+    }
+    
+    /* Alto contraste */
+    @media (prefers-contrast: high) {
+      .chart-container {
+        border: 2px solid var(--gray-700);
+      }
+      .habilidad-card {
+        border: 2px solid var(--gray-700);
+      }
+    }
+    
+    /* Ocultar visualmente pero accesible para lectores de pantalla */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
   </style>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <!-- Loading State -->
@@ -974,21 +1280,47 @@
                 Lectura Crítica
               </h3>
             </div>
-            <div class="metrics-grid" id="metricsLectura">
-              <div class="metric-card">
-                <div class="metric-value" id="metricVS">--</div>
-                <div class="metric-label">Velocidad Simple <span class="info-icon" title="Palabras leídas por minuto">?</span></div>
-                <span class="metric-badge badge-good">PPM</span>
+            
+            <!-- Gráficos de Progreso por Ciclo -->
+            <div class="charts-grid" id="chartsLectura">
+              <div class="chart-container">
+                <div class="chart-title">📊 Velocidad Simple (PPM)</div>
+                <canvas id="chartVelocidadSimple" aria-label="Gráfico de velocidad de lectura por ciclo" role="img"></canvas>
+                <div class="chart-subtitle">Palabras leídas por minuto en cada ciclo</div>
               </div>
-              <div class="metric-card">
-                <div class="metric-value" id="metricComprension">--%</div>
-                <div class="metric-label">Comprensión <span class="info-icon" title="Porcentaje de respuestas correctas">?</span></div>
-                <span class="metric-badge badge-good" id="statusComprension">Adecuado</span>
+              <div class="chart-container">
+                <div class="chart-title">📊 Comprensión (%)</div>
+                <canvas id="chartComprension" aria-label="Gráfico de comprensión lectora por ciclo" role="img"></canvas>
+                <div class="chart-subtitle">Porcentaje de respuestas correctas</div>
               </div>
-              <div class="metric-card">
-                <div class="metric-value" id="metricVE">--</div>
-                <div class="metric-label" id="labelVE">Velocidad Efectiva <span class="info-icon" title="Velocidad × Comprensión">?</span></div>
-                <span class="metric-badge badge-good" id="statusVE">Adecuado</span>
+              <div class="chart-container">
+                <div class="chart-title">📊 Velocidad Efectiva</div>
+                <canvas id="chartVelocidadEfectiva" aria-label="Gráfico de velocidad efectiva por ciclo" role="img"></canvas>
+                <div class="chart-subtitle">Velocidad × Comprensión</div>
+              </div>
+            </div>
+            
+            <!-- Métricas del Ciclo Actual -->
+            <div style="margin-top: 24px;">
+              <h4 style="font-size: 14px; font-weight: 600; color: var(--gray-700); margin-bottom: 12px;">
+                📌 Ciclo Actual - Detalle
+              </h4>
+              <div class="metrics-grid" id="metricsLectura">
+                <div class="metric-card">
+                  <div class="metric-value" id="metricVS">--</div>
+                  <div class="metric-label">Velocidad Simple <span class="info-icon" title="Palabras leídas por minuto">?</span></div>
+                  <span class="metric-badge badge-good">PPM</span>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-value" id="metricComprension">--%</div>
+                  <div class="metric-label">Comprensión <span class="info-icon" title="Porcentaje de respuestas correctas">?</span></div>
+                  <span class="metric-badge badge-good" id="statusComprension">Adecuado</span>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-value" id="metricVE">--</div>
+                  <div class="metric-label" id="labelVE">Velocidad Efectiva <span class="info-icon" title="Velocidad × Comprensión">?</span></div>
+                  <span class="metric-badge badge-good" id="statusVE">Adecuado</span>
+                </div>
               </div>
             </div>
             <div id="lecturaDetalle"></div>
@@ -1002,6 +1334,14 @@
                 Creatividad
               </h3>
             </div>
+            
+            <!-- Gráfico de Creatividad -->
+            <div class="chart-container chart-full-width" style="margin-bottom: 20px;">
+              <div class="chart-title">📊 Calificación por Ciclo</div>
+              <canvas id="chartCreatividad" aria-label="Gráfico de calificaciones de creatividad por ciclo" role="img" style="max-height: 250px;"></canvas>
+              <div class="chart-subtitle">Calificación del docente (0-100%) en cada ciclo completado</div>
+            </div>
+            
             <div id="creatividadContent">
               <div class="empty-state">
                 <div class="empty-state-icon">🎨</div>
@@ -1010,15 +1350,21 @@
             </div>
           </div>
           
-          <!-- Ejercicios Section -->
+          <!-- Ejercicios Section (Habilidades) -->
           <div class="section" id="sectionEjercicios">
             <div class="section-header">
               <h3 class="section-title">
                 <span class="section-icon ejercicios">🎮</span>
-                Ejercicios Digitales
+                Habilidades Cognitivas
               </h3>
             </div>
-            <div id="ejerciciosContent">
+            
+            <!-- Tarjetas de Habilidades con Gráficos Expandibles -->
+            <div class="habilidades-grid" id="habilidadesGrid">
+              <!-- Se generan dinámicamente -->
+            </div>
+            
+            <div id="ejerciciosContent" style="margin-top: 20px;">
               <div class="empty-state">
                 <div class="empty-state-icon">🎮</div>
                 <p>No hay ejercicios digitales en este ciclo</p>
@@ -1284,6 +1630,9 @@
         actualizarNavegadorCiclo();
         await cargarDetalleCiclo();
         
+        // Inicializar gráficos después de cargar datos
+        inicializarGraficos();
+        
       } catch (error) {
         console.error('Error cargando datos:', error);
       }
@@ -1419,15 +1768,16 @@
       }
       
       let contenido = '<div class="detail-card"><h4>📖 Detalles de la Sesión</h4>';
+      let sesionCompleta = null;
       
       if (datosCiclo.lectura_sesion_id) {
         try {
-          const sesion = await LecturaDetalleAPI.obtenerSesionCompleta(datosCiclo.lectura_sesion_id);
-          if (sesion) {
+          sesionCompleta = await LecturaDetalleAPI.obtenerSesionCompleta(datosCiclo.lectura_sesion_id);
+          if (sesionCompleta) {
             contenido += `
-              <div class="detail-row"><span>Título</span><span>${sesion.ciclos_lectura?.titulo || 'N/A'}</span></div>
-              <div class="detail-row"><span>Autor</span><span>${sesion.ciclos_lectura?.autor || 'N/A'}</span></div>
-              <div class="detail-row"><span>Fecha</span><span>${sesion.fecha_fin_sesion ? new Date(sesion.fecha_fin_sesion).toLocaleDateString('es-ES') : 'N/A'}</span></div>
+              <div class="detail-row"><span>Título</span><span>${sesionCompleta.ciclos_lectura?.titulo || 'N/A'}</span></div>
+              <div class="detail-row"><span>Autor</span><span>${sesionCompleta.ciclos_lectura?.autor || 'N/A'}</span></div>
+              <div class="detail-row"><span>Fecha</span><span>${sesionCompleta.fecha_fin_sesion ? new Date(sesionCompleta.fecha_fin_sesion).toLocaleDateString('es-ES') : 'N/A'}</span></div>
             `;
           }
         } catch (e) {
@@ -1443,8 +1793,22 @@
         `;
       }
       
-      // Vocabulario
-      if (datosCiclo.lectura_total_vocabulario > 0) {
+      // Vocabulario - Recalcular desde JSONB para mostrar datos reales
+      if (sesionCompleta) {
+        const vocabReal = calcularVocabularioReal(sesionCompleta);
+        if (vocabReal.total > 0) {
+          const pct = Math.round((vocabReal.aciertos / vocabReal.total) * 100);
+          const color = pct >= 70 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
+          contenido += `
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--gray-200);">
+              <h4 style="margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--gray-700);">📚 Evaluación de Vocabulario</h4>
+              <div class="detail-row"><span>Aciertos</span><span>${vocabReal.aciertos} de ${vocabReal.total}</span></div>
+              <div class="detail-row"><span>Porcentaje</span><span style="color: ${color}; font-weight: 600;">${pct}%</span></div>
+            </div>
+          `;
+        }
+      } else if (datosCiclo.lectura_total_vocabulario > 0) {
+        // Fallback si no hay sesión completa
         const pct = Math.round((datosCiclo.lectura_aciertos_vocabulario / datosCiclo.lectura_total_vocabulario) * 100);
         const color = pct >= 70 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
         contenido += `
@@ -1458,6 +1822,48 @@
       
       contenido += '</div>';
       container.innerHTML = contenido;
+    }
+    
+    /**
+     * Recalcula los aciertos de vocabulario desde el JSONB respuestas_vocabulario
+     * comparando con las respuestas correctas del ciclo.
+     * Esto asegura que se muestren los datos REALES, no los agregados que podrían estar desactualizados.
+     */
+    function calcularVocabularioReal(sesion) {
+      const respuestas = sesion.respuestas_vocabulario || {};
+      const ciclo = sesion.ciclos_lectura;
+      
+      // Intentar obtener preguntas de vocabulario del contenido del ciclo
+      let preguntas = [];
+      if (ciclo?.contenido) {
+        let contenidoObj = ciclo.contenido;
+        if (typeof contenidoObj === 'string') {
+          try { contenidoObj = JSON.parse(contenidoObj); } catch (e) { contenidoObj = {}; }
+        }
+        preguntas = contenidoObj.vocabulary_questions || [];
+      }
+      
+      // Si no hay preguntas en el ciclo, usar los campos agregados como fallback
+      if (preguntas.length === 0) {
+        return {
+          aciertos: sesion.aciertos_vocabulario || 0,
+          total: sesion.total_vocabulario || 0
+        };
+      }
+      
+      // Recalcular aciertos comparando respuestas con las correctas
+      let aciertos = 0;
+      preguntas.forEach(q => {
+        const respuestaUsuario = respuestas[q.qid];
+        if (respuestaUsuario !== undefined && respuestaUsuario === q.answer) {
+          aciertos++;
+        }
+      });
+      
+      return {
+        aciertos,
+        total: preguntas.length
+      };
     }
     
     async function cargarDetalleCreatividad(datosCiclo) {
@@ -2094,6 +2500,431 @@
     window.exportarPDF = function() {
       alert('Función de exportación a PDF próximamente disponible.');
     };
+    
+    // ============================================
+    // GRÁFICOS CON CHART.JS
+    // ============================================
+    
+    let chartInstances = {};
+    
+    function destruirGraficos() {
+      Object.values(chartInstances).forEach(chart => {
+        if (chart) chart.destroy();
+      });
+      chartInstances = {};
+    }
+    
+    function inicializarGraficos() {
+      destruirGraficos();
+      
+      if (datosResumen.length === 0) return;
+      
+      // Ordenar por ciclo
+      const datosOrdenados = [...datosResumen].sort((a, b) => a.ciclo_numero - b.ciclo_numero);
+      const labels = datosOrdenados.map(d => `Ciclo ${d.ciclo_numero}`);
+      
+      // Configuración común para gráficos
+      const configBase = {
+        type: 'line',
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              padding: 12,
+              displayColors: false,
+              callbacks: {
+                title: (items) => items[0]?.label || '',
+                label: (item) => `${item.dataset.label}: ${item.formattedValue}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#6b7280', font: { size: 11 } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: '#f3f4f6' },
+              ticks: { color: '#6b7280', font: { size: 11 } }
+            }
+          },
+          elements: {
+            point: {
+              radius: 6,
+              hoverRadius: 8,
+              backgroundColor: '#fff',
+              borderWidth: 3
+            },
+            line: {
+              tension: 0.3,
+              borderWidth: 3
+            }
+          }
+        }
+      };
+      
+      // 1. Gráfico Velocidad Simple
+      const ctxVS = document.getElementById('chartVelocidadSimple');
+      if (ctxVS) {
+        const datosVS = datosOrdenados.map(d => d.lectura_velocidad_simple || null);
+        chartInstances.velocidadSimple = new Chart(ctxVS, {
+          ...configBase,
+          data: {
+            labels,
+            datasets: [{
+              label: 'Velocidad Simple (PPM)',
+              data: datosVS,
+              borderColor: '#4f46e5',
+              pointBorderColor: '#4f46e5',
+              fill: true,
+              backgroundColor: 'rgba(79, 70, 229, 0.1)'
+            }]
+          },
+          options: {
+            ...configBase.options,
+            onClick: (evt, elements) => {
+              if (elements.length > 0) {
+                const idx = elements[0].index;
+                const cicloNum = datosOrdenados[idx].ciclo_numero;
+                navegarACiclo(cicloNum);
+              }
+            }
+          }
+        });
+      }
+      
+      // 2. Gráfico Comprensión
+      const ctxC = document.getElementById('chartComprension');
+      if (ctxC) {
+        const datosC = datosOrdenados.map(d => d.lectura_comprension || null);
+        chartInstances.comprension = new Chart(ctxC, {
+          ...configBase,
+          data: {
+            labels,
+            datasets: [{
+              label: 'Comprensión (%)',
+              data: datosC,
+              borderColor: '#059669',
+              pointBorderColor: '#059669',
+              fill: true,
+              backgroundColor: 'rgba(5, 150, 105, 0.1)'
+            }]
+          },
+          options: {
+            ...configBase.options,
+            scales: {
+              ...configBase.options.scales,
+              y: {
+                ...configBase.options.scales.y,
+                max: 100,
+                ticks: {
+                  ...configBase.options.scales.y.ticks,
+                  callback: (val) => val + '%'
+                }
+              }
+            },
+            onClick: (evt, elements) => {
+              if (elements.length > 0) {
+                const idx = elements[0].index;
+                const cicloNum = datosOrdenados[idx].ciclo_numero;
+                navegarACiclo(cicloNum);
+              }
+            }
+          }
+        });
+      }
+      
+      // 3. Gráfico Velocidad Efectiva
+      const ctxVE = document.getElementById('chartVelocidadEfectiva');
+      if (ctxVE) {
+        const datosVE = datosOrdenados.map(d => d.lectura_velocidad_efectiva || null);
+        chartInstances.velocidadEfectiva = new Chart(ctxVE, {
+          ...configBase,
+          data: {
+            labels,
+            datasets: [{
+              label: 'Velocidad Efectiva',
+              data: datosVE,
+              borderColor: '#7c3aed',
+              pointBorderColor: '#7c3aed',
+              fill: true,
+              backgroundColor: 'rgba(124, 58, 237, 0.1)'
+            }]
+          },
+          options: {
+            ...configBase.options,
+            onClick: (evt, elements) => {
+              if (elements.length > 0) {
+                const idx = elements[0].index;
+                const cicloNum = datosOrdenados[idx].ciclo_numero;
+                navegarACiclo(cicloNum);
+              }
+            }
+          }
+        });
+      }
+      
+      // 4. Gráfico Creatividad
+      const ctxCreat = document.getElementById('chartCreatividad');
+      if (ctxCreat) {
+        const datosCreat = datosOrdenados.map(d => d.creatividad_calificacion || null);
+        chartInstances.creatividad = new Chart(ctxCreat, {
+          ...configBase,
+          data: {
+            labels,
+            datasets: [{
+              label: 'Calificación (%)',
+              data: datosCreat,
+              borderColor: '#7c3aed',
+              pointBorderColor: '#7c3aed',
+              fill: true,
+              backgroundColor: 'rgba(124, 58, 237, 0.1)',
+              spanGaps: false
+            }]
+          },
+          options: {
+            ...configBase.options,
+            scales: {
+              ...configBase.options.scales,
+              y: {
+                ...configBase.options.scales.y,
+                max: 100,
+                ticks: {
+                  ...configBase.options.scales.y.ticks,
+                  callback: (val) => val + '%'
+                }
+              }
+            },
+            onClick: (evt, elements) => {
+              if (elements.length > 0) {
+                const idx = elements[0].index;
+                const cicloNum = datosOrdenados[idx].ciclo_numero;
+                navegarACiclo(cicloNum);
+              }
+            }
+          }
+        });
+      }
+      
+      // 5. Tarjetas de Habilidades
+      inicializarTarjetasHabilidades(datosOrdenados);
+    }
+    
+    function navegarACiclo(cicloNum) {
+      cicloActual = cicloNum;
+      actualizarNavegadorCiclo();
+      cargarDetalleCiclo();
+    }
+    
+    async function inicializarTarjetasHabilidades(datosOrdenados) {
+      const container = document.getElementById('habilidadesGrid');
+      if (!container) return;
+      
+      // Obtener historial completo de ejercicios
+      let historialEjercicios = [];
+      try {
+        historialEjercicios = await EjerciciosDetalleAPI.obtenerHistorial(estudianteSeleccionado) || [];
+      } catch (e) {
+        console.error('Error cargando historial ejercicios:', e);
+      }
+      
+      if (historialEjercicios.length === 0) {
+        container.innerHTML = '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No hay datos de ejercicios disponibles</p>';
+        return;
+      }
+      
+      // Agrupar por habilidad
+      const habilidadesMap = {};
+      historialEjercicios.forEach(resultado => {
+        const habilidadCodigo = resultado.juegos_ejercicios?.habilidad_estimulada;
+        if (!habilidadCodigo) return;
+        
+        if (!habilidadesMap[habilidadCodigo]) {
+          habilidadesMap[habilidadCodigo] = {
+            codigo: habilidadCodigo,
+            info: habilidadesDB[habilidadCodigo] || { nombre: habilidadCodigo, descripcion: '', icono: '🧠' },
+            resultados: [],
+            porCiclo: {}
+          };
+        }
+        
+        const cicloNum = resultado.juegos_ejercicios?.ciclos_ejercicios?.numero_ciclo;
+        if (cicloNum) {
+          if (!habilidadesMap[habilidadCodigo].porCiclo[cicloNum]) {
+            habilidadesMap[habilidadCodigo].porCiclo[cicloNum] = [];
+          }
+          const meta = resultado.juegos_ejercicios?.meta_objetivo || 1;
+          const pct = Math.min((resultado.resultado_obtenido / meta) * 100, 100);
+          habilidadesMap[habilidadCodigo].porCiclo[cicloNum].push(pct);
+        }
+        
+        habilidadesMap[habilidadCodigo].resultados.push(resultado);
+      });
+      
+      // Tomar las primeras 3 habilidades con más datos
+      const habilidadesOrdenadas = Object.values(habilidadesMap)
+        .sort((a, b) => b.resultados.length - a.resultados.length)
+        .slice(0, 3);
+      
+      if (habilidadesOrdenadas.length === 0) {
+        container.innerHTML = '<p style="color: var(--gray-500); text-align: center; padding: 20px;">No hay habilidades registradas</p>';
+        return;
+      }
+      
+      // Generar HTML de tarjetas
+      container.innerHTML = habilidadesOrdenadas.map((hab, idx) => {
+        const promedio = hab.resultados.length > 0 
+          ? hab.resultados.reduce((sum, r) => {
+              const meta = r.juegos_ejercicios?.meta_objetivo || 1;
+              return sum + Math.min((r.resultado_obtenido / meta) * 100, 100);
+            }, 0) / hab.resultados.length
+          : 0;
+        
+        const tendencia = calcularTendenciaHabilidad(hab.porCiclo);
+        
+        return `
+          <div class="habilidad-card" id="habilidadCard${idx}">
+            <div class="habilidad-header" onclick="toggleHabilidadChart(${idx})" aria-expanded="false" aria-controls="habilidadChart${idx}">
+              <div class="habilidad-info">
+                <div class="habilidad-icon">${hab.info.icono || '🧠'}</div>
+                <div>
+                  <div class="habilidad-nombre">${hab.info.nombre || hab.codigo}</div>
+                  <div class="habilidad-descripcion">${hab.info.descripcion_padres || hab.info.descripcion || 'Habilidad cognitiva'}</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 16px;">
+                <div class="habilidad-resultado">
+                  <div class="habilidad-porcentaje">${Math.round(promedio)}%</div>
+                  <div class="habilidad-tendencia">${tendencia}</div>
+                </div>
+                <button class="habilidad-expand-btn" aria-label="Expandir gráfico">▼</button>
+              </div>
+            </div>
+            <div class="habilidad-chart-container" id="habilidadChartContainer${idx}">
+              <div class="habilidad-chart-inner">
+                <canvas id="habilidadChart${idx}" aria-label="Gráfico de progreso de ${hab.info.nombre || hab.codigo}" role="img"></canvas>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Almacenar datos para los gráficos
+      window.habilidadesData = habilidadesOrdenadas;
+    }
+    
+    function calcularTendenciaHabilidad(porCiclo) {
+      const ciclos = Object.keys(porCiclo).map(Number).sort((a, b) => a - b);
+      if (ciclos.length < 2) return 'Sin tendencia';
+      
+      const ultimo = porCiclo[ciclos[ciclos.length - 1]];
+      const penultimo = porCiclo[ciclos[ciclos.length - 2]];
+      
+      const promUltimo = ultimo.reduce((a, b) => a + b, 0) / ultimo.length;
+      const promPenultimo = penultimo.reduce((a, b) => a + b, 0) / penultimo.length;
+      
+      const diff = promUltimo - promPenultimo;
+      if (diff > 5) return '↑ Mejorando';
+      if (diff < -5) return '↓ Bajando';
+      return '→ Estable';
+    }
+    
+    window.toggleHabilidadChart = function(idx) {
+      const card = document.getElementById(`habilidadCard${idx}`);
+      const isExpanded = card.classList.contains('expanded');
+      
+      // Cerrar todas las demás
+      document.querySelectorAll('.habilidad-card').forEach(c => c.classList.remove('expanded'));
+      
+      if (!isExpanded) {
+        card.classList.add('expanded');
+        
+        // Crear gráfico si no existe
+        if (!chartInstances[`habilidad${idx}`] && window.habilidadesData) {
+          const hab = window.habilidadesData[idx];
+          if (hab) {
+            setTimeout(() => crearGraficoHabilidad(idx, hab), 100);
+          }
+        }
+      }
+    };
+    
+    function crearGraficoHabilidad(idx, hab) {
+      const canvas = document.getElementById(`habilidadChart${idx}`);
+      if (!canvas || chartInstances[`habilidad${idx}`]) return;
+      
+      const ciclos = Object.keys(hab.porCiclo).map(Number).sort((a, b) => a - b);
+      const labels = ciclos.map(c => `Ciclo ${c}`);
+      const datos = ciclos.map(c => {
+        const valores = hab.porCiclo[c];
+        return valores.reduce((a, b) => a + b, 0) / valores.length;
+      });
+      
+      chartInstances[`habilidad${idx}`] = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: hab.info.nombre || hab.codigo,
+            data: datos,
+            borderColor: '#4f46e5',
+            pointBorderColor: '#4f46e5',
+            pointBackgroundColor: '#fff',
+            borderWidth: 3,
+            pointRadius: 6,
+            pointBorderWidth: 3,
+            fill: true,
+            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              titleColor: '#1f2937',
+              bodyColor: '#4b5563',
+              borderColor: '#e5e7eb',
+              borderWidth: 1,
+              callbacks: {
+                label: (item) => `Rendimiento: ${Math.round(item.raw)}%`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#6b7280', font: { size: 11 } }
+            },
+            y: {
+              beginAtZero: true,
+              max: 100,
+              grid: { color: '#f3f4f6' },
+              ticks: {
+                color: '#6b7280',
+                font: { size: 11 },
+                callback: (val) => val + '%'
+              }
+            }
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>

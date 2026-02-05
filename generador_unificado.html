@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador Unificado - Lectura Crítica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FFF5F0 0%, #FFE8DD 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(255, 107, 0, 0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px;
+        }
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .step-card {
+            background: #FFFAF7;
+            border: 2px solid #FFD4B8;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .step-card.active {
+            border-color: #FF6B00;
+            background: #FFF5F0;
+        }
+        .step-number {
+            background: #FF6B00;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 auto 15px;
+        }
+        .step-card.active .step-number {
+            background: #FF8C42;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.4);
+        }
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .step-desc {
+            font-size: 14px;
+            color: #666;
+        }
+        .section {
+            margin-bottom: 35px;
+            padding: 25px;
+            background: #FFFAF7;
+            border-radius: 12px;
+            border-left: 4px solid #FF6B00;
+        }
+        .section-title {
+            color: #FF6B00;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-number {
+            background: #FF6B00;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .field-group {
+            margin-bottom: 20px;
+        }
+        .field-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .field-hint {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+        .textarea-field {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #FFD4B8;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 200px;
+            background: white;
+            line-height: 1.6;
+        }
+        .textarea-field:focus {
+            outline: none;
+            border-color: #FF6B00;
+            box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+        }
+        .textarea-large {
+            min-height: 400px;
+        }
+        .textarea-extra-large {
+            min-height: 500px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+            margin: 5px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 107, 0, 0.4);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        }
+        .btn-copy {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #bee5eb;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+        .hidden {
+            display: none;
+        }
+        .preview-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .preview-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .preview-meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .json-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: white;
+            border: 2px solid #FFD4B8;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FF6B00;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .keyword-badge {
+            display: inline-block;
+            background: #C8F7DC;
+            color: #0F6938;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin: 4px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .copy-feedback {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            font-weight: 600;
+            display: none;
+        }
+        .copy-feedback.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Generador Unificado de Lecturas</h1>
+            <p>Workflow completo: Prompt → IA → TXT → JSON</p>
+        </div>
+
+        <div class="content">
+            <!-- INDICADOR DE PASOS -->
+            <div class="workflow-steps">
+                <div class="step-card" id="step1">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Configurar Prompt</div>
+                    <div class="step-desc">Edita y copia el prompt</div>
+                </div>
+                <div class="step-card" id="step2">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Generar TXT con IA</div>
+                    <div class="step-desc">Pega el resultado aquí</div>
+                </div>
+                <div class="step-card" id="step3">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Generar JSON</div>
+                    <div class="step-desc">Descarga el JSON final</div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 1: METADATOS Y TEXTO (ENTRADA) -->
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-number">1</span>
+                    Metadatos y Texto de la Lectura Original
+                </div>
+                <div class="alert alert-info" style="margin-bottom: 20px;">
+                    <strong>📝 Paso 1:</strong> Llena los metadatos y el texto de la lectura original. Luego integra estos datos al prompt.
+                </div>
+
+                <!-- Tipo de Lectura -->
+                <div class="field-group" style="margin-bottom: 30px;">
+                    <label class="field-label">Tipo de Lectura</label>
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <button class="btn" id="btnContinua" onclick="setReadingType('continua')">📖 Lectura Continua</button>
+                        <button class="btn" id="btnDiscontinua" onclick="setReadingType('discontinua')">📊 Lectura Discontinua</button>
+                    </div>
+                    <div class="alert alert-info" id="typeAlert">
+                        <strong>Selecciona el tipo de lectura:</strong> Continua incluye texto completo, Discontinua solo imagen/infografía.
+                    </div>
+                </div>
+
+                <!-- Metadatos -->
+                <div class="field-group" style="display: grid; grid-template-columns: 2fr 1fr 100px; gap: 15px; margin-bottom: 30px;">
+                    <div>
+                        <label class="field-label">Título</label>
+                        <input type="text" class="textarea-field" id="titleField" placeholder="Título de la lectura" style="min-height: auto; padding: 12px;">
+                    </div>
+                    <div>
+                        <label class="field-label">Autor</label>
+                        <input type="text" class="textarea-field" id="authorField" placeholder="Autor" style="min-height: auto; padding: 12px;">
+                    </div>
+                    <div>
+                        <label class="field-label">Año</label>
+                        <input type="number" class="textarea-field" id="yearField" placeholder="2025" style="min-height: auto; padding: 12px;" value="2025">
+                    </div>
+                </div>
+
+                <!-- Texto (solo continua) -->
+                <div class="field-group hidden" id="textInputGroup" style="margin-bottom: 30px;">
+                    <label class="field-label">Cuerpo del Texto (Párrafo por Párrafo)</label>
+                    <div class="field-hint">Pega un párrafo a la vez y haz clic en "Siguiente Párrafo". Cuando termines, haz clic en "Terminar Párrafos".</div>
+                    <textarea class="textarea-field" id="paragraphField" placeholder="Pega aquí un párrafo del texto..."></textarea>
+                    <div class="btn-group" style="margin-top: 10px;">
+                        <button class="btn" onclick="agregarParrafo()">➕ Siguiente Párrafo</button>
+                        <button class="btn btn-success" onclick="terminarParrafos()">✅ Terminar Párrafos</button>
+                        <button class="btn btn-secondary" onclick="limpiarParrafos()">🗑️ Limpiar Todo</button>
+                    </div>
+                    <div id="parrafosCount" style="margin-top: 10px; color: #666; font-size: 14px;"></div>
+                    <div class="field-group" style="margin-top: 20px;">
+                        <label class="field-label">Texto Completo (Generado Automáticamente)</label>
+                        <div class="field-hint">Este campo se llena automáticamente. Puedes editarlo manualmente si es necesario.</div>
+                        <textarea class="textarea-field textarea-large" id="textField" placeholder="El texto completo aparecerá aquí..." readonly></textarea>
+                    </div>
+                </div>
+
+                <!-- Preguntas de Evaluación (opcional) -->
+                <div class="field-group" style="margin-bottom: 30px;">
+                    <label class="field-label">Preguntas de Evaluación (Opcional)</label>
+                    <div class="field-hint">Si tienes preguntas prehechas, pégalas aquí. Si no, déjalo vacío y la IA las generará automáticamente.</div>
+                    <textarea class="textarea-field" id="preguntasEvaluacionField" placeholder="P: Pregunta 1\nA) Opción A\nB) Opción B\nC) Opción C\nD) Opción D\n\nP: Pregunta 2..."></textarea>
+                </div>
+
+                <!-- Botón Integrar al Prompt -->
+                <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; margin-top: 20px;">
+                    <button class="btn btn-success" style="font-size: 18px; padding: 15px 40px;" onclick="integrarAlPrompt()">
+                        🔗 Integrar Datos al Prompt
+                    </button>
+                    <div id="integracionStatus" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: PROMPT CON DATOS INTEGRADOS -->
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-number">2</span>
+                    Prompt Listo para IA Externa
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Prompt Completo con Datos Integrados</label>
+                    <div class="field-hint">Este prompt ya incluye los datos de entrada. Cópialo y pégalo en tu IA externa.</div>
+                    <textarea class="textarea-field textarea-extra-large" id="promptField" placeholder="Haz clic en 'Integrar Datos al Prompt' para generar el prompt completo..."></textarea>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-copy" onclick="copiarPrompt()">📋 Copiar Prompt Completo</button>
+                    <button class="btn btn-secondary" onclick="restaurarPromptOriginal()">🔄 Restaurar Prompt Base</button>
+                </div>
+                <div id="promptStatus" style="margin-top: 10px;"></div>
+            </div>
+
+            <!-- SECCIÓN 3: RESULTADO DE LA IA -->
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-number">3</span>
+                    Resultado de la IA (TXT)
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Pega aquí el TXT generado por la IA</label>
+                    <div class="field-hint">Copia el resultado completo que te dio la IA y pégalo aquí. El sistema lo procesará automáticamente.</div>
+                    <textarea class="textarea-field textarea-extra-large" id="txtResultField" placeholder="Pega aquí el TXT completo generado por la IA..."></textarea>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="procesarTXT()">🔄 Procesar TXT y Cargar Datos</button>
+                    <button class="btn" onclick="limpiarTXT()">🗑️ Limpiar</button>
+                </div>
+                <div class="alert alert-info" style="margin-top: 15px;">
+                    <strong>ℹ️ Nota:</strong> Este botón solo parsea el TXT y carga los datos en los campos. Para generar el JSON final, usa el botón "🚀 Generar y Descargar JSON" en la sección de abajo.
+                </div>
+                <div id="txtStatus" style="margin-top: 10px;"></div>
+            </div>
+
+
+            <!-- SECCIÓN 4: SUMMARY (después de procesar TXT) -->
+            <div class="section hidden" id="sectionSummary">
+                <div class="section-title">
+                    <span class="section-number">4</span>
+                    Resumen (Summary)
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Resumen del texto</label>
+                    <div class="field-hint">Escribe un resumen breve de 1-4 líneas sobre el contenido de la lectura.</div>
+                    <textarea class="textarea-field" id="summaryField" placeholder="Resumen en 1-4 líneas..."></textarea>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 7: KEYWORDS (solo continua) -->
+            <div class="section hidden" id="sectionKeywords">
+                <div class="section-title">
+                    <span class="section-number">7</span>
+                    Keywords y Significados
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Lista de Keywords</label>
+                    <div class="field-hint">Formato: palabra|significado (una por línea)</div>
+                    <textarea class="textarea-field" id="keywordsField" placeholder="palabra|significado"></textarea>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 8: VOCABULARIO (solo continua) -->
+            <div class="section hidden" id="sectionVocab">
+                <div class="section-title">
+                    <span class="section-number">8</span>
+                    Cuestionario de Vocabulario
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Preguntas de Vocabulario</label>
+                    <div class="field-hint">Formato: P: pregunta, A) opción, B) opción, C) opción, D) opción, R: respuesta, J: justificación</div>
+                    <textarea class="textarea-field textarea-large" id="vocabQuestionsField" placeholder="Preguntas de vocabulario..."></textarea>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 9: EVALUACIÓN -->
+            <div class="section hidden" id="sectionEval">
+                <div class="section-title">
+                    <span class="section-number" id="evalNumber">9</span>
+                    Preguntas de Evaluación
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Preguntas de Evaluación</label>
+                    <div class="field-hint">Mismo formato que vocabulario. Solo preguntas cerradas (múltiple opción).</div>
+                    <textarea class="textarea-field textarea-large" id="evalQuestionsField" placeholder="Preguntas de evaluación..."></textarea>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 10: GENERAR JSON -->
+            <div class="section" id="sectionGenerate">
+                <div class="section-title">
+                    <span class="section-number" id="generateNumber">4</span>
+                    Generar JSON
+                </div>
+                <div class="alert alert-info" style="margin-bottom: 20px;">
+                    <strong>📝 Paso 4:</strong> Una vez que hayas procesado el TXT de la IA (paso 3) y revisado los datos, haz clic aquí para generar el JSON final.
+                </div>
+                <button class="btn btn-success" onclick="generateJSON()" style="font-size: 18px; padding: 15px 40px;">🚀 Generar y Descargar JSON</button>
+                
+                <div id="statsSection" class="hidden" style="margin-top: 30px;">
+                    <h3 style="color: #FF6B00; margin-bottom: 15px;">📊 Estadísticas</h3>
+                    <div class="stats-grid" id="statsGrid"></div>
+                    
+                    <h3 style="color: #FF6B00; margin: 30px 0 15px;">📋 Vista Previa</h3>
+                    <div class="preview-box" id="previewBox"></div>
+                    
+                    <h3 style="color: #FF6B00; margin: 30px 0 15px;">💾 JSON Generado</h3>
+                    <div class="json-output" id="jsonOutput"></div>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button class="btn" onclick="downloadJSON()">⬇️ Descargar JSON</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="copy-feedback" id="copyFeedback">✅ Copiado al portapapeles</div>
+
+    <script>
+        let state = {
+            readingType: 'continua',
+            generatedJSON: null,
+            parrafos: [],
+            imageData: null
+        };
+
+        // Prompt original
+        const PROMPT_ORIGINAL = `Eres un experto en educación y lectura crítica y eres un generador automático de archivos TXT para plataforma de lectura crítica.
+
+
+
+El usuario te dará:
+
+1. Tipo de lectura: "CONTINUA" o "DISCONTINUA" (si no lo dice, infiérelo).
+
+2. Título, Autor y Año (si no, usa "Lectura Sin Título | Anónimo | 2025").
+
+3. El cuerpo de texto completo.
+
+4. PreguntasEvaluacion: [PEGA AQUÍ LAS PREGUNTAS PREHECHAS CON FORMATO P: ... A) ... B) ... etc. O DEJA VACÍO PARA GENERAR AUTOMÁTICO].
+
+Tu salida DEBE SER EXACTAMENTE el TXT siguiente (nada más, texto plano):
+
+[META]
+
+Título | Autor | Año
+
+[SUMMARY]
+
+Resumen en 1-4 líneas.
+
+[Si CONTINUA → incluir; si DISCONTINUA → OMITIR]
+
+[TEXTO]: REGLA OBLIGATORIA DE PROCESAMIENTO DE PÁRRAFOS
+
+1. El texto de entrada puede contener saltos simples (/n) o dobles (/n/n) que indican separación de párrafos.
+
+2. Trata CUALQUIER aparición de /n/n como separador definitivo de párrafo.
+
+3. Trata también cada /n aislado (uno solo) seguido de texto como inicio de nuevo párrafo.
+
+4. Procesa el texto de la siguiente forma exacta:
+
+   - Divide todo el contenido en líneas usando /n como separador.
+
+   - Elimina líneas completamente vacías o que solo contengan espacios.
+
+   - Une nuevamente las líneas NO vacías consecutivas en un solo párrafo (sin ningún /n interno).
+
+   - Cada vez que encuentres una línea vacía o un /n/n, finaliza el párrafo actual y empieza uno nuevo.
+
+   - Al final de CADA párrafo (y solo al final) coloca EXACTAMENTE /n/n (dos saltos de línea).
+
+5. Resultado esperado:
+
+   - Nunca debe haber /n sueltos dentro de un párrafo.
+
+   - Nunca debe haber más de dos /n seguidos.
+
+   - Cada bloque de texto continuo (incluso si en el input original estaba separado solo por /n simples) queda como un párrafo único terminado en /n/n.
+
+   - El [TEXTO] final debe tener exactamente el mismo número de párrafos que bloques que el texto original mostraba visualmente.
+
+Ejemplo correcto de salida:
+
+Párrafo 1 completo aquí./n/n
+
+Párrafo 2 completo aquí./n/n
+
+Párrafo 3 completo aquí./n/n
+
+[KEYWORDS]
+
+CRÍTICO: Extrae las palabras EXACTAMENTE como aparecen en el texto (no uses infinitivos ni formas base).
+
+- Lee el texto completo y identifica 5-12 palabras o frases importantes que aparezcan literalmente en el texto.
+
+- Si encuentras "cosecharon" en el texto, usa "cosecharon" (NO "cosechar").
+
+- Si encuentras "ratoncito" en el texto, usa "ratoncito" (NO "ratón").
+
+- Si encuentras "haló" o "halaron", usa esa forma exacta (NO "halar").
+
+- Si encuentras una frase como "trabajo en equipo", úsala completa.
+
+- Mantén mayúsculas/minúsculas y acentos exactos como en el texto.
+
+- Ordena por orden de aparición en el texto (primera aparición primero).
+
+- Define cada palabra/frase en máximo 12 palabras.
+
+Formato:
+
+palabra_exacta_del_texto|Definición en máximo 12 palabras
+
+Ejemplo correcto:
+
+cosecharon|Recoger los frutos o verduras de una siembra
+
+ratoncito|Animal pequeño de color gris o marrón
+
+halaron|Tirar de algo con fuerza
+
+[VOCABULARIO]
+
+Por cada palabra incluida en [KEYWORDS], genera una pregunta de vocabulario siguiendo el formato indicado. 
+
+No omitas ninguna palabra. 
+
+El número de preguntas en [VOCABULARIO] debe ser igual al número de palabras listadas en [KEYWORDS]. 
+
+Mantén el mismo orden que aparece en [KEYWORDS]. Todas las opciones de respuesta del cuestionario del vocabulario deben ser más o menos de la misma extensión, no se debe notar ni por extensión, ni por exceso de explicación cual es la opción correcta.
+
+P: ¿Qué significa "palabra_exacta_del_texto"?
+
+A) distractor
+
+B) definición correcta
+
+C) distractor
+
+D) distractor
+
+R: B
+
+J: Justificación breve con referencia al texto.
+
+[Separar CADA pregunta con EXACTAMENTE UNA LÍNEA EN BLANCO (enter doble) para detección individual]
+
+[EVALUACION]
+
+[Si PreguntasEvaluacion vacío → genera 9 - 10 cerradas; si no vacío → copia literalmente las P: y opciones]
+
+P: Pregunta cerrada 1
+
+A) ...
+
+R: B
+
+J: Justificación con evidencia textual.
+
+[Separar CADA pregunta con EXACTAMENTE UNA LÍNEA EN BLANCO (enter doble) para detección individual]
+
+REGLAS ESTRICTAS:
+
+- Tipo: CONTINUA >80 palabras narrativo; DISCONTINUA <80 o visual.
+
+- [META]: datos exactos o coherentes.
+
+- [SUMMARY]: fiel, 1-4 líneas.
+
+- [TEXTO]: PROCESA INPUT: elimina TODOS /n y /n/n originales. Detecta párrafos por bloques de texto (líneas no vacías seguidas). Une líneas internas de cada párrafo sin marcadores. Añade /n/n SOLO al final de cada párrafo detectado. NUNCA duplicates /n/n. Preserva para JSON: párrafos exactos sin extras.
+
+- [KEYWORDS]: 
+
+  * EXTRAE palabras/frases EXACTAMENTE como aparecen en el texto (forma verbal, diminutivo, plural, etc.).
+
+  * NO uses infinitivos ni formas base si en el texto aparece una forma conjugada.
+
+  * NO uses singular si en el texto aparece plural o diminutivo.
+
+  * Ordena por orden de primera aparición en el texto.
+
+  * 5-12 palabras únicas, definición nominal ≤12 palabras.
+
+  * Si una palabra aparece múltiples veces, usa la primera aparición.
+
+- [VOCABULARIO]: Itera sobre cada palabra de [KEYWORDS] y genera UNA pregunta de vocabulario por cada una. Usa la palabra EXACTA de [KEYWORDS] en la pregunta. Siempre usa 4 opciones, R: Letra, J: 1-2 oraciones con contexto textual. SEPARA cada pregunta con línea en blanco exacta. El orden debe coincidir con el listado de [KEYWORDS]. Todas las opciones deben tener extensión similar.
+
+- [EVALUACION]: 
+
+  - Si PreguntasEvaluacion VACÍO: genera automáticamente 9-10 preguntas cerradas (múltiple opción).
+
+  - Si PreguntasEvaluacion con contenido: COPIA EXACTO las P: y A/B/C/D; NO generes nuevas. 
+
+  - SIEMPRE genera R: (evalúa correcta basada en texto) y J: (análisis fiel, 1-2 oraciones con evidencia).
+
+  - Genera SOLO preguntas cerradas (múltiple opción). NO incluyas preguntas abiertas.
+
+  - SEPARA con línea en blanco exacta.
+
+- Justificaciones: siempre después de R:, breves, citan texto implícita/explícitamente.
+
+- Prohibido: markdown, negritas, etiquetas extra, "Respuesta correcta", /n sueltos en [TEXTO], preguntas abiertas.
+
+- Error: solo "Error: Falta cuerpo de texto."
+
+- Salida: 100 % copiable a .txt. Líneas en blanco SOLO entre preguntas para parser.
+
+- Opciones de respuesta: En el vocabulario todas las opciones deben tener la misma longitud y el mismo grado de detalle. Evita que la respuesta correcta sea obvia por extensión.
+
+DATOS DE ENTRADA
+
+Tipo: [CONTINUA o DISCONTINUA]
+
+Título: [Título]
+
+Autor: [Autor]
+
+Año: [Año]
+
+Texto: 
+
+[PEGA AQUÍ EL CUERPO DE TEXTO, USA /n/n SOLO AL FINAL DE PÁRRAFOS REALES]
+
+PreguntasEvaluacion: 
+
+[PEGA AQUÍ LAS PREGUNTAS PREHECHAS O DEJA VACÍO]`;
+
+        // Inicializar
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('promptField').value = PROMPT_ORIGINAL;
+            actualizarPasos(1);
+            setReadingType('continua'); // Inicializar con lectura continua
+        });
+
+        function actualizarPasos(pasoActivo) {
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById(`step${i}`);
+                if (i === pasoActivo) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            }
+        }
+
+        function copiarPrompt() {
+            const promptText = document.getElementById('promptField').value;
+            navigator.clipboard.writeText(promptText).then(() => {
+                mostrarFeedbackCopia();
+                document.getElementById('promptStatus').innerHTML = 
+                    '<div class="alert alert-success">✅ Prompt copiado al portapapeles</div>';
+                setTimeout(() => {
+                    document.getElementById('promptStatus').innerHTML = '';
+                }, 3000);
+            }).catch(err => {
+                document.getElementById('promptStatus').innerHTML = 
+                    '<div class="alert alert-warning">❌ Error al copiar. Selecciona y copia manualmente (Ctrl+C)</div>';
+            });
+        }
+
+        function mostrarFeedbackCopia() {
+            const feedback = document.getElementById('copyFeedback');
+            feedback.classList.add('show');
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 2000);
+        }
+
+        function restaurarPromptOriginal() {
+            if (confirm('¿Restaurar el prompt base? Se perderán los datos integrados. Puedes volver a integrarlos con el botón "Integrar Datos al Prompt".')) {
+                document.getElementById('promptField').value = PROMPT_ORIGINAL;
+                document.getElementById('promptStatus').innerHTML = 
+                    '<div class="alert alert-info">✅ Prompt base restaurado. Usa "Integrar Datos al Prompt" para agregar los datos nuevamente.</div>';
+                setTimeout(() => {
+                    document.getElementById('promptStatus').innerHTML = '';
+                }, 3000);
+            }
+        }
+
+        function limpiarTXT() {
+            if (confirm('¿Limpiar el contenido del TXT?')) {
+                document.getElementById('txtResultField').value = '';
+                document.getElementById('txtStatus').innerHTML = '';
+            }
+        }
+
+        function procesarTXT() {
+            const txtContent = document.getElementById('txtResultField').value.trim();
+            
+            if (!txtContent) {
+                document.getElementById('txtStatus').innerHTML = 
+                    '<div class="alert alert-warning">⚠️ Por favor pega el TXT generado por la IA</div>';
+                return;
+            }
+
+            document.getElementById('txtStatus').innerHTML = 
+                '<div class="alert alert-info">⏳ Procesando TXT...</div>';
+
+            try {
+                parseTXT(txtContent);
+                actualizarPasos(3);
+                
+                // Scroll a la sección de generar JSON
+                setTimeout(() => {
+                    document.getElementById('sectionGenerate').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 500);
+                
+                document.getElementById('txtStatus').innerHTML = 
+                    '<div class="alert alert-success">✅ TXT procesado correctamente. Los datos han sido cargados en los campos. <strong>Ahora revisa y ajusta los datos si es necesario, luego haz clic en "🚀 Generar y Descargar JSON" en la sección de abajo.</strong></div>';
+            } catch (error) {
+                document.getElementById('txtStatus').innerHTML = 
+                    `<div class="alert alert-warning">❌ Error al procesar TXT: ${error.message}</div>`;
+                console.error('Error procesando TXT:', error);
+            }
+        }
+
+        // Parsear TXT con etiquetas (misma función del JSON Creator)
+        function parseTXT(content) {
+            try {
+                // Extraer secciones
+                const sections = {
+                    meta: extractSection(content, '[META]', '[SUMMARY]'),
+                    summary: extractSection(content, '[SUMMARY]', '[TEXTO]', '[EVALUACION]'),
+                    texto: extractSection(content, '[TEXTO]', '[KEYWORDS]'),
+                    keywords: extractSection(content, '[KEYWORDS]', '[VOCABULARIO]'),
+                    vocabulario: extractSection(content, '[VOCABULARIO]', '[EVALUACION]'),
+                    evaluacion: extractSection(content, '[EVALUACION]', null)
+                };
+
+                // Detectar tipo de lectura
+                const isContinua = sections.texto.trim() !== '' && sections.keywords.trim() !== '';
+                state.readingType = isContinua ? 'continua' : 'discontinua';
+                
+                // Actualizar UI de tipo (con validación)
+                const btnContinua = document.getElementById('btnContinua');
+                const btnDiscontinua = document.getElementById('btnDiscontinua');
+                if (btnContinua && btnDiscontinua) {
+                    if (isContinua) {
+                        btnContinua.style.background = 'linear-gradient(135deg, #28a745 0%, #34ce57 100%)';
+                        btnContinua.style.color = 'white';
+                        btnDiscontinua.style.background = 'linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)';
+                        btnDiscontinua.style.color = 'white';
+                    } else {
+                        btnDiscontinua.style.background = 'linear-gradient(135deg, #28a745 0%, #34ce57 100%)';
+                        btnDiscontinua.style.color = 'white';
+                        btnContinua.style.background = 'linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)';
+                        btnContinua.style.color = 'white';
+                    }
+                }
+
+                // Llenar campos de metadatos si vienen del TXT (con validación)
+                if (sections.meta) {
+                    const metaParts = sections.meta.split('|').map(p => p.trim());
+                    if (metaParts.length >= 3) {
+                        const titleField = document.getElementById('titleField');
+                        const authorField = document.getElementById('authorField');
+                        const yearField = document.getElementById('yearField');
+                        if (titleField) titleField.value = metaParts[0] || '';
+                        if (authorField) authorField.value = metaParts[1] || '';
+                        if (yearField) yearField.value = metaParts[2] || new Date().getFullYear();
+                    }
+                }
+                
+                const summaryField = document.getElementById('summaryField');
+                if (summaryField) summaryField.value = sections.summary.trim();
+                
+                if (isContinua) {
+                    const textField = document.getElementById('textField');
+                    const keywordsField = document.getElementById('keywordsField');
+                    const vocabQuestionsField = document.getElementById('vocabQuestionsField');
+                    if (textField) textField.value = sections.texto.trim();
+                    if (keywordsField) keywordsField.value = sections.keywords.trim();
+                    if (vocabQuestionsField) vocabQuestionsField.value = sections.vocabulario.trim();
+                }
+                
+                const evalQuestionsField = document.getElementById('evalQuestionsField');
+                if (evalQuestionsField) evalQuestionsField.value = sections.evaluacion.trim();
+
+                // Actualizar visibilidad de secciones
+                updateSectionVisibility();
+
+            } catch (error) {
+                alert('Error al procesar TXT: ' + error.message);
+                console.error(error);
+                throw error;
+            }
+        }
+
+        // Extraer sección entre etiquetas
+        function extractSection(content, startTag, endTag, altEndTag = null) {
+            const startIndex = content.indexOf(startTag);
+            if (startIndex === -1) {
+                console.warn(`No se encontró la etiqueta ${startTag}`);
+                return '';
+            }
+            
+            const start = startIndex + startTag.length;
+            let end = content.length;
+            
+            if (endTag) {
+                const endIndex = content.indexOf(endTag, start);
+                if (endIndex !== -1) {
+                    end = endIndex;
+                } else {
+                    console.warn(`No se encontró la etiqueta de cierre ${endTag} para ${startTag}, usando hasta el final`);
+                }
+            }
+            
+            if (altEndTag && end === content.length) {
+                const altEndIndex = content.indexOf(altEndTag, start);
+                if (altEndIndex !== -1) {
+                    end = altEndIndex;
+                }
+            }
+            
+            const extracted = content.substring(start, end).trim();
+            console.log(`Extraída sección ${startTag}: ${extracted.length} caracteres`);
+            return extracted;
+        }
+
+        // Actualizar visibilidad de secciones
+        function updateSectionVisibility() {
+            const isContinua = state.readingType === 'continua';
+            
+            // Validar que los elementos existan antes de acceder a ellos
+            const sectionSummary = document.getElementById('sectionSummary');
+            const sectionKeywords = document.getElementById('sectionKeywords');
+            const sectionVocab = document.getElementById('sectionVocab');
+            const sectionEval = document.getElementById('sectionEval');
+            const evalNumber = document.getElementById('evalNumber');
+            
+            if (sectionSummary) sectionSummary.classList.remove('hidden');
+            if (sectionKeywords) sectionKeywords.classList.toggle('hidden', !isContinua);
+            if (sectionVocab) sectionVocab.classList.toggle('hidden', !isContinua);
+            if (sectionEval) sectionEval.classList.remove('hidden');
+            
+            // Actualizar numeración
+            if (evalNumber) {
+                if (isContinua) {
+                    evalNumber.textContent = '9';
+                } else {
+                    evalNumber.textContent = '6';
+                }
+            }
+        }
+
+        // Cambiar tipo de lectura
+        function setReadingType(type) {
+            state.readingType = type;
+            
+            // Actualizar botones
+            const btnContinua = document.getElementById('btnContinua');
+            const btnDiscontinua = document.getElementById('btnDiscontinua');
+            
+            if (type === 'continua') {
+                btnContinua.style.background = 'linear-gradient(135deg, #28a745 0%, #34ce57 100%)';
+                btnContinua.style.color = 'white';
+                btnDiscontinua.style.background = 'linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)';
+                btnDiscontinua.style.color = 'white';
+                document.getElementById('textInputGroup').classList.remove('hidden');
+            } else {
+                btnDiscontinua.style.background = 'linear-gradient(135deg, #28a745 0%, #34ce57 100%)';
+                btnDiscontinua.style.color = 'white';
+                btnContinua.style.background = 'linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)';
+                btnContinua.style.color = 'white';
+                document.getElementById('textInputGroup').classList.add('hidden');
+            }
+            
+            // Actualizar alerta
+            const alert = document.getElementById('typeAlert');
+            if (type === 'continua') {
+                alert.innerHTML = '<strong>📖 Lectura Continua:</strong> Incluye texto completo, keywords, preguntas de vocabulario y evaluación.';
+                alert.className = 'alert alert-warning';
+            } else {
+                alert.innerHTML = '<strong>📊 Lectura Discontinua:</strong> Solo incluye ilustración/infografía y preguntas de evaluación. No requiere texto ni vocabulario.';
+                alert.className = 'alert alert-success';
+            }
+        }
+
+        // Integrar datos al prompt
+        function integrarAlPrompt() {
+            const tipo = state.readingType.toUpperCase();
+            const titulo = document.getElementById('titleField').value.trim() || 'Lectura Sin Título';
+            const autor = document.getElementById('authorField').value.trim() || 'Anónimo';
+            const año = document.getElementById('yearField').value.trim() || new Date().getFullYear();
+            const texto = document.getElementById('textField').value.trim();
+            const preguntasEval = document.getElementById('preguntasEvaluacionField').value.trim();
+
+            // Validaciones
+            if (!titulo || titulo === 'Lectura Sin Título') {
+                document.getElementById('integracionStatus').innerHTML = 
+                    '<div class="alert alert-warning">⚠️ Por favor ingresa el título de la lectura</div>';
+                return;
+            }
+
+            if (state.readingType === 'continua' && !texto) {
+                document.getElementById('integracionStatus').innerHTML = 
+                    '<div class="alert alert-warning">⚠️ Para lectura continua, debes agregar al menos un párrafo</div>';
+                return;
+            }
+
+            // Construir sección de datos de entrada
+            let datosEntrada = `DATOS DE ENTRADA
+
+Tipo: ${tipo}
+
+Título: ${titulo}
+
+Autor: ${autor}
+
+Año: ${año}
+
+Texto: 
+
+${texto || '[PEGA AQUÍ EL CUERPO DE TEXTO, USA /n/n SOLO AL FINAL DE PÁRRAFOS REALES]'}
+
+PreguntasEvaluacion: 
+
+${preguntasEval || '[PEGA AQUÍ LAS PREGUNTAS PREHECHAS O DEJA VACÍO]'}`;
+
+            // Integrar al prompt base
+            const promptCompleto = PROMPT_ORIGINAL + '\n\n' + datosEntrada;
+            
+            // Actualizar el campo del prompt
+            document.getElementById('promptField').value = promptCompleto;
+            
+            // Mostrar confirmación
+            document.getElementById('integracionStatus').innerHTML = 
+                '<div class="alert alert-success">✅ Datos integrados al prompt correctamente. Ahora puedes copiar el prompt completo.</div>';
+            
+            // Scroll al prompt
+            setTimeout(() => {
+                document.getElementById('promptField').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 500);
+        }
+
+        // Agregar párrafo
+        function agregarParrafo() {
+            const parrafo = document.getElementById('paragraphField').value.trim();
+            
+            if (!parrafo) {
+                return;
+            }
+            
+            state.parrafos.push(parrafo);
+            document.getElementById('paragraphField').value = '';
+            actualizarTextoCompleto();
+            actualizarContadorParrafos();
+            
+            // Enfocar el campo para el siguiente párrafo
+            document.getElementById('paragraphField').focus();
+        }
+
+        // Terminar párrafos
+        function terminarParrafos() {
+            if (state.parrafos.length === 0) {
+                alert('⚠️ No hay párrafos agregados. Agrega al menos un párrafo.');
+                return;
+            }
+            
+            actualizarTextoCompleto();
+            
+            // Hacer el campo editable para ajustes manuales
+            document.getElementById('textField').readOnly = false;
+            
+            alert(`✅ Texto completo generado con ${state.parrafos.length} párrafo(s). Ahora puedes integrar los datos al prompt.`);
+        }
+
+        // Actualizar texto completo
+        function actualizarTextoCompleto() {
+            const textoCompleto = state.parrafos.join('/n/n') + (state.parrafos.length > 0 ? '/n/n' : '');
+            document.getElementById('textField').value = textoCompleto;
+        }
+
+        // Actualizar contador de párrafos
+        function actualizarContadorParrafos() {
+            const count = state.parrafos.length;
+            document.getElementById('parrafosCount').innerHTML = 
+                `<strong>Párrafos agregados: ${count}</strong>`;
+        }
+
+        // Limpiar párrafos
+        function limpiarParrafos() {
+            if (confirm('¿Limpiar todos los párrafos agregados?')) {
+                state.parrafos = [];
+                document.getElementById('paragraphField').value = '';
+                document.getElementById('textField').value = '';
+                document.getElementById('parrafosCount').innerHTML = '';
+            }
+        }
+
+        // Preview de imagen
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    state.imageData = e.target.result;
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Obtener metadatos desde los campos
+        function getMetadata() {
+            return {
+                title: document.getElementById('titleField').value.trim() || 'Lectura Sin Título',
+                author: document.getElementById('authorField').value.trim() || 'Anónimo',
+                year: parseInt(document.getElementById('yearField').value) || new Date().getFullYear()
+            };
+        }
+
+        // Calcular Lexile basado en word count y complejidad
+        function calculateLexile(wordCount, text) {
+            let base = 600;
+            
+            // Ajuste por longitud
+            if (wordCount > 500) base += 200;
+            else if (wordCount > 300) base += 100;
+            
+            // Ajuste por complejidad de palabras
+            const longWords = text.split(/\s+/).filter(w => w.length > 8).length;
+            const complexity = (longWords / wordCount) * 100;
+            
+            if (complexity > 20) base += 200;
+            else if (complexity > 10) base += 100;
+            
+            return `${Math.round(base / 10) * 10}L`;
+        }
+
+        // Parsear keywords
+        function parseKeywords(text) {
+            return text.split('\n')
+                .filter(line => line.trim())
+                .map(line => {
+                    const [word, meaning] = line.split('|').map(p => p.trim());
+                    return { word, meaning };
+                })
+                .filter(kw => kw.word && kw.meaning);
+        }
+
+        // Parsear preguntas (misma función mejorada del JSON Creator)
+        function parseQuestions(text, prefix = 'Q') {
+            const questions = [];
+            
+            if (!text || !text.trim()) {
+                console.warn(`Texto vacío para parsear preguntas con prefijo ${prefix}`);
+                return questions;
+            }
+            
+            // Normalizar el texto: reemplazar múltiples saltos de línea consecutivos
+            let normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            
+            // Estrategia 1: Dividir por líneas que empiezan con "P:" (más confiable)
+            const lines = normalizedText.split('\n');
+            let questionBlocks = [];
+            let currentBlock = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const trimmedLine = lines[i].trim();
+                
+                // Si encontramos una línea que empieza con "P:" y ya tenemos un bloque, guardarlo
+                if (trimmedLine.startsWith('P:') && currentBlock.length > 0) {
+                    const blockText = currentBlock.join('\n').trim();
+                    if (blockText) {
+                        questionBlocks.push(blockText);
+                    }
+                    currentBlock = [lines[i]]; // Empezar nuevo bloque con la línea actual
+                } else {
+                    // Agregar línea al bloque actual
+                    currentBlock.push(lines[i]);
+                }
+            }
+            
+            // Agregar el último bloque
+            if (currentBlock.length > 0) {
+                const blockText = currentBlock.join('\n').trim();
+                if (blockText) {
+                    questionBlocks.push(blockText);
+                }
+            }
+            
+            // Si no se encontraron bloques con "P:", intentar dividir por doble salto de línea
+            if (questionBlocks.length <= 1) {
+                questionBlocks = normalizedText.split(/\n\s*\n+/).filter(b => b.trim());
+                console.log(`Usando método alternativo: ${questionBlocks.length} bloques encontrados`);
+            }
+            
+            console.log(`Total de bloques detectados: ${questionBlocks.length} para prefijo ${prefix}`);
+            
+            questionBlocks.forEach((block, index) => {
+                const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+                if (lines.length === 0) return;
+                
+                const question = { qid: `${prefix}${index + 1}` };
+                
+                // Extraer pregunta
+                const stemLine = lines.find(l => l.startsWith('P:'));
+                if (!stemLine) {
+                    console.warn(`Bloque ${index + 1} no tiene línea P:, omitiendo...`);
+                    return;
+                }
+                question.stem = stemLine.substring(2).trim();
+                
+                // Extraer opciones
+                const options = [];
+                const optionLines = lines.filter(l => /^[A-D]\)/.test(l));
+                optionLines.forEach(line => {
+                    options.push(line.substring(2).trim());
+                });
+                
+                // Extraer respuesta
+                const answerLine = lines.find(l => l.startsWith('R:'));
+                if (!answerLine) {
+                    console.warn(`Pregunta "${question.stem.substring(0, 50)}..." no tiene línea R:, omitiendo...`);
+                    return;
+                }
+                
+                const answerText = answerLine.substring(2).trim().toUpperCase();
+                
+                // Extraer justificación
+                const justificationLine = lines.find(l => l.startsWith('J:'));
+                const justification = justificationLine ? justificationLine.substring(2).trim() : '';
+                
+                if (answerText === 'ABIERTA') {
+                    question.type = 'open';
+                    question.options = [];
+                    question.answer = 'Respuesta abierta - evaluar comprensión, análisis y argumentación del estudiante';
+                    question.justification = justification || 'Se espera una respuesta que demuestre comprensión profunda del tema.';
+                } else {
+                    question.type = 'mcq';
+                    question.options = options;
+                    const answerIndex = answerText.charCodeAt(0) - 65; // A=0, B=1, etc
+                    if (answerIndex < 0 || answerIndex > 3) {
+                        console.warn(`Respuesta inválida "${answerText}" en pregunta "${question.stem.substring(0, 50)}..."`);
+                        return;
+                    }
+                    question.answer = answerIndex;
+                    question.justification = justification || 'Esta es la respuesta correcta según el texto.';
+                }
+                
+                questions.push(question);
+            });
+            
+            console.log(`Se parsearon ${questions.length} preguntas con prefijo ${prefix}`);
+            return questions;
+        }
+
+        // Generar JSON
+        function generateJSON() {
+            try {
+                // Obtener metadatos desde los campos
+                const metadata = getMetadata();
+                const summaryText = document.getElementById('summaryField')?.value.trim() || '';
+                const evalQuestionsText = document.getElementById('evalQuestionsField')?.value.trim() || '';
+                
+                // Validar campos básicos
+                if (!metadata.title || !metadata.author || !summaryText || !evalQuestionsText) {
+                    alert('Por favor completa los campos obligatorios: Título, Autor, Año, Summary y Preguntas de Evaluación');
+                    return;
+                }
+                
+                // Crear objeto base
+                const json = {
+                    assessment_id: `commonlit_${Date.now()}`,
+                    reading_type: state.readingType,
+                    source: "CommonLit PDF",
+                    version: "3.0",
+                    timestamp: new Date().toISOString(),
+                    reading: {
+                        title: metadata.title,
+                        author: metadata.author,
+                        year: metadata.year,
+                        summary: summaryText.replace(/\n/g, ' ').trim()
+                    }
+                };
+                
+                // Procesar según tipo
+                if (state.readingType === 'continua') {
+                    const textField = document.getElementById('textField');
+                    const keywordsField = document.getElementById('keywordsField');
+                    const vocabQuestionsField = document.getElementById('vocabQuestionsField');
+                    
+                    const textRaw = textField?.value.trim() || '';
+                    const keywordsText = keywordsField?.value.trim() || '';
+                    const vocabQuestionsText = vocabQuestionsField?.value.trim() || '';
+                    
+                    if (!textRaw || !keywordsText || !vocabQuestionsText) {
+                        alert('Para lectura continua necesitas completar: Texto, Keywords y Cuestionario de Vocabulario');
+                        return;
+                    }
+                    
+                    // Procesar texto
+                    const text = textRaw.replace(/\/n/g, '\n\n').trim();
+                    const wordCount = text.split(/\s+/).length;
+                    const lexile = calculateLexile(wordCount, text);
+                    
+                    // Keywords
+                    const keywords = parseKeywords(keywordsText);
+                    
+                    // Agregar a reading
+                    json.reading.text_excerpt = text;
+                    json.reading.word_count_text = wordCount;
+                    json.reading.lexile = lexile;
+                    json.reading.keywords = keywords;
+                    
+                    // Preguntas de vocabulario
+                    json.vocabulary_questions = parseQuestions(vocabQuestionsText, 'V');
+                    
+                } else {
+                    // Lectura discontinua - sin texto ni keywords
+                    json.reading.word_count_text = 0;
+                    json.reading.lexile = "N/A";
+                    json.reading.text_excerpt = "Infografía/Ilustración";
+                }
+                
+                // Preguntas de evaluación (ambos tipos)
+                json.questions = parseQuestions(evalQuestionsText, 'Q');
+                
+                // Guardar JSON
+                state.generatedJSON = json;
+                
+                // Mostrar resultados
+                displayResults(json);
+                
+            } catch (error) {
+                alert('Error al generar JSON: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        // Mostrar resultados
+        function displayResults(json) {
+            // Estadísticas
+            const stats = [];
+            stats.push({ label: 'Tipo', value: json.reading_type === 'continua' ? 'Continua' : 'Discontinua' });
+            
+            if (json.reading_type === 'continua') {
+                stats.push({ label: 'Palabras', value: json.reading.word_count_text });
+                stats.push({ label: 'Lexile', value: json.reading.lexile });
+                stats.push({ label: 'Keywords', value: json.reading.keywords.length });
+                stats.push({ label: 'P. Vocabulario', value: json.vocabulary_questions.length });
+            }
+            stats.push({ label: 'P. Evaluación', value: json.questions.length });
+            
+            const statsHTML = stats.map(s => `
+                <div class="stat-card">
+                    <div class="stat-value">${s.value}</div>
+                    <div class="stat-label">${s.label}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('statsGrid').innerHTML = statsHTML;
+            
+            // Preview
+            let previewHTML = `
+                <div class="preview-title">${json.reading.title}</div>
+                <div class="preview-meta">Por ${json.reading.author} (${json.reading.year})</div>
+                <p><strong>Resumen:</strong> ${json.reading.summary}</p>
+            `;
+            
+            if (json.reading_type === 'continua') {
+                previewHTML += `<p><strong>Keywords:</strong> ${json.reading.keywords.map(k => `<span class="keyword-badge">${k.word}</span>`).join('')}</p>`;
+            }
+            
+            document.getElementById('previewBox').innerHTML = previewHTML;
+            
+            // JSON output
+            document.getElementById('jsonOutput').textContent = JSON.stringify(json, null, 2);
+            
+            // Mostrar sección
+            document.getElementById('statsSection').classList.remove('hidden');
+            document.getElementById('statsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Descargar JSON
+        function downloadJSON() {
+            if (!state.generatedJSON) {
+                alert('Primero genera el JSON');
+                return;
+            }
+            
+            const filename = `${state.generatedJSON.reading.title.replace(/\s+/g, '_')}_${Date.now()}.json`;
+            const blob = new Blob([JSON.stringify(state.generatedJSON, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('✅ JSON descargado correctamente');
+        }
+    </script>
+</body>
+</html>
+

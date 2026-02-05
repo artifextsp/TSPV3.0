@@ -574,21 +574,24 @@
                 <input type="number" id="cobrosValorBase" min="0" step="1000" placeholder="Ej: 400000">
               </div>
               <div class="form-group">
-                <label>URL plataforma (resultados estudiante)</label>
-                <input type="url" id="cobrosLinkPlataforma" placeholder="https://...">
+                <label>Login de la plataforma</label>
+                <input type="url" id="cobrosLinkPlataforma" value="https://artifextsp.github.io/TSPV3.0/index.html" readonly style="background:#f0f0f0;">
+                <small style="color:#718096;">URL fija que se incluye en el mensaje WhatsApp (debajo de la contraseña inicial).</small>
               </div>
               <div class="form-group">
-                <label>Link videotutorial 1</label>
+                <label>Link videotutorial para acudientes</label>
                 <input type="url" id="cobrosLinkVideo1" placeholder="https://...">
+                <small style="color:#718096;">Videotutorial para que los acudientes revisen los resultados del entrenamiento de sus hijos (aparece en el mensaje WhatsApp).</small>
               </div>
               <div class="form-group">
-                <label>Link videotutorial 2</label>
+                <label>Link resultados estudiantes (dashboard)</label>
                 <input type="url" id="cobrosLinkVideo2" placeholder="https://...">
+                <small style="color:#718096;">Cómo pueden los estudiantes ver sus propios resultados desde su dashboard.</small>
               </div>
               <div class="form-group">
                 <label>Mensaje WhatsApp para el acudiente</label>
                 <textarea id="cobrosMensajeWhatsApp" rows="14" placeholder="El mensaje se rellena con los datos del estudiante y acudiente al enviar por WhatsApp."></textarea>
-                <small style="color:#718096; display:block; margin-top:4px;">Variables: {{nombre_acudiente}}, {{nombre_estudiante}}, {{mes_cobro}}, {{valor_a_cobrar}}, {{estado_mensualidad}}, {{link_plataforma}}, {{link_video_1}}, {{link_video_2}}</small>
+                <small style="color:#718096; display:block; margin-top:4px;">Variables: {{nombre_acudiente}}, {{username_acudiente}}, {{contraseña_inicial}}, {{nombre_estudiante}}, {{mes_cobro}}, {{valor_a_cobrar}}, {{estado_mensualidad}}. Login de la plataforma va fijo. Enlaces: {{link_video_1}} (videotutorial acudientes), {{link_resultados_estudiantes}} (dashboard estudiante).</small>
               </div>
               <div class="form-group">
                 <label><input type="checkbox" id="cobrosBecasActivo" checked> Becas activas (aplicar % beca al cobro)</label>
@@ -1911,15 +1914,21 @@
     let cobrosParametros = null;
     const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-    // Plantilla prediseñada: enfoque en resultados; estado y valor como información adicional
+    // Plantilla prediseñada: primera vez incluye usuario, contraseña, login fijo y videotutorial acudientes
+    const LOGIN_PLATAFORMA_URL = 'https://artifextsp.github.io/TSPV3.0/index.html';
     const PLANTILLA_MENSAJE_WHATSAPP_COBROS = `*Thinking Skills Program*
 Estimado(a) {{nombre_acudiente}},
 
-Los resultados y el avance de *{{nombre_estudiante}}* ya están disponibles. Puede consultarlos aquí:
-{{link_plataforma}}
+*Acceso a la plataforma (primera vez):*
+• Usuario: {{username_acudiente}}
+• Contraseña inicial: {{contraseña_inicial}}
+• Acceso al login: ` + LOGIN_PLATAFORMA_URL + `
 
-Si desea apoyo con el uso de la plataforma, puede revisar nuestro videotutorial:
-{{link_video_1}}
+*Enlaces útiles:*
+• Videotutorial para acudientes (cómo revisar resultados de sus hijos): {{link_video_1}}
+• Cómo ver sus resultados desde el dashboard (estudiante): {{link_resultados_estudiantes}}
+
+Los resultados y el avance de *{{nombre_estudiante}}* ya están disponibles.
 
 —
 *Información adicional:* Mensualidad {{mes_cobro}}: {{estado_mensualidad}}. Valor: $` + `{{valor_a_cobrar}}
@@ -2014,7 +2023,7 @@ Equipo Thinking Skills Program`;
         cobrosParametros = await CobrosAPI.obtenerParametros();
         const msgEl = document.getElementById('cobrosMensajeWhatsApp');
         const msg = cobrosParametros && cobrosParametros.mensaje_whatsapp && String(cobrosParametros.mensaje_whatsapp).trim();
-        const esPlantillaAntigua = msg && (msg.includes('recordatorio de mensualidad') || msg.includes('recordatorio de cobro')) && !msg.includes('resultados y el avance');
+        const esPlantillaAntigua = msg && ((msg.includes('recordatorio de mensualidad') || msg.includes('recordatorio de cobro')) && !msg.includes('resultados y el avance') || !msg.includes('username_acudiente'));
         if (cobrosParametros) {
           document.getElementById('cobrosValorBase').value = cobrosParametros.valor_base_mensualidad ?? '';
           document.getElementById('cobrosLinkPlataforma').value = cobrosParametros.link_plataforma ?? '';
@@ -2054,37 +2063,73 @@ Equipo Thinking Skills Program`;
       const anio = document.getElementById('cobrosAnio').value;
       const mes = document.getElementById('cobrosMes').value;
       const tbody = document.getElementById('tbodyCobrosEstudiantes');
+      const alertEl = document.getElementById('alertCobrosEstudiantes');
       if (!anio || !mes) {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Selecciona mes y año y pulsa Cargar cobros</td></tr>';
         return;
       }
       tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Cargando...</td></tr>';
       try {
-        const rows = await CobrosAPI.getCobrosDelPeriodo(anio, mes);
-        if (!rows || rows.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay cobros para este periodo. Pulsa "Generar cobros del mes".</td></tr>';
-          return;
-        }
+        const [cobros, todosEstudiantes] = await Promise.all([
+          CobrosAPI.getCobrosDelPeriodo(anio, mes),
+          CobrosAPI.listarEstudiantesConSaldos()
+        ]);
         const nombreMes = MESES[Number(mes) - 1] || mes;
-        tbody.innerHTML = rows.map(c => {
-          const u = c.usuarios || {};
-          const nombreEst = `${u.nombre || ''} ${u.apellidos || ''}`.trim() || 'N/A';
-          const estadoClass = c.estado === 'al_dia' ? 'badge-success' : c.estado === 'enviado' ? 'badge-info' : 'badge-warning';
-          return `<tr>
-            <td>${nombreEst}</td>
-            <td>${c.acudiente ? c.acudiente.nombre : 'N/A'}</td>
-            <td>$${Number(c.valor_final).toLocaleString('es-CO')}</td>
-            <td><span class="badge ${estadoClass}">${c.estado || 'pendiente'}</span></td>
-            <td>
-              <div class="actions">
-                <button type="button" class="btn btn-sm btn-success" onclick="abrirWhatsAppCobro('${c.id}','${(c.acudiente && c.acudiente.celular) ? c.acudiente.celular.replace(/'/g, "\\'") : ''}','${nombreEst.replace(/'/g, "\\'")}','${(c.acudiente && c.acudiente.nombre) ? c.acudiente.nombre.replace(/'/g, "\\'") : 'N/A'}','${c.valor_final}','${nombreMes} ${anio}','${(c.estado || 'pendiente').replace(/'/g, "\\'")}')">WhatsApp</button>
-                <button type="button" class="btn btn-sm btn-primary" onclick="marcarAlDiaCobro('${c.id}')">Al día</button>
-              </div>
-            </td>
-          </tr>`;
-        }).join('');
+        const cobroPorEst = {};
+        (cobros || []).forEach(c => { cobroPorEst[c.estudiante_id] = c; });
+        const idsSinCobro = (todosEstudiantes || []).filter(e => !cobroPorEst[e.estudiante_id]).map(e => e.estudiante_id);
+        let acuPorEstSinCobro = {};
+        if (idsSinCobro.length > 0) {
+          acuPorEstSinCobro = await CobrosAPI.getAcudientesPorEstudiantes(idsSinCobro);
+        }
+        const filas = [];
+        for (const est of (todosEstudiantes || [])) {
+          const c = cobroPorEst[est.estudiante_id];
+          const nombreEst = (est.nombre && est.nombre.trim()) ? est.nombre : (est.codigo_estudiante || 'N/A');
+          if (c) {
+            const u = c.usuarios || {};
+            const nombreEstC = `${u.nombre || ''} ${u.apellidos || ''}`.trim() || nombreEst;
+            const estadoClass = c.estado === 'al_dia' ? 'badge-success' : c.estado === 'enviado' ? 'badge-info' : 'badge-warning';
+            const usernameAcu = (c.acudiente && c.acudiente.username) ? String(c.acudiente.username).replace(/'/g, "\\'") : '';
+            filas.push(`<tr>
+              <td>${nombreEstC}</td>
+              <td>${c.acudiente ? (c.acudiente.nombre || 'N/A') : 'N/A'}</td>
+              <td>$${Number(c.valor_final).toLocaleString('es-CO')}</td>
+              <td><span class="badge ${estadoClass}">${c.estado || 'pendiente'}</span></td>
+              <td>
+                <div class="actions">
+                  <button type="button" class="btn btn-sm btn-success" onclick="abrirWhatsAppCobro('${c.id}','${(c.acudiente && c.acudiente.celular) ? c.acudiente.celular.replace(/'/g, "\\'") : ''}','${nombreEstC.replace(/'/g, "\\'")}','${(c.acudiente && c.acudiente.nombre) ? c.acudiente.nombre.replace(/'/g, "\\'") : 'N/A'}','${usernameAcu}','${c.valor_final}','${nombreMes} ${anio}','${(c.estado || 'pendiente').replace(/'/g, "\\'")}')">WhatsApp</button>
+                  <button type="button" class="btn btn-sm btn-primary" onclick="marcarAlDiaCobro('${c.id}')">Al día</button>
+                </div>
+              </td>
+            </tr>`);
+          } else {
+            const acuList = acuPorEstSinCobro[est.estudiante_id];
+            const acu = acuList && acuList[0];
+            const nombreAcu = acu ? `${acu.nombre || ''} ${acu.apellidos || ''}`.trim() : 'N/A';
+            filas.push(`<tr style="background:#fafafa;">
+              <td>${nombreEst}</td>
+              <td>${nombreAcu}</td>
+              <td>—</td>
+              <td><span class="badge badge-secondary">Sin cobro</span></td>
+              <td><small style="color:#718096;">Pulsa «Generar cobros del mes» para incluirlos</small></td>
+            </tr>`);
+          }
+        }
+        if (filas.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay estudiantes activos. Revisa la pestaña Saldos.</td></tr>';
+        } else {
+          tbody.innerHTML = filas.join('');
+        }
+        if (alertEl && idsSinCobro.length > 0) {
+          alertEl.innerHTML = `<div class="alert alert-warning">Hay <strong>${idsSinCobro.length}</strong> estudiante(s) sin cobro para ${nombreMes} ${anio}. Pulsa «Generar cobros del mes» para incluirlos.</div>`;
+          alertEl.className = '';
+        } else if (alertEl) {
+          alertEl.innerHTML = '';
+        }
       } catch (e) {
         tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Error: ${e.message}</td></tr>`;
+        if (alertEl) alertEl.innerHTML = '';
       }
     }
 
@@ -2141,26 +2186,26 @@ Equipo Thinking Skills Program`;
       return t[estado] || estado || 'Pendiente de pago';
     }
 
-    window.abrirWhatsAppCobro = function(cobroId, celular, nombreEstudiante, nombreAcudiente, valorFinal, mesCobro, estadoCobro) {
+    window.abrirWhatsAppCobro = function(cobroId, celular, nombreEstudiante, nombreAcudiente, usernameAcudiente, valorFinal, mesCobro, estadoCobro) {
       if (!celular || celular.trim() === '') {
         mostrarAlerta('alertCobrosEstudiantes', 'El acudiente no tiene celular registrado', 'error');
         return;
       }
       cobrosParametros = cobrosParametros || {};
-      const linkPlataforma = document.getElementById('cobrosLinkPlataforma').value || cobrosParametros.link_plataforma || 'N/A';
       const linkVideo1 = document.getElementById('cobrosLinkVideo1').value || cobrosParametros.link_video_1 || 'N/A';
-      const linkVideo2 = document.getElementById('cobrosLinkVideo2').value || cobrosParametros.link_video_2 || 'N/A';
+      const linkResultadosEstudiantes = document.getElementById('cobrosLinkVideo2').value || cobrosParametros.link_video_2 || 'N/A';
       const plantilla = document.getElementById('cobrosMensajeWhatsApp').value || cobrosParametros.mensaje_whatsapp || '';
       const valorFormateado = Number(valorFinal) ? Number(valorFinal).toLocaleString('es-CO') : String(valorFinal || '');
       const mensaje = CobrosAPI.reemplazarPlaceholders(plantilla, {
         nombre_acudiente: nombreAcudiente,
+        username_acudiente: usernameAcudiente || 'N/A',
+        contraseña_inicial: 'temporal123',
         nombre_estudiante: nombreEstudiante,
         mes_cobro: mesCobro,
         valor_a_cobrar: valorFormateado,
         estado_mensualidad: estadoMensualidadTexto(estadoCobro),
-        link_plataforma: linkPlataforma,
         link_video_1: linkVideo1,
-        link_video_2: linkVideo2
+        link_resultados_estudiantes: linkResultadosEstudiantes
       });
       const url = CobrosAPI.urlWhatsApp(celular, mensaje);
       if (url) window.open(url, '_blank');

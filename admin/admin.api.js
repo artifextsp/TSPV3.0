@@ -35,21 +35,25 @@ const TABLES = {
 // ============================================
 
 /**
- * Realiza una petición a Supabase REST API
+ * Realiza una petición a Supabase REST API.
+ * Si CONFIG.API_PROXY_URL está definido, la petición se hace al proxy (evita CORS en GitHub Pages, etc.).
  */
 async function apiRequest(endpoint, options = {}) {
-  const url = `${CONFIG.API_BASE}/${endpoint}`;
+  const useProxy = CONFIG.API_PROXY_URL && typeof CONFIG.API_PROXY_URL === 'string' && CONFIG.API_PROXY_URL.trim() !== '';
+  const url = useProxy
+    ? `${CONFIG.API_PROXY_URL.replace(/\/$/, '')}?path=${encodeURIComponent(endpoint)}`
+    : `${CONFIG.API_BASE}/${endpoint}`;
   const defaultOptions = {
     method: options.method || 'GET',
     headers: CONFIG.HEADERS,
     ...options
   };
-  
+
   // Si hay body, asegurarse de que sea JSON string
   if (defaultOptions.body && typeof defaultOptions.body !== 'string') {
     defaultOptions.body = JSON.stringify(defaultOptions.body);
   }
-  
+
   try {
     const response = await fetch(url, defaultOptions);
     
@@ -227,16 +231,30 @@ export const EstudiantesAPI = {
     datos.activo = datos.activo !== undefined ? datos.activo : true;
     datos.primera_vez = datos.primera_vez !== undefined ? datos.primera_vez : true;
     
-    try {
-      return await apiRequest(`${TABLES.USUARIOS}`, {
-        method: 'POST',
-        body: JSON.stringify(datos)
-      });
-    } catch (error) {
-      // Manejar error de email duplicado con mensaje más claro
-      if (error.message) {
-        if (error.message.includes('23505') && error.message.includes('usuarios_email_key')) {
-          // Intentar obtener información del usuario existente
+    const MAX_REINTENTOS_CODIGO = 15;
+    let ultimoError = null;
+    
+    for (let intento = 0; intento < MAX_REINTENTOS_CODIGO; intento++) {
+      try {
+        return await apiRequest(`${TABLES.USUARIOS}`, {
+          method: 'POST',
+          body: JSON.stringify(datos)
+        });
+      } catch (error) {
+        ultimoError = error;
+        const msg = error.message || '';
+        const esCodigoDuplicado = msg.includes('23505') && msg.includes('usuarios_codigo_estudiante_key');
+        if (esCodigoDuplicado && datos.codigo_estudiante) {
+          // Código ya existe (p. ej. usuario inactivo no visible por RLS): incrementar y reintentar
+          const match = datos.codigo_estudiante.match(/\d+/);
+          if (match) {
+            const numero = parseInt(match[0], 10) + 1;
+            datos.codigo_estudiante = 'EST' + String(numero).padStart(4, '0');
+            continue;
+          }
+        }
+        // Error de email duplicado: mensaje más claro
+        if (msg.includes('23505') && msg.includes('usuarios_email_key')) {
           try {
             const params = new URLSearchParams();
             params.append('email', `eq.${datos.email}`);
@@ -249,16 +267,16 @@ export const EstudiantesAPI = {
               throw new Error(`El email "${datos.email}" ya está registrado para: ${nombreCompleto} (${codigo}). Usa un email diferente o edita el usuario existente.`);
             }
           } catch (innerError) {
-            // Si ya tiene un mensaje personalizado, usarlo
             if (innerError.message && innerError.message.includes('ya está registrado')) {
               throw innerError;
             }
           }
           throw new Error(`El email "${datos.email}" ya está registrado en el sistema. Por favor, usa un email diferente.`);
         }
+        throw error;
       }
-      throw error;
     }
+    throw ultimoError || new Error('No se pudo crear el estudiante: código de estudiante duplicado tras varios intentos.');
   },
   
   /**
@@ -1071,6 +1089,7 @@ export const CobrosAPI = {
 
   /**
    * Recalcular y guardar en BD los valores de todos los cobros del mes (valor_base + saldo, con beca).
+   * Si el cobro está en estado "al_dia" (pagado), se guarda valor_final = 0.
    * Útil cuando cambias parámetros o saldos y quieres que la tabla quede persistida.
    */
   async recalcularYGuardarCobrosDelMes(anio, mes, opciones = {}) {
@@ -1082,7 +1101,7 @@ export const CobrosAPI = {
     const paramsCobros = new URLSearchParams();
     paramsCobros.append('anio', `eq.${anio}`);
     paramsCobros.append('mes', `eq.${mes}`);
-    paramsCobros.append('select', 'id,estudiante_id,valor_base,valor_final');
+    paramsCobros.append('select', 'id,estudiante_id,valor_base,valor_final,estado');
     const cobros = await apiRequest(`${TABLES.COBROS_MENSUALES}?${paramsCobros.toString()}`);
     if (!cobros || cobros.length === 0) return { actualizados: 0, mensaje: 'No hay cobros para este mes.' };
     const saldosMap = await this._getSaldosMap();
@@ -1090,11 +1109,19 @@ export const CobrosAPI = {
     const now = new Date().toISOString();
     let actualizados = 0;
     for (const c of cobros) {
-      const saldoRow = saldosMap[c.estudiante_id];
-      const valorFinal = this._calcularValorCobro(valorBase, saldoRow, becasActivo);
+      const estaAlDia = (c.estado || '').toLowerCase() === 'al_dia';
+      let valorFinal;
+      let valorBaseGuardar = valorBase;
+      if (estaAlDia) {
+        valorFinal = 0;
+        valorBaseGuardar = 0;
+      } else {
+        const saldoRow = saldosMap[c.estudiante_id];
+        valorFinal = this._calcularValorCobro(valorBase, saldoRow, becasActivo);
+      }
       await apiRequest(`${TABLES.COBROS_MENSUALES}?id=eq.${c.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ valor_base: valorBase, valor_final: valorFinal, updated_at: now })
+        body: JSON.stringify({ valor_base: valorBaseGuardar, valor_final: valorFinal, updated_at: now })
       });
       actualizados++;
     }
@@ -1145,9 +1172,16 @@ export const CobrosAPI = {
    * Listar todos los estudiantes activos (EST%) con su saldo y % beca (0 si no tienen fila)
    */
   async listarEstudiantesConSaldos() {
+    const paramsUsuarios = new URLSearchParams();
+    paramsUsuarios.append('codigo_estudiante', 'like.EST%');
+    paramsUsuarios.append('activo', 'eq.true');
+    paramsUsuarios.append('select', 'id,nombre,apellidos,codigo_estudiante');
+    paramsUsuarios.append('order', 'codigo_estudiante');
+    const paramsSaldos = new URLSearchParams();
+    paramsSaldos.append('select', 'estudiante_id,saldo,porcentaje_beca');
     const [estudiantes, saldosRows] = await Promise.all([
-      apiRequest(`${TABLES.USUARIOS}?codigo_estudiante=like.EST%&activo=eq.true&select=id,nombre,apellidos,codigo_estudiante&order=codigo_estudiante`),
-      apiRequest(`${TABLES.SALDOS_ESTUDIANTE}?select=estudiante_id,saldo,porcentaje_beca`)
+      apiRequest(`${TABLES.USUARIOS}?${paramsUsuarios.toString()}`),
+      apiRequest(`${TABLES.SALDOS_ESTUDIANTE}?${paramsSaldos.toString()}`)
     ]);
     const saldosMap = {};
     (saldosRows || []).forEach(r => { saldosMap[r.estudiante_id] = r; });
@@ -1161,6 +1195,24 @@ export const CobrosAPI = {
         porcentaje_beca: s ? Number(s.porcentaje_beca) : 0
       };
     });
+  },
+
+  /**
+   * Obtener acudientes activos para una lista de estudiante_id (para mostrar en tabla cuando no tienen cobro aún)
+   */
+  async getAcudientesPorEstudiantes(estudianteIds) {
+    if (!estudianteIds || estudianteIds.length === 0) return {};
+    const params = new URLSearchParams();
+    params.append('estudiante_id', `in.(${estudianteIds.join(',')})`);
+    params.append('activo', 'eq.true');
+    params.append('select', 'estudiante_id,nombre,apellidos,celular,username');
+    const rows = await apiRequest(`${TABLES.ACUDIENTES}?${params.toString()}`);
+    const acuPorEst = {};
+    (rows || []).forEach(a => {
+      if (!acuPorEst[a.estudiante_id]) acuPorEst[a.estudiante_id] = [];
+      acuPorEst[a.estudiante_id].push(a);
+    });
+    return acuPorEst;
   },
 
   /**
