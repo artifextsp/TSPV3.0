@@ -325,6 +325,143 @@
     .hidden {
       display: none !important;
     }
+    
+    /* ============================================
+       BARRA DE ACCION SUPERIOR (nuevo flujo)
+       ============================================ */
+    .action-bar {
+      background: rgba(237, 137, 54, 0.15);
+      border-bottom: 2px solid #ed8936;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      position: sticky;
+      top: 56px;
+      z-index: 90;
+      backdrop-filter: blur(8px);
+    }
+    
+    .action-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .action-bar .action-text {
+      font-size: 15px;
+      font-weight: 500;
+      color: #e2e8f0;
+    }
+    
+    .action-bar .btn-solicitar {
+      background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
+    }
+    
+    .action-bar .btn-solicitar:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(237, 137, 54, 0.4);
+    }
+    
+    /* Estado pendiente - barra amarilla */
+    .action-bar.pending {
+      background: rgba(236, 201, 75, 0.15);
+      border-bottom-color: #ecc94b;
+    }
+    
+    .action-bar.pending .action-text {
+      color: #ecc94b;
+    }
+    
+    /* Indicador pulsante */
+    .pulse-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ecc94b;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+    
+    /* Overlay de calificacion (gradedState como overlay) */
+    .graded-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(26, 26, 46, 0.92);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.4s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .graded-overlay .completed-card {
+      animation: slideUp 0.4s ease;
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Boton volver en la barra de accion */
+    .action-bar .btn-volver {
+      background: rgba(255,255,255,0.1);
+      color: #a0aec0;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    
+    .action-bar .btn-volver:hover {
+      background: rgba(255,255,255,0.2);
+      color: #e2e8f0;
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-indicator { animation: none; }
+      .graded-overlay, .graded-overlay .completed-card { animation: none; }
+    }
+    
+    @media (max-width: 480px) {
+      .action-bar {
+        padding: 10px 16px;
+        gap: 10px;
+      }
+      .action-bar .btn-solicitar {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -340,20 +477,8 @@
     <a href="../estudiante/dashboard.html" class="btn-back-dashboard">Volver al Dashboard</a>
   </div>
   
-  <!-- Estado completado - pendiente de revisión -->
-  <div id="pendingReviewState" class="completed-state hidden">
-    <div class="completed-card">
-      <div class="completed-icon">⏳</div>
-      <h2>Esperando calificación del docente</h2>
-      <p>Ya solicitaste la revisión de tu trabajo. El docente te asignará una calificación pronto.</p>
-      <button class="btn-completed" onclick="window.location.href='../estudiante/dashboard.html'">
-        Volver al Dashboard
-      </button>
-    </div>
-  </div>
-  
-  <!-- Estado calificado -->
-  <div id="gradedState" class="completed-state hidden">
+  <!-- Overlay de calificacion (aparece sobre todo cuando el docente califica) -->
+  <div id="gradedOverlay" class="graded-overlay hidden">
     <div class="completed-card">
       <div class="completed-icon">🎉</div>
       <h2>¡Tu trabajo ha sido calificado!</h2>
@@ -368,22 +493,7 @@
     </div>
   </div>
   
-  <!-- Estado completado - listo para solicitar revisión -->
-  <div id="completedState" class="completed-state hidden">
-    <div class="completed-card">
-      <div class="completed-icon">✅</div>
-      <h2>¡Actividad completada!</h2>
-      <p>Has terminado de visualizar el contenido. Ahora muestra tu trabajo al docente y solicita que lo califique.</p>
-      <button class="btn-request-review" onclick="solicitarRevision()">
-        Solicitar Revisión al Docente
-      </button>
-      <button class="btn-secondary-action" onclick="window.location.href='../estudiante/dashboard.html'">
-        Volver al Dashboard
-      </button>
-    </div>
-  </div>
-  
-  <!-- Contenido principal -->
+  <!-- Contenido principal (permanece visible en estados finalizada y pendiente_revision) -->
   <div id="mainContent" class="hidden">
     <header class="header">
       <span class="header-title" id="headerTitle">Creatividad</span>
@@ -395,6 +505,24 @@
         </div>
       </div>
     </header>
+    
+    <!-- Barra de accion superior (aparece tras finalizar actividad) -->
+    <div id="actionBar" class="action-bar hidden">
+      <!-- Estado: finalizada - listo para solicitar revision -->
+      <div id="actionFinished" class="action-content hidden">
+        <span class="action-text">Actividad completada. Muestra tu trabajo al docente.</span>
+        <button class="btn-solicitar" onclick="solicitarRevision()">
+          Solicitar Revision al Docente
+        </button>
+        <a href="../estudiante/dashboard.html" class="btn-volver">Volver al Dashboard</a>
+      </div>
+      <!-- Estado: pendiente_revision - esperando calificacion -->
+      <div id="actionPending" class="action-content hidden">
+        <div class="pulse-indicator" aria-label="Esperando calificacion"></div>
+        <span class="action-text">Esperando calificacion del docente...</span>
+        <a href="../estudiante/dashboard.html" class="btn-volver">Volver al Dashboard</a>
+      </div>
+    </div>
     
     <div class="container">
       <!-- Instrucciones (opcional) -->
@@ -408,8 +536,8 @@
         <!-- Se carga dinámicamente: imagen o PDF -->
       </div>
       
-      <!-- Botón finalizar -->
-      <div class="finish-section">
+      <!-- Botón finalizar (se oculta al finalizar) -->
+      <div class="finish-section" id="finishSection">
         <button class="btn-finish" id="btnFinish" onclick="finalizarActividad()">
           He terminado de visualizar
         </button>
@@ -426,10 +554,13 @@
     let sesionActual = null;
     let zoomLevel = 100;
     let tiempoInicio = null;
-    
     let usuarioActual = null;
+    let pollingInterval = null;
     
-    // Inicializar
+    // ============================================
+    // INICIALIZACION
+    // ============================================
+    
     async function init() {
       usuarioActual = getUser();
       
@@ -454,51 +585,280 @@
           return;
         }
         
-        // Verificar sesión existente
+        // Verificar sesion existente
         const sesionExistente = await SesionesCreatividadAPI.obtenerSesion(cicloActual.id, usuarioActual.id);
         
         if (sesionExistente) {
           sesionActual = sesionExistente;
           
-          // Verificar estado de la sesión
+          // Estado: calificada -> mostrar overlay con calificacion sobre el reto
           if (sesionExistente.estado === 'calificada') {
-            // Mostrar calificación
+            cargarContenido();
+            mostrarEstado('mainContent');
+            ocultarFinishSection();
             mostrarCalificacion(sesionExistente);
             return;
           }
           
+          // Estado: pendiente_revision -> mostrar reto + barra "esperando"
           if (sesionExistente.estado === 'pendiente_revision') {
-            // Esperando revisión del docente
-            mostrarEstado('pendingReviewState');
+            cargarContenido();
+            mostrarEstado('mainContent');
+            ocultarFinishSection();
+            mostrarBarraAccion('pending');
+            iniciarPolling();
             return;
           }
           
+          // Estado: finalizada -> mostrar reto + barra "solicitar revision"
           if (sesionExistente.estado === 'finalizada') {
-            // Completó pero no ha solicitado revisión
-            mostrarEstado('completedState');
+            cargarContenido();
+            mostrarEstado('mainContent');
+            ocultarFinishSection();
+            mostrarBarraAccion('finished');
             return;
           }
         }
         
-        // Iniciar o recuperar sesión
+        // Iniciar o recuperar sesion (estado: en_progreso)
         sesionActual = await SesionesCreatividadAPI.iniciar(cicloActual.id, usuarioActual.id);
         tiempoInicio = Date.now();
         
-        // Cargar contenido
+        // Cargar contenido con boton "He terminado"
         cargarContenido();
         mostrarEstado('mainContent');
         
       } catch (error) {
         console.error('Error inicializando:', error);
-        if (error.message.includes('Ya completaste')) {
-          mostrarEstado('completedState');
+        if (error.message && error.message.includes('Ya completaste')) {
+          // Intentar cargar contenido si hay ciclo
+          if (cicloActual) {
+            cargarContenido();
+            mostrarEstado('mainContent');
+            ocultarFinishSection();
+            mostrarBarraAccion('finished');
+          } else {
+            mostrarEstado('noCycleState');
+          }
         } else {
           mostrarEstado('noCycleState');
         }
       }
     }
     
-    // Obtener grado del usuario
+    // ============================================
+    // GESTION DE ESTADOS
+    // ============================================
+    
+    /**
+     * Muestra un estado principal (loadingState, noCycleState, mainContent).
+     * Ya NO incluye completedState ni pendingReviewState (eliminados).
+     */
+    function mostrarEstado(stateId) {
+      ['loadingState', 'noCycleState', 'mainContent'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      const target = document.getElementById(stateId);
+      if (target) target.classList.remove('hidden');
+    }
+    
+    /**
+     * Muestra la barra de accion superior dentro de mainContent.
+     * @param {'finished'|'pending'} tipo
+     */
+    function mostrarBarraAccion(tipo) {
+      const bar = document.getElementById('actionBar');
+      const finished = document.getElementById('actionFinished');
+      const pending = document.getElementById('actionPending');
+      
+      // Ocultar ambos contenidos
+      finished.classList.add('hidden');
+      pending.classList.add('hidden');
+      bar.classList.remove('pending');
+      
+      if (tipo === 'finished') {
+        finished.classList.remove('hidden');
+      } else if (tipo === 'pending') {
+        pending.classList.remove('hidden');
+        bar.classList.add('pending');
+      }
+      
+      bar.classList.remove('hidden');
+    }
+    
+    /**
+     * Oculta la barra de accion.
+     */
+    function ocultarBarraAccion() {
+      const bar = document.getElementById('actionBar');
+      if (bar) bar.classList.add('hidden');
+    }
+    
+    /**
+     * Oculta el boton "He terminado de visualizar".
+     */
+    function ocultarFinishSection() {
+      const section = document.getElementById('finishSection');
+      if (section) section.classList.add('hidden');
+    }
+    
+    // ============================================
+    // CALIFICACION (overlay)
+    // ============================================
+    
+    /**
+     * Muestra el overlay de calificacion sobre el reto visible.
+     */
+    function mostrarCalificacion(sesion) {
+      document.getElementById('gradeValue').textContent = `${sesion.calificacion_docente || 0}%`;
+      
+      if (sesion.comentario_docente) {
+        const commentDiv = document.getElementById('gradeComment');
+        commentDiv.innerHTML = `
+          <div class="grade-comment-label">Comentario del docente:</div>
+          <p>${sesion.comentario_docente}</p>
+        `;
+        commentDiv.classList.remove('hidden');
+      }
+      
+      // Mostrar overlay (encima del reto que permanece visible debajo)
+      document.getElementById('gradedOverlay').classList.remove('hidden');
+    }
+    
+    // ============================================
+    // POLLING (detectar calificacion del docente)
+    // ============================================
+    
+    /**
+     * Inicia polling cada 5 segundos para detectar cuando el docente califica.
+     * Al detectar estado 'calificada', muestra el overlay automaticamente.
+     */
+    function iniciarPolling() {
+      // Limpiar polling anterior si existe
+      if (pollingInterval) clearInterval(pollingInterval);
+      
+      pollingInterval = setInterval(async () => {
+        try {
+          const sesion = await SesionesCreatividadAPI.obtenerSesion(
+            cicloActual.id, usuarioActual.id
+          );
+          if (sesion && sesion.estado === 'calificada') {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+            // Transicion: ocultar barra pending, mostrar overlay
+            ocultarBarraAccion();
+            mostrarCalificacion(sesion);
+          }
+        } catch (error) {
+          console.error('Error en polling:', error);
+          // No detener polling por errores transitorios
+        }
+      }, 5000);
+    }
+    
+    /**
+     * Detiene el polling al salir de la pagina.
+     */
+    window.addEventListener('beforeunload', () => {
+      if (pollingInterval) clearInterval(pollingInterval);
+    });
+    
+    // ============================================
+    // SOLICITAR REVISION
+    // ============================================
+    
+    window.solicitarRevision = async function() {
+      if (!confirm('¿Solicitar al docente que revise y califique tu trabajo?')) return;
+      
+      try {
+        await SesionesCreatividadAPI.solicitarRevision(sesionActual.id);
+        
+        // Transicion: cambiar barra de "solicitar" a "esperando"
+        mostrarBarraAccion('pending');
+        
+        // Iniciar polling para detectar calificacion
+        iniciarPolling();
+        
+      } catch (error) {
+        console.error('Error solicitando revision:', error);
+        alert('Error al enviar solicitud: ' + error.message);
+      }
+    };
+    
+    // ============================================
+    // FINALIZAR ACTIVIDAD
+    // ============================================
+    
+    window.finalizarActividad = async function() {
+      if (!confirm('¿Confirmas que has terminado de visualizar el contenido?')) return;
+      
+      try {
+        const tiempoTotal = Math.floor((Date.now() - tiempoInicio) / 1000);
+        
+        await SesionesCreatividadAPI.finalizarSesion(sesionActual.id, tiempoTotal);
+        
+        // El reto sigue visible, solo cambiamos los controles:
+        // Ocultar boton "He terminado" y mostrar barra de accion
+        ocultarFinishSection();
+        mostrarBarraAccion('finished');
+        
+      } catch (error) {
+        console.error('Error finalizando:', error);
+        alert('Error al guardar: ' + error.message);
+      }
+    };
+    
+    // ============================================
+    // CONTENIDO Y ZOOM
+    // ============================================
+    
+    function cargarContenido() {
+      document.getElementById('headerTitle').textContent = cicloActual.titulo;
+      
+      // Mostrar instrucciones si aplica
+      if (cicloActual.mostrar_instrucciones && cicloActual.instrucciones) {
+        document.getElementById('instructionsText').textContent = cicloActual.instrucciones;
+        document.getElementById('instructionsSection').classList.remove('hidden');
+      }
+      
+      // Cargar visor segun tipo de archivo
+      const viewer = document.getElementById('contentViewer');
+      
+      if (cicloActual.archivo_tipo === 'pdf') {
+        viewer.classList.remove('image-viewer');
+        viewer.innerHTML = `<iframe id="pdfViewer" src="${cicloActual.archivo_url}" title="PDF"></iframe>`;
+      } else {
+        viewer.classList.add('image-viewer');
+        viewer.innerHTML = `<img id="imageViewer" src="${cicloActual.archivo_url}" alt="${cicloActual.titulo}">`;
+      }
+    }
+    
+    window.zoomIn = function() {
+      if (zoomLevel >= 200) return;
+      zoomLevel += 10;
+      aplicarZoom();
+    };
+    
+    window.zoomOut = function() {
+      if (zoomLevel <= 50) return;
+      zoomLevel -= 10;
+      aplicarZoom();
+    };
+    
+    function aplicarZoom() {
+      document.getElementById('zoomValue').textContent = `${zoomLevel}%`;
+      
+      const img = document.getElementById('imageViewer');
+      if (img) {
+        img.style.transform = `scale(${zoomLevel / 100})`;
+      }
+    }
+    
+    // ============================================
+    // UTILIDADES
+    // ============================================
+    
     async function obtenerGradoUsuario(user) {
       let grado = user.grado;
       
@@ -524,7 +884,6 @@
       return mapearGrado(grado);
     }
     
-    // Mapear grado
     function mapearGrado(gradoRaw) {
       if (!gradoRaw) return null;
       const gradoStr = String(gradoRaw).toLowerCase().replace('°', '').trim();
@@ -541,111 +900,6 @@
       };
       return mapa[gradoStr] || gradoStr;
     }
-    
-    // Mostrar estado
-    function mostrarEstado(stateId) {
-      ['loadingState', 'noCycleState', 'completedState', 'pendingReviewState', 'gradedState', 'mainContent'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-      });
-      document.getElementById(stateId).classList.remove('hidden');
-    }
-    
-    // Mostrar calificación recibida
-    function mostrarCalificacion(sesion) {
-      document.getElementById('gradeValue').textContent = `${sesion.calificacion_docente || 0}%`;
-      
-      if (sesion.comentario_docente) {
-        const commentDiv = document.getElementById('gradeComment');
-        commentDiv.innerHTML = `
-          <div class="grade-comment-label">Comentario del docente:</div>
-          <p>${sesion.comentario_docente}</p>
-        `;
-        commentDiv.classList.remove('hidden');
-      }
-      
-      mostrarEstado('gradedState');
-    }
-    
-    // Solicitar revisión al docente
-    window.solicitarRevision = async function() {
-      if (!confirm('¿Solicitar al docente que revise y califique tu trabajo?')) return;
-      
-      try {
-        await SesionesCreatividadAPI.solicitarRevision(sesionActual.id);
-        alert('¡Solicitud enviada! El docente revisará tu trabajo pronto.');
-        mostrarEstado('pendingReviewState');
-      } catch (error) {
-        console.error('Error solicitando revisión:', error);
-        alert('Error al enviar solicitud: ' + error.message);
-      }
-    };
-    
-    // Cargar contenido
-    function cargarContenido() {
-      document.getElementById('headerTitle').textContent = cicloActual.titulo;
-      
-      // Mostrar instrucciones si aplica
-      if (cicloActual.mostrar_instrucciones && cicloActual.instrucciones) {
-        document.getElementById('instructionsText').textContent = cicloActual.instrucciones;
-        document.getElementById('instructionsSection').classList.remove('hidden');
-      }
-      
-      // Cargar visor según tipo de archivo
-      const viewer = document.getElementById('contentViewer');
-      
-      if (cicloActual.archivo_tipo === 'pdf') {
-        viewer.classList.remove('image-viewer');
-        viewer.innerHTML = `<iframe id="pdfViewer" src="${cicloActual.archivo_url}" title="PDF"></iframe>`;
-      } else {
-        viewer.classList.add('image-viewer');
-        viewer.innerHTML = `<img id="imageViewer" src="${cicloActual.archivo_url}" alt="${cicloActual.titulo}">`;
-      }
-    }
-    
-    // Zoom In
-    window.zoomIn = function() {
-      if (zoomLevel >= 200) return;
-      zoomLevel += 10;
-      aplicarZoom();
-    };
-    
-    // Zoom Out
-    window.zoomOut = function() {
-      if (zoomLevel <= 50) return;
-      zoomLevel -= 10;
-      aplicarZoom();
-    };
-    
-    // Aplicar zoom
-    function aplicarZoom() {
-      document.getElementById('zoomValue').textContent = `${zoomLevel}%`;
-      
-      const img = document.getElementById('imageViewer');
-      if (img) {
-        img.style.transform = `scale(${zoomLevel / 100})`;
-      }
-      
-      // Para PDF, el zoom se maneja dentro del iframe
-    }
-    
-    // Finalizar actividad - ahora muestra directamente el botón de solicitar revisión
-    window.finalizarActividad = async function() {
-      if (!confirm('¿Confirmas que has terminado de visualizar el contenido?')) return;
-      
-      try {
-        const tiempoTotal = Math.floor((Date.now() - tiempoInicio) / 1000);
-        
-        await SesionesCreatividadAPI.finalizarSesion(sesionActual.id, tiempoTotal);
-        
-        // Mostrar directamente el estado para solicitar revisión
-        mostrarEstado('completedState');
-        
-      } catch (error) {
-        console.error('Error finalizando:', error);
-        alert('Error al guardar: ' + error.message);
-      }
-    };
     
     // Iniciar
     init();
