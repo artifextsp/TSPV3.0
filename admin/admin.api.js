@@ -31,6 +31,79 @@ const TABLES = {
 };
 
 // ============================================
+// 🔒 AISLAMIENTO MULTI-TENANT
+// ============================================
+
+/**
+ * Obtiene el colegio_id del admin actualmente autenticado.
+ * Si no hay sesión o no tiene colegio_id, lanza un error.
+ * 
+ * @returns {string} UUID del colegio
+ * @throws {Error} Si no hay colegio_id disponible
+ */
+function getAdminColegioId() {
+  try {
+    const sessionData = localStorage.getItem(CONFIG.STORAGE_KEY);
+    if (!sessionData) {
+      throw new Error('No hay sesión activa');
+    }
+    
+    const user = JSON.parse(sessionData);
+    
+    // Buscar colegio_id en el objeto principal o en extra
+    const colegioId = user.colegio_id || (user.extra && user.extra.colegio_id);
+    
+    if (!colegioId) {
+      console.error('[TENANT] ⚠️ Admin sin colegio_id. Sesión:', {
+        id: user.id,
+        role: user.role,
+        nombre: user.nombre
+      });
+      throw new Error('El administrador no tiene un colegio asignado. Contacta al super_admin.');
+    }
+    
+    return colegioId;
+  } catch (error) {
+    if (error.message.includes('colegio asignado') || error.message.includes('sesión activa')) {
+      throw error;
+    }
+    throw new Error('Error al obtener datos del tenant: ' + error.message);
+  }
+}
+
+/**
+ * Verifica que un array de datos solo contenga registros del colegio esperado.
+ * Segunda capa de defensa: filtra registros que no coinciden con el tenant.
+ * 
+ * @param {Array} datos - Array de registros devueltos por la API
+ * @param {string} colegioId - UUID del colegio esperado
+ * @param {string} campoColegioId - Nombre del campo colegio_id (default: 'colegio_id')
+ * @returns {Array} Solo los registros que pertenecen al colegio
+ */
+function filtrarPorTenant(datos, colegioId, campoColegioId = 'colegio_id') {
+  if (!Array.isArray(datos)) return datos;
+  if (!colegioId) return datos;
+  
+  const filtrados = datos.filter(item => {
+    const itemColegioId = item[campoColegioId];
+    if (itemColegioId && itemColegioId !== colegioId) {
+      console.warn(`[TENANT] ⚠️ Registro filtrado por no pertenecer al tenant. ID: ${item.id}, colegio_id: ${itemColegioId}, esperado: ${colegioId}`);
+      return false;
+    }
+    return true;
+  });
+  
+  if (filtrados.length !== datos.length) {
+    console.warn(`[TENANT] Se filtraron ${datos.length - filtrados.length} registros de otros colegios`);
+  }
+  
+  return filtrados;
+}
+
+// Exportar utilidades de tenant para uso externo
+export { getAdminColegioId, filtrarPorTenant };
+
+// ============================================
 // UTILIDADES
 // ============================================
 
@@ -78,10 +151,13 @@ async function apiRequest(endpoint, options = {}) {
 
 /**
  * Genera código de estudiante automático (EST0001, EST0002, etc.)
+ * 🔒 Busca el último código GLOBAL (no por tenant) para evitar colisiones
  */
 async function generarCodigoEstudiante() {
   try {
     // Construir URL correctamente codificada
+    // NOTA: No filtramos por colegio_id aquí porque el código debe ser
+    // único globalmente para evitar colisiones entre colegios
     const params = new URLSearchParams();
     params.append('codigo_estudiante', 'like.EST%');
     params.append('select', 'codigo_estudiante');
@@ -155,12 +231,21 @@ async function generarUsernameEstudiante() {
 
 export const EstudiantesAPI = {
   /**
-   * Obtener todos los estudiantes
+   * Obtener todos los estudiantes - 🔒 FILTRADO POR TENANT
    */
   async listar(filtros = {}) {
     const params = new URLSearchParams();
     params.append('codigo_estudiante', 'like.EST%');
     params.append('activo', 'eq.true');
+    
+    // 🔒 FILTRO MULTI-TENANT: Solo estudiantes del colegio del admin
+    try {
+      const colegioId = getAdminColegioId();
+      params.append('colegio_id', `eq.${colegioId}`);
+    } catch (e) {
+      console.warn('[EstudiantesAPI.listar] Sin filtro de colegio:', e.message);
+      // Si no hay colegio_id, continuar pero registrar la anomalía
+    }
     
     if (filtros.grado) {
       params.append('grado', `eq.${filtros.grado}`);
@@ -170,10 +255,18 @@ export const EstudiantesAPI = {
       params.append('or', `(nombre.ilike.%${filtros.buscar}%,apellidos.ilike.%${filtros.buscar}%,codigo_estudiante.ilike.%${filtros.buscar}%)`);
     }
     
-    params.append('select', 'id,email,nombre,apellidos,codigo_estudiante,grado,activo,created_at');
+    params.append('select', 'id,email,nombre,apellidos,codigo_estudiante,grado,activo,colegio_id,created_at');
     params.append('order', 'codigo_estudiante');
     
-    return await apiRequest(`${TABLES.USUARIOS}?${params.toString()}`);
+    const resultados = await apiRequest(`${TABLES.USUARIOS}?${params.toString()}`);
+    
+    // 🔒 Segunda capa: validar resultados en el cliente
+    try {
+      const colegioId = getAdminColegioId();
+      return filtrarPorTenant(resultados, colegioId);
+    } catch (e) {
+      return resultados;
+    }
   },
   
   /**
@@ -230,6 +323,15 @@ export const EstudiantesAPI = {
     datos.tipo_usuario = 'usuario';  // Cambiado de 'estudiante' a 'usuario' para cumplir con el constraint
     datos.activo = datos.activo !== undefined ? datos.activo : true;
     datos.primera_vez = datos.primera_vez !== undefined ? datos.primera_vez : true;
+    
+    // 🔒 MULTI-TENANT: Asignar colegio_id del admin si no viene en los datos
+    if (!datos.colegio_id) {
+      try {
+        datos.colegio_id = getAdminColegioId();
+      } catch (e) {
+        console.warn('[EstudiantesAPI.crear] No se pudo asignar colegio_id:', e.message);
+      }
+    }
     
     const MAX_REINTENTOS_CODIGO = 15;
     let ultimoError = null;
@@ -433,19 +535,27 @@ export const ColegiosAPI = {
 
 export const DocentesAPI = {
   /**
-   * Obtener todos los docentes
+   * Obtener todos los docentes - 🔒 FILTRADO POR TENANT
    */
   async listar(filtros = {}) {
     const params = new URLSearchParams();
     params.append('tipo_usuario', 'eq.docente');
     params.append('activo', 'eq.true');
     
+    // 🔒 FILTRO MULTI-TENANT: Solo docentes del colegio del admin
+    try {
+      const colegioId = getAdminColegioId();
+      params.append('colegio_id', `eq.${colegioId}`);
+    } catch (e) {
+      console.warn('[DocentesAPI.listar] Sin filtro de colegio:', e.message);
+    }
+    
     if (filtros.buscar) {
       params.append('or', `(nombre.ilike.%${filtros.buscar}%,apellidos.ilike.%${filtros.buscar}%,email.ilike.%${filtros.buscar}%)`);
     }
     
     // Primero obtener los docentes básicos
-    params.append('select', 'id,email,nombre,apellidos,celular,tipo_usuario,activo,created_at');
+    params.append('select', 'id,email,nombre,apellidos,celular,tipo_usuario,activo,colegio_id,created_at');
     params.append('order', 'nombre');
     
     try {
@@ -555,9 +665,18 @@ export const DocentesAPI = {
       datos.celular = null;
     }
     
-    // Guardar colegio_id si viene en los datos (se asociará después)
+    // 🔒 MULTI-TENANT: Asegurar que el docente tenga colegio_id
+    if (!datos.colegio_id) {
+      try {
+        datos.colegio_id = getAdminColegioId();
+      } catch (e) {
+        console.warn('[DocentesAPI.crear] No se pudo asignar colegio_id:', e.message);
+      }
+    }
+    
+    // Guardar colegio_id para asociar en tabla docentes_colegios (además de usuarios)
     const colegioId = datos.colegio_id;
-    delete datos.colegio_id; // Remover del objeto antes de crear el usuario
+    // NO eliminar colegio_id del objeto - se guarda en usuarios también
     
     // Log para debugging (remover en producción si es necesario)
     console.log('[DocentesAPI.crear] Datos a enviar:', {
@@ -763,9 +882,57 @@ export const DocentesAPI = {
 
 export const AcudientesAPI = {
   /**
-   * Obtener todos los acudientes
+   * Obtener todos los acudientes - 🔒 FILTRADO POR TENANT
+   * Los acudientes se filtran por el colegio_id de su estudiante vinculado.
    */
   async listar(filtros = {}) {
+    let colegioId = null;
+    try {
+      colegioId = getAdminColegioId();
+    } catch (e) {
+      console.warn('[AcudientesAPI.listar] Sin filtro de colegio:', e.message);
+    }
+    
+    // 🔒 ESTRATEGIA DE FILTRADO POR TENANT:
+    // Los acudientes no tienen colegio_id directo, pero están vinculados
+    // a estudiantes que sí. Filtramos por la relación con el estudiante.
+    if (colegioId) {
+      // Primero obtener IDs de estudiantes del colegio
+      const paramsEst = new URLSearchParams();
+      paramsEst.append('colegio_id', `eq.${colegioId}`);
+      paramsEst.append('tipo_usuario', 'in.(usuario,estudiante)');
+      paramsEst.append('activo', 'eq.true');
+      paramsEst.append('select', 'id');
+      
+      try {
+        const estudiantesDelColegio = await apiRequest(`${TABLES.USUARIOS}?${paramsEst.toString()}`);
+        
+        if (!estudiantesDelColegio || estudiantesDelColegio.length === 0) {
+          return []; // No hay estudiantes en este colegio → no hay acudientes
+        }
+        
+        const idsEstudiantes = estudiantesDelColegio.map(e => e.id);
+        
+        // Ahora buscar acudientes vinculados a esos estudiantes
+        const params = new URLSearchParams();
+        params.append('activo', 'eq.true');
+        params.append('estudiante_id', `in.(${idsEstudiantes.join(',')})`);
+        
+        if (filtros.buscar) {
+          params.append('or', `(nombre.ilike.%${filtros.buscar}%,apellidos.ilike.%${filtros.buscar}%,email.ilike.%${filtros.buscar}%)`);
+        }
+        
+        params.append('select', '*,usuarios:estudiante_id(id,codigo_estudiante,nombre,apellidos,grado)');
+        params.append('order', 'nombre');
+        
+        return await apiRequest(`${TABLES.ACUDIENTES}?${params.toString()}`);
+      } catch (error) {
+        console.error('[AcudientesAPI.listar] Error filtrando por colegio:', error);
+        // Fallback: usar query original si falla el filtrado
+      }
+    }
+    
+    // Fallback sin filtro de tenant (solo si no hay colegio_id)
     const params = new URLSearchParams();
     params.append('activo', 'eq.true');
     
@@ -1031,6 +1198,13 @@ export const CobrosAPI = {
     paramsEst.append('codigo_estudiante', 'like.EST%');
     paramsEst.append('activo', 'eq.true');
     paramsEst.append('select', 'id');
+    // 🔒 MULTI-TENANT: Solo generar cobros para estudiantes del colegio
+    try {
+      const colegioId = getAdminColegioId();
+      paramsEst.append('colegio_id', `eq.${colegioId}`);
+    } catch (e) {
+      console.warn('[CobrosAPI.generarCobrosDelMes] Sin filtro de colegio:', e.message);
+    }
     const estudiantes = await apiRequest(`${TABLES.USUARIOS}?${paramsEst.toString()}`);
     if (!estudiantes || estudiantes.length === 0) return { generados: 0, actualizados: 0, mensaje: 'No hay estudiantes activos' };
     const paramsExistentes = new URLSearchParams();
@@ -1177,6 +1351,13 @@ export const CobrosAPI = {
     paramsUsuarios.append('activo', 'eq.true');
     paramsUsuarios.append('select', 'id,nombre,apellidos,codigo_estudiante');
     paramsUsuarios.append('order', 'codigo_estudiante');
+    // 🔒 MULTI-TENANT
+    try {
+      const colegioId = getAdminColegioId();
+      paramsUsuarios.append('colegio_id', `eq.${colegioId}`);
+    } catch (e) {
+      console.warn('[CobrosAPI.listarEstudiantesConSaldos] Sin filtro de colegio:', e.message);
+    }
     const paramsSaldos = new URLSearchParams();
     paramsSaldos.append('select', 'estudiante_id,saldo,porcentaje_beca');
     const [estudiantes, saldosRows] = await Promise.all([

@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importar Acudientes desde Excel - Admin</title>
+  <!-- SheetJS para leer Excel en el navegador -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header h1 { font-size: 18px; }
+    .btn-back {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+    .card h2 {
+      font-size: 18px;
+      color: #1a202c;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h3 {
+      font-size: 15px;
+      color: #2d3748;
+      margin: 16px 0 10px;
+    }
+
+    /* Steps indicator */
+    .steps {
+      display: flex;
+      gap: 0;
+      margin-bottom: 32px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .step {
+      flex: 1;
+      padding: 16px 20px;
+      text-align: center;
+      background: #f7fafc;
+      border-right: 1px solid #e2e8f0;
+      transition: all 0.3s;
+    }
+    .step:last-child { border-right: none; }
+    .step.active {
+      background: #667eea;
+      color: white;
+    }
+    .step.completed {
+      background: #48bb78;
+      color: white;
+    }
+    .step-number {
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.1);
+      line-height: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .step.active .step-number,
+    .step.completed .step-number {
+      background: rgba(255,255,255,0.3);
+    }
+    .step-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    /* Upload area */
+    .upload-area {
+      border: 2px dashed #cbd5e0;
+      border-radius: 12px;
+      padding: 48px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: #f7fafc;
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: #667eea;
+      background: #ebf4ff;
+    }
+    .upload-area .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .upload-area p {
+      color: #718096;
+      font-size: 14px;
+      margin: 4px 0;
+    }
+    .upload-area .browse-link {
+      color: #667eea;
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover:not(:disabled) { background: #5a67d8; }
+    .btn-success { background: #48bb78; color: white; }
+    .btn-success:hover:not(:disabled) { background: #38a169; }
+    .btn-secondary { background: #e2e8f0; color: #4a5568; }
+    .btn-secondary:hover:not(:disabled) { background: #cbd5e0; }
+    .btn-danger { background: #fc8181; color: white; }
+    .btn-danger:hover:not(:disabled) { background: #f56565; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-lg { padding: 14px 28px; font-size: 16px; }
+
+    /* Alerts */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .alert-success { background: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
+    .alert-error { background: #fed7d7; color: #742a2a; border: 1px solid #fc8181; }
+    .alert-warning { background: #fefcbf; color: #744210; border: 1px solid #f6e05e; }
+    .alert-info { background: #bee3f8; color: #2a4365; border: 1px solid #90cdf4; }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .stat-card {
+      background: #f7fafc;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #2d3748;
+    }
+    .stat-value.success { color: #38a169; }
+    .stat-value.warning { color: #d69e2e; }
+    .stat-value.error { color: #e53e3e; }
+    .stat-label {
+      font-size: 12px;
+      color: #718096;
+      margin-top: 4px;
+    }
+
+    /* Preview table */
+    .table-wrapper {
+      overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead { position: sticky; top: 0; z-index: 5; }
+    th {
+      background: #f7fafc;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #4a5568;
+      border-bottom: 2px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    tr:hover td { background: #f7fafc; }
+    tr.row-error td { background: #fff5f5; }
+    tr.row-warning td { background: #fffff0; }
+    tr.row-ok td { background: #f0fff4; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-success { background: #c6f6d5; color: #22543d; }
+    .badge-warning { background: #fefcbf; color: #744210; }
+    .badge-error { background: #fed7d7; color: #742a2a; }
+    .badge-info { background: #bee3f8; color: #2a4365; }
+
+    /* Progress */
+    .progress-bar {
+      width: 100%;
+      height: 24px;
+      background: #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #48bb78);
+      border-radius: 12px;
+      transition: width 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Log */
+    .log-container {
+      background: #1a202c;
+      color: #a0aec0;
+      border-radius: 8px;
+      padding: 16px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .log-success { color: #68d391; }
+    .log-error { color: #fc8181; }
+    .log-warning { color: #f6e05e; }
+    .log-info { color: #63b3ed; }
+
+    /* Format info */
+    .format-info {
+      background: #ebf8ff;
+      border: 1px solid #bee3f8;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+    .format-info h4 {
+      color: #2a4365;
+      margin-bottom: 8px;
+    }
+    .format-info ul {
+      padding-left: 20px;
+      color: #4a5568;
+      font-size: 13px;
+    }
+    .format-info li { margin: 4px 0; }
+
+    .hidden { display: none !important; }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .filter-group select {
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 { font-size: 15px; }
+      .container { padding: 16px; }
+      .card { padding: 16px; }
+      .steps { flex-direction: column; }
+      .upload-area { padding: 24px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Importar Acudientes desde Excel</h1>
+    <a href="dashboard.html" class="btn-back">← Volver al Dashboard</a>
+  </header>
+
+  <div class="container">
+    <div id="alertContainer"></div>
+
+    <!-- Steps indicator -->
+    <div class="steps">
+      <div class="step active" id="step1">
+        <span class="step-number">1</span>
+        <span class="step-label">Cargar Excel</span>
+      </div>
+      <div class="step" id="step2">
+        <span class="step-number">2</span>
+        <span class="step-label">Validar Datos</span>
+      </div>
+      <div class="step" id="step3">
+        <span class="step-number">3</span>
+        <span class="step-label">Importar</span>
+      </div>
+      <div class="step" id="step4">
+        <span class="step-number">4</span>
+        <span class="step-label">Resultados</span>
+      </div>
+    </div>
+
+    <!-- PASO 1: Cargar Excel -->
+    <div id="section-upload" class="card">
+      <h2>Paso 1: Seleccionar archivo Excel</h2>
+
+      <div class="format-info">
+        <h4>Formato esperado del Excel (Directorio del colegio)</h4>
+        <ul>
+          <li><strong>Fila 3</strong>: Encabezados (GRADO, GRUPO, 1er. APELLIDO, 2o. APELLIDO, NOMBRES, etc.)</li>
+          <li><strong>Columnas S-V</strong>: Datos de la madre (Nombre, Celular, Cargo, Telefono)</li>
+          <li><strong>Columnas W-Z</strong>: Datos del padre (Nombre, Celular, Cargo, Telefono)</li>
+          <li><strong>Columna H</strong>: Quien es el acudiente ("Madre", "Padre", "Abuela", etc.)</li>
+          <li><strong>Columna de EMAIL</strong>: El colegio debe agregar una columna con el email del acudiente</li>
+        </ul>
+        <p style="margin-top: 8px; font-size: 13px; color: #e53e3e; font-weight: 500;">
+          Si el Excel no tiene columna de EMAIL, los acudientes sin email se marcaran como advertencia y no se importaran.
+        </p>
+      </div>
+
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+        <div class="icon">📊</div>
+        <p style="font-size: 16px; font-weight: 600; color: #2d3748;">Arrastra el archivo Excel aqui</p>
+        <p>o <span class="browse-link">haz clic para seleccionar</span></p>
+        <p style="font-size: 12px; margin-top: 12px;">.xlsx, .xls (maximo 10MB)</p>
+      </div>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden">
+      <div id="fileInfo" class="hidden" style="margin-top: 16px; display: flex; align-items: center; gap: 12px;">
+        <span id="fileName" style="font-weight: 500; color: #2d3748;"></span>
+        <button class="btn btn-sm btn-secondary" onclick="resetUpload()">Cambiar archivo</button>
+      </div>
+    </div>
+
+    <!-- PASO 2: Validacion y Preview -->
+    <div id="section-validate" class="card hidden">
+      <h2>Paso 2: Validacion y vista previa</h2>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <!-- Filters -->
+      <div class="toolbar">
+        <div class="filter-group">
+          <label style="font-size: 13px; font-weight: 500;">Filtrar:</label>
+          <select id="filterStatus" onchange="filtrarPreview()">
+            <option value="all">Todos</option>
+            <option value="ok">Validos</option>
+            <option value="warning">Con advertencias</option>
+            <option value="error">Con errores</option>
+          </select>
+          <select id="filterGrado" onchange="filtrarPreview()">
+            <option value="all">Todos los grados</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary btn-sm" onclick="exportarReporte()">Exportar reporte</button>
+        </div>
+      </div>
+
+      <!-- Preview table -->
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Estado</th>
+              <th>Estudiante (Excel)</th>
+              <th>Grado</th>
+              <th>Match en BD</th>
+              <th>Acudiente</th>
+              <th>Parentesco</th>
+              <th>Celular</th>
+              <th>Email</th>
+              <th>Ocupacion</th>
+            </tr>
+          </thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="volverAPaso1()">← Volver</button>
+        <button class="btn btn-success btn-lg" id="btnImportar" onclick="iniciarImportacion()">
+          Importar Acudientes Validos
+        </button>
+      </div>
+    </div>
+
+    <!-- PASO 3: Importacion en progreso -->
+    <div id="section-import" class="card hidden">
+      <h2>Paso 3: Importacion en progreso</h2>
+      <p id="importStatus" style="color: #718096; margin-bottom: 16px;">Preparando importacion...</p>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%;">0%</div>
+      </div>
+      <div class="stats-grid" id="importStatsGrid"></div>
+      <div class="log-container" id="importLog"></div>
+    </div>
+
+    <!-- PASO 4: Resultados -->
+    <div id="section-results" class="card hidden">
+      <h2>Paso 4: Resultados de la importacion</h2>
+      <div class="stats-grid" id="resultsStatsGrid"></div>
+      <div id="resultsDetails"></div>
+      <div style="display: flex; gap: 12px; margin-top: 20px;">
+        <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">Ir al Dashboard</button>
+        <button class="btn btn-secondary" onclick="resetearTodo()">Importar otro archivo</button>
+        <button class="btn btn-secondary" onclick="exportarResultados()">Descargar reporte</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireRole } from '../auth/auth.core.js';
+    import { CONFIG } from '../config/supabase.config.js';
+    import { AcudientesAPI } from './admin.api.js';
+
+    const user = requireRole('admin');
+    if (!user) {
+      window.location.href = '../index.html';
+    }
+
+    // ============================================
+    // ESTADO GLOBAL
+    // ============================================
+    let datosExcel = [];          // Filas parseadas del Excel
+    let datosValidados = [];      // Filas con validacion
+    let estudiantesDB = [];       // Estudiantes existentes en la BD
+    let acudientesExistentes = []; // Acudientes existentes en la BD
+    let resultadosImport = [];    // Resultados de la importacion
+
+    // ============================================
+    // CONSTANTES
+    // ============================================
+    const PASSWORD_HASH_TEMPORAL = 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3';
+
+    // Indice de columnas del Excel (basado en fila 3 de encabezados)
+    const COL = {
+      NUM: 0,         // A: No.
+      GRADO: 1,       // B: GRADO
+      GRUPO: 2,       // C: GRUPO
+      APELLIDO1: 3,   // D: 1er. APELLIDO
+      APELLIDO2: 4,   // E: 2o. APELLIDO
+      NOMBRES: 5,     // F: NOMBRES
+      VIVE_CON: 6,    // G: VIVE CON
+      ACUDIENTE: 7,   // H: ACUDIENTE (quien es el acudiente)
+      TIPO_ID: 8,     // I: TIPO ID
+      IDENTIFICACION: 9, // J: IDENTIFICACION
+      // ... (cols K-R: datos estudiante)
+      MADRE_NOMBRE: 18, // S: MADRE (nombre completo)
+      MADRE_CELULAR: 19, // T: CELULAR madre
+      MADRE_CARGO: 20,   // U: CARGO madre
+      MADRE_TEL: 21,     // V: TELEFONO madre
+      PADRE_NOMBRE: 22,  // W: PADRE (nombre completo)
+      PADRE_CELULAR: 23, // X: CELULAR padre
+      PADRE_CARGO: 24,   // Y: CARGO padre
+      PADRE_TEL: 25,     // Z: TELEFONO padre
+      ACU_QUIEN: 26,     // AA: ACUDIENTE (tipo)
+      ACU_NOMBRE: 27,    // AB: NOMBRE (si es otro)
+      ACU_PARENTESCO: 28, // AC: Parentesco
+      ACU_CELULAR: 29,   // AD: CELULAR
+      OTRO_NOMBRE: 30,   // AE: OTRO FAMILIAR NOMBRE
+      OTRO_PARENTESCO: 31, // AF: OTRO FAMILIAR PARENTESCO
+      OTRO_CELULAR: 32   // AG: OTRO FAMILIAR CELULAR
+    };
+
+    // ============================================
+    // FILE UPLOAD
+    // ============================================
+
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) procesarArchivo(e.target.files[0]);
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) procesarArchivo(e.dataTransfer.files[0]);
+    });
+
+    async function procesarArchivo(file) {
+      if (!file.name.match(/\.(xlsx|xls)$/i)) {
+        mostrarAlerta('Solo se aceptan archivos .xlsx o .xls', 'error');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        mostrarAlerta('El archivo excede 10MB', 'error');
+        return;
+      }
+
+      document.getElementById('fileName').textContent = `${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+      document.getElementById('fileInfo').classList.remove('hidden');
+      document.getElementById('fileInfo').style.display = 'flex';
+      uploadArea.classList.add('hidden');
+
+      mostrarAlerta('Leyendo archivo Excel...', 'info');
+
+      try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
+
+        // Buscar fila de datos (primera fila con un numero en columna A)
+        let filaInicio = -1;
+        let filaEmailExtra = -1;
+
+        // Buscar columna EMAIL adicional en los encabezados
+        for (let i = 0; i < Math.min(5, rows.length); i++) {
+          const row = rows[i];
+          if (!row) continue;
+          for (let j = 0; j < row.length; j++) {
+            const val = String(row[j] || '').trim().toUpperCase();
+            if (val === 'EMAIL' || val === 'CORREO' || val === 'E-MAIL' || val === 'EMAIL ACUDIENTE' || val === 'CORREO ACUDIENTE') {
+              filaEmailExtra = j;
+              console.log(`Columna EMAIL encontrada en posicion ${j} (fila ${i})`);
+            }
+          }
+        }
+
+        datosExcel = [];
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row || row[COL.NUM] === null || row[COL.NUM] === undefined) continue;
+
+          // Verificar que la fila tiene un numero secuencial
+          const num = parseInt(row[COL.NUM]);
+          if (isNaN(num) || num <= 0) continue;
+
+          const grado = limpiar(row[COL.GRADO]);
+          const grupo = limpiar(row[COL.GRUPO]);
+          const apellido1 = limpiar(row[COL.APELLIDO1]);
+          const apellido2 = limpiar(row[COL.APELLIDO2]);
+          const nombres = limpiar(row[COL.NOMBRES]);
+
+          if (!grado || !apellido1 || !nombres) continue;
+
+          // Determinar datos del acudiente segun columna H
+          const tipoAcudiente = limpiar(row[COL.ACUDIENTE]);
+          const datosAcu = extraerDatosAcudiente(row, tipoAcudiente);
+
+          // Buscar email en columna extra si existe
+          let emailAcudiente = null;
+          if (filaEmailExtra >= 0 && row[filaEmailExtra]) {
+            const posibleEmail = limpiar(row[filaEmailExtra]);
+            if (posibleEmail && posibleEmail.includes('@')) {
+              emailAcudiente = posibleEmail.toLowerCase().trim();
+            }
+          }
+
+          datosExcel.push({
+            fila: i + 1,
+            num,
+            grado,
+            grupo,
+            apellido1,
+            apellido2,
+            nombres,
+            nombreCompletoEstudiante: `${apellido1} ${apellido2 || ''} ${nombres}`.trim(),
+            tipoAcudiente,
+            acudienteNombre: datosAcu.nombre,
+            acudienteApellidos: datosAcu.apellidos,
+            acudienteCelular: datosAcu.celular,
+            acudienteOcupacion: datosAcu.ocupacion,
+            acudienteParentesco: datosAcu.parentesco,
+            acudienteEmail: emailAcudiente,
+            // Sera llenado en validacion
+            estudianteMatch: null,
+            estado: 'pending',
+            errores: [],
+            advertencias: []
+          });
+        }
+
+        if (datosExcel.length === 0) {
+          mostrarAlerta('No se encontraron filas de datos validas en el Excel. Verifica que el formato sea correcto.', 'error');
+          return;
+        }
+
+        mostrarAlerta(`Se leyeron ${datosExcel.length} filas del Excel. Validando contra la base de datos...`, 'success');
+
+        // Cargar datos de la BD para validar
+        await cargarDatosBD();
+        validarDatos();
+        mostrarVistaPreviaValidacion();
+        avanzarPaso(2);
+
+      } catch (error) {
+        console.error('Error leyendo Excel:', error);
+        mostrarAlerta(`Error al leer el archivo: ${error.message}`, 'error');
+      }
+    }
+
+    function extraerDatosAcudiente(row, tipoAcudiente) {
+      const tipo = (tipoAcudiente || '').toLowerCase().trim();
+      let nombre = '', apellidos = '', celular = '', ocupacion = '', parentesco = tipoAcudiente || '';
+
+      if (tipo === 'madre') {
+        const parsed = parsearNombreCompleto(limpiar(row[COL.MADRE_NOMBRE]));
+        nombre = parsed.nombre;
+        apellidos = parsed.apellidos;
+        celular = limpiar(row[COL.MADRE_CELULAR]);
+        ocupacion = limpiar(row[COL.MADRE_CARGO]);
+        parentesco = 'Madre';
+      } else if (tipo === 'padre') {
+        const parsed = parsearNombreCompleto(limpiar(row[COL.PADRE_NOMBRE]));
+        nombre = parsed.nombre;
+        apellidos = parsed.apellidos;
+        celular = limpiar(row[COL.PADRE_CELULAR]);
+        ocupacion = limpiar(row[COL.PADRE_CARGO]);
+        parentesco = 'Padre';
+      } else if (tipo === 'ambos padres') {
+        // Usar madre como default
+        const parsed = parsearNombreCompleto(limpiar(row[COL.MADRE_NOMBRE]));
+        nombre = parsed.nombre;
+        apellidos = parsed.apellidos;
+        celular = limpiar(row[COL.MADRE_CELULAR]);
+        ocupacion = limpiar(row[COL.MADRE_CARGO]);
+        parentesco = 'Madre';
+      } else {
+        // Abuela, tia, hermana, etc.
+        // Intentar extraer de columnas AB-AD (acudiente especifico)
+        const nombreCol = limpiar(row[COL.ACU_NOMBRE]);
+        if (nombreCol) {
+          const parsed = parsearNombreCompleto(nombreCol);
+          nombre = parsed.nombre;
+          apellidos = parsed.apellidos;
+          celular = limpiar(row[COL.ACU_CELULAR]);
+          parentesco = limpiar(row[COL.ACU_PARENTESCO]) || tipoAcudiente;
+        } else {
+          // Fallback: Si tipo contiene abuela/tia, intentar con madre
+          if (tipo.includes('abuela') || tipo.includes('madre')) {
+            const parsed = parsearNombreCompleto(limpiar(row[COL.MADRE_NOMBRE]));
+            nombre = parsed.nombre;
+            apellidos = parsed.apellidos;
+            celular = limpiar(row[COL.MADRE_CELULAR]);
+            ocupacion = limpiar(row[COL.MADRE_CARGO]);
+          } else {
+            const parsed = parsearNombreCompleto(limpiar(row[COL.PADRE_NOMBRE]));
+            nombre = parsed.nombre;
+            apellidos = parsed.apellidos;
+            celular = limpiar(row[COL.PADRE_CELULAR]);
+            ocupacion = limpiar(row[COL.PADRE_CARGO]);
+          }
+        }
+      }
+
+      return { nombre, apellidos, celular, ocupacion, parentesco };
+    }
+
+    /**
+     * Parsea un nombre completo en formato "APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2"
+     * Heuristica: Los primeros 2 tokens son apellidos, el resto es nombre.
+     * Si solo hay 2 tokens, el primero es apellido y el segundo es nombre.
+     */
+    function parsearNombreCompleto(nombreCompleto) {
+      if (!nombreCompleto) return { nombre: '', apellidos: '' };
+
+      const tokens = nombreCompleto.trim().split(/\s+/);
+
+      if (tokens.length === 1) {
+        return { nombre: tokens[0], apellidos: '' };
+      }
+      if (tokens.length === 2) {
+        // Podria ser "NOMBRE APELLIDO" o "APELLIDO NOMBRE"
+        // Asumimos formato del Excel: APELLIDO(S) NOMBRE(S) -> primero es apellido
+        return { nombre: tokens[1], apellidos: tokens[0] };
+      }
+      if (tokens.length === 3) {
+        // APELLIDO1 APELLIDO2 NOMBRE1 o APELLIDO1 NOMBRE1 NOMBRE2
+        // Asumimos 2 apellidos + 1 nombre
+        return { nombre: tokens[2], apellidos: `${tokens[0]} ${tokens[1]}` };
+      }
+
+      // 4+ tokens: primeros 2 son apellidos, resto es nombre
+      const apellidos = tokens.slice(0, 2).join(' ');
+      const nombre = tokens.slice(2).join(' ');
+      return { nombre, apellidos };
+    }
+
+    function limpiar(val) {
+      if (val === null || val === undefined) return '';
+      let s = String(val).trim();
+      if (s.toUpperCase() === 'NULL' || s.toUpperCase() === 'N/A' || s === 'None') return '';
+      return s;
+    }
+
+    // ============================================
+    // CARGA DE DATOS DE LA BD
+    // ============================================
+
+    async function cargarDatosBD() {
+      try {
+        // 1. Cargar todos los estudiantes activos
+        const respEst = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/usuarios?codigo_estudiante=like.EST%&activo=eq.true&select=id,codigo_estudiante,nombre,apellidos,grado`,
+          { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
+        );
+        if (!respEst.ok) throw new Error('Error al cargar estudiantes');
+        estudiantesDB = await respEst.json();
+        console.log(`Cargados ${estudiantesDB.length} estudiantes de la BD`);
+
+        // 2. Cargar acudientes existentes (para detectar duplicados)
+        const respAcu = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/acudientes?activo=eq.true&select=id,email,username,estudiante_id,nombre,apellidos`,
+          { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
+        );
+        if (!respAcu.ok) throw new Error('Error al cargar acudientes existentes');
+        acudientesExistentes = await respAcu.json();
+        console.log(`Cargados ${acudientesExistentes.length} acudientes existentes`);
+
+      } catch (error) {
+        console.error('Error cargando datos de BD:', error);
+        mostrarAlerta('Error al conectar con la base de datos: ' + error.message, 'error');
+        throw error;
+      }
+    }
+
+    // ============================================
+    // VALIDACION
+    // ============================================
+
+    function validarDatos() {
+      datosValidados = datosExcel.map(fila => {
+        const resultado = { ...fila, errores: [], advertencias: [] };
+
+        // 1. Validar nombre del acudiente
+        if (!resultado.acudienteNombre && !resultado.acudienteApellidos) {
+          resultado.errores.push('No se pudo extraer el nombre del acudiente');
+        }
+
+        // 2. Validar email
+        if (!resultado.acudienteEmail) {
+          resultado.errores.push('Sin email del acudiente');
+        } else if (!resultado.acudienteEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+          resultado.errores.push(`Email invalido: ${resultado.acudienteEmail}`);
+        }
+
+        // 3. Validar celular
+        if (!resultado.acudienteCelular) {
+          resultado.advertencias.push('Sin celular del acudiente');
+        }
+
+        // 4. Buscar match del estudiante en la BD
+        const match = buscarEstudianteEnBD(resultado);
+        resultado.estudianteMatch = match;
+
+        if (!match) {
+          resultado.errores.push('Estudiante no encontrado en la BD');
+        } else if (match.confianza < 0.7) {
+          resultado.advertencias.push(`Match parcial (${(match.confianza * 100).toFixed(0)}%): ${match.nombre} ${match.apellidos || ''}`);
+        }
+
+        // 5. Verificar si ya existe esta combinacion acudiente-estudiante
+        if (match && resultado.acudienteEmail) {
+          const yaExiste = acudientesExistentes.find(a =>
+            a.email && a.email.toLowerCase() === resultado.acudienteEmail.toLowerCase() &&
+            a.estudiante_id === match.id
+          );
+          if (yaExiste) {
+            resultado.advertencias.push('Este acudiente ya esta asociado a este estudiante');
+          }
+        }
+
+        // Determinar estado
+        if (resultado.errores.length > 0) {
+          resultado.estado = 'error';
+        } else if (resultado.advertencias.length > 0) {
+          resultado.estado = 'warning';
+        } else {
+          resultado.estado = 'ok';
+        }
+
+        return resultado;
+      });
+    }
+
+    function buscarEstudianteEnBD(fila) {
+      // Normalizar el nombre del estudiante del Excel
+      const excelNombre = normalizar(fila.nombres);
+      const excelApellido1 = normalizar(fila.apellido1);
+      const excelApellido2 = normalizar(fila.apellido2);
+      const excelGrado = normalizar(fila.grado);
+
+      let mejorMatch = null;
+      let mejorScore = 0;
+
+      for (const est of estudiantesDB) {
+        let score = 0;
+
+        const dbNombre = normalizar(est.nombre || '');
+        const dbApellidos = normalizar(est.apellidos || '');
+        const dbGrado = normalizar(est.grado || '');
+
+        // Comparar grado (peso: 0.1)
+        if (excelGrado && dbGrado && gradosSimilares(excelGrado, dbGrado)) {
+          score += 0.1;
+        }
+
+        // Comparar apellido1 con apellidos de la BD (peso: 0.35)
+        if (excelApellido1 && dbApellidos.includes(excelApellido1)) {
+          score += 0.35;
+        }
+
+        // Comparar apellido2 con apellidos de la BD (peso: 0.2)
+        if (excelApellido2 && dbApellidos.includes(excelApellido2)) {
+          score += 0.2;
+        }
+
+        // Comparar nombre (peso: 0.35)
+        if (excelNombre && dbNombre) {
+          const nombresExcel = excelNombre.split(/\s+/);
+          const nombresDB = dbNombre.split(/\s+/);
+          const coincidencias = nombresExcel.filter(n => nombresDB.some(m => m === n || (n.length > 3 && m.startsWith(n)) || (m.length > 3 && n.startsWith(m))));
+          if (coincidencias.length > 0) {
+            score += 0.35 * (coincidencias.length / Math.max(nombresExcel.length, nombresDB.length));
+          }
+        }
+
+        if (score > mejorScore) {
+          mejorScore = score;
+          mejorMatch = { ...est, confianza: score };
+        }
+      }
+
+      // Umbral minimo de confianza
+      return mejorScore >= 0.5 ? mejorMatch : null;
+    }
+
+    function normalizar(str) {
+      return (str || '').toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remover acentos
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function gradosSimilares(a, b) {
+      // Normalizar nombres de grado
+      const normGrado = (g) => {
+        return g.replace(/[^a-z0-9]/g, '')
+          .replace('prejardin', 'prejardin')
+          .replace('jardin', 'jardin')
+          .replace('transicion', 'transicion')
+          .replace('1o', '1').replace('2o', '2').replace('3o', '3')
+          .replace('4o', '4').replace('5o', '5').replace('6o', '6')
+          .replace('7o', '7').replace('8o', '8').replace('9o', '9')
+          .replace('10o', '10').replace('11o', '11');
+      };
+      return normGrado(a) === normGrado(b);
+    }
+
+    // ============================================
+    // VISTA PREVIA
+    // ============================================
+
+    function mostrarVistaPreviaValidacion() {
+      const okCount = datosValidados.filter(d => d.estado === 'ok').length;
+      const warnCount = datosValidados.filter(d => d.estado === 'warning').length;
+      const errCount = datosValidados.filter(d => d.estado === 'error').length;
+
+      // Stats
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${datosValidados.length}</div>
+          <div class="stat-label">Total filas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value success">${okCount}</div>
+          <div class="stat-label">Validos para importar</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value warning">${warnCount}</div>
+          <div class="stat-label">Con advertencias</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value error">${errCount}</div>
+          <div class="stat-label">Con errores (no se importan)</div>
+        </div>
+      `;
+
+      // Filtro de grados
+      const grados = [...new Set(datosValidados.map(d => d.grado))].sort();
+      const selectGrado = document.getElementById('filterGrado');
+      selectGrado.innerHTML = '<option value="all">Todos los grados</option>' +
+        grados.map(g => `<option value="${g}">${g}</option>`).join('');
+
+      // Boton importar
+      const importables = datosValidados.filter(d => d.estado !== 'error').length;
+      document.getElementById('btnImportar').textContent = `Importar ${importables} acudientes validos`;
+      document.getElementById('btnImportar').disabled = importables === 0;
+
+      filtrarPreview();
+    }
+
+    window.filtrarPreview = function() {
+      const statusFilter = document.getElementById('filterStatus').value;
+      const gradoFilter = document.getElementById('filterGrado').value;
+
+      let filtrados = datosValidados;
+      if (statusFilter !== 'all') filtrados = filtrados.filter(d => d.estado === statusFilter);
+      if (gradoFilter !== 'all') filtrados = filtrados.filter(d => d.grado === gradoFilter);
+
+      const tbody = document.getElementById('previewBody');
+      tbody.innerHTML = filtrados.map((d, i) => {
+        const rowClass = d.estado === 'error' ? 'row-error' : d.estado === 'warning' ? 'row-warning' : 'row-ok';
+        const badge = d.estado === 'ok' ? '<span class="badge badge-success">OK</span>'
+          : d.estado === 'warning' ? `<span class="badge badge-warning" title="${d.advertencias.join('; ')}">Advertencia</span>`
+          : `<span class="badge badge-error" title="${d.errores.join('; ')}">Error</span>`;
+
+        const matchInfo = d.estudianteMatch
+          ? `<span class="badge badge-success">${d.estudianteMatch.codigo_estudiante}</span> ${d.estudianteMatch.nombre} ${d.estudianteMatch.apellidos || ''}`
+          : '<span class="badge badge-error">Sin match</span>';
+
+        return `<tr class="${rowClass}">
+          <td>${d.num}</td>
+          <td>${badge}</td>
+          <td title="${d.nombreCompletoEstudiante}">${d.nombreCompletoEstudiante}</td>
+          <td>${d.grado} ${d.grupo}</td>
+          <td>${matchInfo}</td>
+          <td>${d.acudienteNombre} ${d.acudienteApellidos}</td>
+          <td>${d.acudienteParentesco}</td>
+          <td>${d.acudienteCelular || '-'}</td>
+          <td>${d.acudienteEmail || '<span class="badge badge-error">Falta</span>'}</td>
+          <td>${d.acudienteOcupacion || '-'}</td>
+        </tr>`;
+      }).join('');
+
+      if (filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 24px; color: #718096;">No hay filas que coincidan con el filtro</td></tr>';
+      }
+    };
+
+    // ============================================
+    // IMPORTACION
+    // ============================================
+
+    window.iniciarImportacion = async function() {
+      const importables = datosValidados.filter(d => d.estado !== 'error');
+
+      if (importables.length === 0) {
+        mostrarAlerta('No hay registros validos para importar', 'error');
+        return;
+      }
+
+      if (!confirm(`Vas a importar ${importables.length} acudientes. Los que tengan advertencias tambien se importaran.\n\nContraseña por defecto: temporal123\n\n¿Continuar?`)) {
+        return;
+      }
+
+      avanzarPaso(3);
+
+      const log = document.getElementById('importLog');
+      const progressFill = document.getElementById('progressFill');
+      let exitosos = 0, duplicados = 0, fallidos = 0;
+      resultadosImport = [];
+
+      // Determinar siguiente username disponible
+      let siguienteNumero = 1;
+      try {
+        const usernameMax = await obtenerMaxUsername();
+        siguienteNumero = usernameMax + 1;
+      } catch (e) {
+        console.error('Error obteniendo max username:', e);
+      }
+
+      appendLog(log, `Iniciando importacion de ${importables.length} acudientes...`, 'info');
+      appendLog(log, `Siguiente username disponible: ACU${String(siguienteNumero).padStart(3, '0')}`, 'info');
+
+      for (let i = 0; i < importables.length; i++) {
+        const fila = importables[i];
+        const progreso = ((i + 1) / importables.length * 100).toFixed(0);
+        progressFill.style.width = `${progreso}%`;
+        progressFill.textContent = `${progreso}%`;
+        document.getElementById('importStatus').textContent = `Procesando ${i + 1} de ${importables.length}...`;
+
+        try {
+          // Verificar si ya existe
+          const yaExiste = acudientesExistentes.find(a =>
+            a.email && a.email.toLowerCase() === (fila.acudienteEmail || '').toLowerCase() &&
+            a.estudiante_id === fila.estudianteMatch.id
+          );
+
+          if (yaExiste) {
+            duplicados++;
+            appendLog(log, `[${i + 1}] DUPLICADO: ${fila.acudienteNombre} ${fila.acudienteApellidos} ya asociado a ${fila.estudianteMatch.codigo_estudiante}`, 'warning');
+            resultadosImport.push({ ...fila, resultado: 'duplicado' });
+            continue;
+          }
+
+          const username = 'ACU' + String(siguienteNumero).padStart(3, '0');
+
+          const datos = {
+            nombre: fila.acudienteNombre || 'Sin nombre',
+            apellidos: fila.acudienteApellidos || '',
+            email: fila.acudienteEmail,
+            celular: fila.acudienteCelular || null,
+            username: username,
+            password_hash: PASSWORD_HASH_TEMPORAL,
+            estudiante_id: fila.estudianteMatch.id,
+            activo: true,
+            primera_vez: true
+          };
+
+          const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/acudientes`, {
+            method: 'POST',
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify(datos)
+          });
+
+          if (response.ok) {
+            exitosos++;
+            siguienteNumero++;
+            appendLog(log, `[${i + 1}] OK: ${username} - ${datos.nombre} ${datos.apellidos} → ${fila.estudianteMatch.codigo_estudiante} (${fila.nombreCompletoEstudiante})`, 'success');
+            resultadosImport.push({ ...fila, resultado: 'exitoso', username });
+          } else {
+            const errorText = await response.text();
+            if (errorText.includes('23505') || response.status === 409) {
+              // Duplicado por constraint
+              if (errorText.includes('acudientes_username_key') || errorText.includes('username')) {
+                // Username duplicado - reintentar con siguiente
+                siguienteNumero++;
+                i--; // Reintentar esta fila
+                appendLog(log, `[${i + 2}] Username ${username} en uso, reintentando...`, 'warning');
+                continue;
+              }
+              duplicados++;
+              appendLog(log, `[${i + 1}] DUPLICADO (BD): ${datos.email} + ${fila.estudianteMatch.codigo_estudiante}`, 'warning');
+              resultadosImport.push({ ...fila, resultado: 'duplicado' });
+            } else {
+              throw new Error(errorText.substring(0, 200));
+            }
+          }
+        } catch (error) {
+          fallidos++;
+          appendLog(log, `[${i + 1}] ERROR: ${fila.acudienteNombre} - ${error.message}`, 'error');
+          resultadosImport.push({ ...fila, resultado: 'error', errorMsg: error.message });
+        }
+
+        // Actualizar stats en tiempo real
+        document.getElementById('importStatsGrid').innerHTML = `
+          <div class="stat-card">
+            <div class="stat-value">${i + 1}/${importables.length}</div>
+            <div class="stat-label">Procesados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value success">${exitosos}</div>
+            <div class="stat-label">Importados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value warning">${duplicados}</div>
+            <div class="stat-label">Duplicados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value error">${fallidos}</div>
+            <div class="stat-label">Fallidos</div>
+          </div>
+        `;
+
+        // Pausa para no saturar la API
+        if (i > 0 && i % 10 === 0) {
+          await sleep(200);
+        }
+      }
+
+      appendLog(log, `\nImportacion completada: ${exitosos} exitosos, ${duplicados} duplicados, ${fallidos} fallidos`, 'info');
+      document.getElementById('importStatus').textContent = 'Importacion completada';
+
+      // Mostrar resultados
+      mostrarResultados(exitosos, duplicados, fallidos);
+      avanzarPaso(4);
+    };
+
+    async function obtenerMaxUsername() {
+      const resp = await fetch(
+        `${CONFIG.SUPABASE_URL}/rest/v1/acudientes?select=username&order=username.desc&limit=1`,
+        { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
+      );
+      if (!resp.ok) return 0;
+      const data = await resp.json();
+      if (!data || data.length === 0) return 0;
+      const match = (data[0].username || '').match(/\d+/);
+      return match ? parseInt(match[0]) : 0;
+    }
+
+    function mostrarResultados(exitosos, duplicados, fallidos) {
+      const total = exitosos + duplicados + fallidos;
+      document.getElementById('resultsStatsGrid').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${total}</div>
+          <div class="stat-label">Total procesados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value success">${exitosos}</div>
+          <div class="stat-label">Importados exitosamente</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value warning">${duplicados}</div>
+          <div class="stat-label">Ya existian (omitidos)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value error">${fallidos}</div>
+          <div class="stat-label">Fallidos</div>
+        </div>
+      `;
+
+      // Detalles
+      const detalles = document.getElementById('resultsDetails');
+      if (fallidos > 0) {
+        const filasError = resultadosImport.filter(r => r.resultado === 'error');
+        detalles.innerHTML = `
+          <h3 style="color: #e53e3e; margin: 20px 0 12px;">Registros fallidos (${fallidos})</h3>
+          <div class="table-wrapper" style="max-height: 300px;">
+            <table>
+              <thead>
+                <tr><th>#</th><th>Estudiante</th><th>Acudiente</th><th>Error</th></tr>
+              </thead>
+              <tbody>
+                ${filasError.map(f => `
+                  <tr>
+                    <td>${f.num}</td>
+                    <td>${f.nombreCompletoEstudiante}</td>
+                    <td>${f.acudienteNombre} ${f.acudienteApellidos}</td>
+                    <td style="color: #e53e3e;">${f.errorMsg || 'Error desconocido'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else {
+        detalles.innerHTML = `
+          <div style="text-align: center; padding: 24px;">
+            <span style="font-size: 48px;">✅</span>
+            <p style="font-size: 16px; font-weight: 600; color: #22543d; margin-top: 12px;">
+              Todos los registros se procesaron correctamente
+            </p>
+          </div>
+        `;
+      }
+    }
+
+    // ============================================
+    // UTILIDADES
+    // ============================================
+
+    function appendLog(container, message, type) {
+      const span = document.createElement('div');
+      span.className = `log-${type}`;
+      span.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      container.appendChild(span);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function avanzarPaso(paso) {
+      // Actualizar steps
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`step${i}`);
+        el.classList.remove('active', 'completed');
+        if (i < paso) el.classList.add('completed');
+        if (i === paso) el.classList.add('active');
+      }
+
+      // Mostrar/ocultar secciones
+      document.getElementById('section-upload').classList.toggle('hidden', paso > 1);
+      document.getElementById('section-validate').classList.toggle('hidden', paso !== 2);
+      document.getElementById('section-import').classList.toggle('hidden', paso !== 3);
+      document.getElementById('section-results').classList.toggle('hidden', paso !== 4);
+    }
+
+    window.volverAPaso1 = function() {
+      avanzarPaso(1);
+    };
+
+    window.resetUpload = function() {
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileInfo').classList.add('hidden');
+      document.getElementById('uploadArea').classList.remove('hidden');
+      datosExcel = [];
+      datosValidados = [];
+    };
+
+    window.resetearTodo = function() {
+      resetUpload();
+      resultadosImport = [];
+      avanzarPaso(1);
+    };
+
+    window.exportarReporte = function() {
+      const lines = ['#,Estado,Estudiante,Grado,Match BD,Acudiente,Parentesco,Celular,Email,Errores,Advertencias'];
+      datosValidados.forEach(d => {
+        const match = d.estudianteMatch ? `${d.estudianteMatch.codigo_estudiante} - ${d.estudianteMatch.nombre}` : 'Sin match';
+        lines.push([
+          d.num,
+          d.estado,
+          `"${d.nombreCompletoEstudiante}"`,
+          d.grado,
+          `"${match}"`,
+          `"${d.acudienteNombre} ${d.acudienteApellidos}"`,
+          d.acudienteParentesco,
+          d.acudienteCelular || '',
+          d.acudienteEmail || '',
+          `"${d.errores.join('; ')}"`,
+          `"${d.advertencias.join('; ')}"`
+        ].join(','));
+      });
+
+      descargarCSV(lines.join('\n'), 'reporte_validacion_acudientes.csv');
+    };
+
+    window.exportarResultados = function() {
+      const lines = ['#,Estudiante,Acudiente,Email,Username,Resultado,Detalle'];
+      resultadosImport.forEach(r => {
+        lines.push([
+          r.num,
+          `"${r.nombreCompletoEstudiante}"`,
+          `"${r.acudienteNombre} ${r.acudienteApellidos}"`,
+          r.acudienteEmail || '',
+          r.username || '',
+          r.resultado,
+          `"${r.errorMsg || ''}"`
+        ].join(','));
+      });
+
+      descargarCSV(lines.join('\n'), 'resultados_importacion_acudientes.csv');
+    };
+
+    function descargarCSV(contenido, nombre) {
+      const blob = new Blob(['\ufeff' + contenido], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function mostrarAlerta(mensaje, tipo) {
+      const container = document.getElementById('alertContainer');
+      container.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+      setTimeout(() => { container.innerHTML = ''; }, 6000);
+    }
+  </script>
+</body>
+</html>

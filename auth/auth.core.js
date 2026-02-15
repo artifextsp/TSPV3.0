@@ -458,7 +458,9 @@ export async function login(usernameOrEmail, password, options = {}) {
         // Campos adicionales importantes
         grado: userData.grado || null,
         codigo_estudiante: userData.codigo_estudiante || null,
-        apellidos: userData.apellidos || null
+        apellidos: userData.apellidos || null,
+        // 🔒 CRÍTICO: colegio_id para aislamiento multi-tenant
+        colegio_id: userData.colegio_id || null
       };
       
       // Guardar cualquier campo adicional que no esté ya en sessionData

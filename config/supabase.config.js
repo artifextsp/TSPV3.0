@@ -108,6 +108,7 @@ const CONFIG = {
     'activo',
     'primera_vez',
     'grado',          // Campo adicional del sistema anterior
+    'colegio_id',     // 🔒 CRÍTICO: Necesario para aislamiento multi-tenant
     'created_at',
     'updated_at'
     // Añade aquí más campos adicionales de tu sistema anterior que necesites mantener

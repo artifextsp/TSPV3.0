@@ -141,6 +141,9 @@ export function setUser(userData) {
       primera_vez: Boolean(userData.primera_vez),
       rol_activo: userData.rol_activo ? String(userData.rol_activo).toLowerCase().trim() : null,
       
+      // 🔒 CRÍTICO: colegio_id para aislamiento multi-tenant
+      colegio_id: userData.colegio_id || null,
+      
       // Timestamp para control de expiración
       timestamp: now(),
       
@@ -150,7 +153,7 @@ export function setUser(userData) {
     
     // Guardar campos adicionales en 'extra'
     const knownFields = ['id', 'role', 'email', 'nombre', 'username', 
-                         'activo', 'primera_vez', 'rol_activo', CONFIG.USER_ROLE_FIELD];
+                         'activo', 'primera_vez', 'rol_activo', 'colegio_id', CONFIG.USER_ROLE_FIELD];
     
     for (const [key, value] of Object.entries(userData)) {
       if (!knownFields.includes(key) && value !== undefined) {
