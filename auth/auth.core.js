@@ -127,6 +127,32 @@ function mapLegacyRole(legacyRole) {
 }
 
 // ============================================
+// CAMPOS SEGUROS PARA TABLA USUARIOS
+// ============================================
+// Algunas BDs pueden no tener la columna colegio_id. Si detectamos 400 por esa
+// columna, se marca en sessionStorage y se usan campos sin colegio_id en las peticiones.
+
+const STORAGE_KEY_BD_SIN_COLEGIO_ID = 'tsp_bd_sin_colegio_id';
+
+function getUsuarioSelectFields() {
+  let list = CONFIG.USER_FIELDS.filter(f => f !== 'username');
+  if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(STORAGE_KEY_BD_SIN_COLEGIO_ID) === '1') {
+    list = list.filter(f => f !== 'colegio_id');
+  }
+  return list.join(',');
+}
+
+function markBDSinColegioId() {
+  try { sessionStorage.setItem(STORAGE_KEY_BD_SIN_COLEGIO_ID, '1'); } catch (_) {}
+}
+
+function isErrorColegioIdInexistente(body) {
+  if (!body || typeof body !== 'object') return false;
+  const msg = (body.message || '').toLowerCase();
+  return body.code === '42703' && msg.includes('colegio_id');
+}
+
+// ============================================
 // FUNCIONES AUXILIARES DE BÚSQUEDA
 // ============================================
 
@@ -139,49 +165,39 @@ function mapLegacyRole(legacyRole) {
  */
 async function findUsuario(identifier, isUsername) {
   try {
-    // Usar campos de CONFIG pero filtrar 'username' que no existe
-    const fields = CONFIG.USER_FIELDS.filter(f => f !== 'username').join(',');
-    let queryUrl;
-    
-    if (isUsername) {
-      // Si es username (TSP001, TSP0046, etc.) o código (EST0046), buscar por codigo_estudiante
-      // Extraer número del username (TSP0046 -> EST0046, EST0046 -> EST0046)
-      let codigoEstudiante;
-      
-      if (identifier.toUpperCase().startsWith('EST')) {
-        // Ya es código de estudiante
-        codigoEstudiante = identifier.toUpperCase();
-      } else {
-        // Es TSP###, convertir a EST####
-        const numeroMatch = identifier.match(/\d+/);
-        if (numeroMatch) {
-          const numero = numeroMatch[0].padStart(4, '0'); // Asegurar 4 dígitos
-          codigoEstudiante = `EST${numero}`;
+    const doRequest = (selectFields) => {
+      let queryUrl;
+      if (isUsername) {
+        let codigoEstudiante;
+        if (identifier.toUpperCase().startsWith('EST')) {
+          codigoEstudiante = identifier.toUpperCase();
         } else {
-          Logger.error('No se pudo extraer número de:', identifier);
-          return null;
+          const numeroMatch = identifier.match(/\d+/);
+          if (!numeroMatch) return null;
+          codigoEstudiante = `EST${numeroMatch[0].padStart(4, '0')}`;
         }
+        Logger.log('Buscando usuario por codigo_estudiante:', codigoEstudiante);
+        queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?codigo_estudiante=eq.${encodeURIComponent(codigoEstudiante)}&select=${selectFields}`;
+      } else {
+        Logger.log('Buscando usuario por email:', identifier.toLowerCase());
+        queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?email=eq.${encodeURIComponent(identifier.toLowerCase())}&select=${selectFields}`;
       }
-      
-      Logger.log('Buscando usuario por codigo_estudiante:', codigoEstudiante);
-      
-      // Buscar por codigo_estudiante (más confiable que username)
-      queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?codigo_estudiante=eq.${encodeURIComponent(codigoEstudiante)}&select=${fields}`;
-    } else {
-      // Buscar por email
-      Logger.log('Buscando usuario por email:', identifier.toLowerCase());
-      queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?email=eq.${encodeURIComponent(identifier.toLowerCase())}&select=${fields}`;
+      return fetch(queryUrl, { method: 'GET', headers: CONFIG.HEADERS, mode: 'cors', credentials: 'omit' });
+    };
+
+    let response = await doRequest(getUsuarioSelectFields());
+
+    // Si 400 por columna inexistente (ej. TSPV2 sin colegio_id), marcar y reintentar sin colegio_id
+    if (!response.ok && response.status === 400) {
+      let body = {};
+      try { body = await response.json(); } catch (_) {}
+      if (isErrorColegioIdInexistente(body)) {
+        Logger.warn('[TSP-AUTH] La tabla usuarios no tiene colegio_id. Reintentando login sin ese campo.');
+        markBDSinColegioId();
+        response = await doRequest(getUsuarioSelectFields());
+      }
     }
-    
-    Logger.log('URL de consulta:', queryUrl);
-    
-    const response = await fetch(queryUrl, {
-      method: 'GET',
-      headers: CONFIG.HEADERS,
-      mode: 'cors',
-      credentials: 'omit'
-    });
-    
+
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Sin detalles');
       Logger.error(`Error ${response.status} al buscar usuario:`, errorText);
@@ -190,23 +206,25 @@ async function findUsuario(identifier, isUsername) {
         return null;
       }
       if (response.status === 400) {
-        Logger.error('Error 400 - Verifica que el campo codigo_estudiante existe y RLS está configurado');
+        Logger.error('Error 400 - Verifica que los campos existan en la tabla usuarios y RLS esté configurado');
         return null;
       }
       return null;
     }
-    
+
     const users = await response.json();
     Logger.log('Usuarios encontrados:', users.length);
-    
+
     if (users && users.length > 0) {
-      Logger.success('Usuario encontrado:', users[0].codigo_estudiante || users[0].email);
-      return users[0];
+      const user = users[0];
+      if (user.colegio_id === undefined) user.colegio_id = null;
+      Logger.success('Usuario encontrado:', user.codigo_estudiante || user.email);
+      return user;
     }
-    
+
     Logger.warn('No se encontró usuario con:', identifier);
     return null;
-    
+
   } catch (error) {
     Logger.error('Error al buscar usuario:', error);
     return null;
@@ -714,21 +732,21 @@ export async function requestPasswordReset(email) {
   try {
     Logger.log('Solicitando recuperación de contraseña para:', trimmedEmail);
     
-    // Verificar que el usuario existe
-    const fields = CONFIG.USER_FIELDS.join(',');
-    const queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?email=eq.${encodeURIComponent(trimmedEmail)}&select=${fields}`;
-    
-    const response = await fetch(queryUrl, {
-      method: 'GET',
-      headers: CONFIG.HEADERS,
-      mode: 'cors',
-      credentials: 'omit'
-    });
-    
+    // Verificar que el usuario existe (campos compatibles con BD sin colegio_id)
+    let queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?email=eq.${encodeURIComponent(trimmedEmail)}&select=${getUsuarioSelectFields()}`;
+    let response = await fetch(queryUrl, { method: 'GET', headers: CONFIG.HEADERS, mode: 'cors', credentials: 'omit' });
+    if (!response.ok && response.status === 400) {
+      let body = {};
+      try { body = await response.json(); } catch (_) {}
+      if (isErrorColegioIdInexistente(body)) {
+        markBDSinColegioId();
+        queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?email=eq.${encodeURIComponent(trimmedEmail)}&select=${getUsuarioSelectFields()}`;
+        response = await fetch(queryUrl, { method: 'GET', headers: CONFIG.HEADERS, mode: 'cors', credentials: 'omit' });
+      }
+    }
     if (!response.ok) {
       return errorResult('Error al conectar con el servidor', 'SERVER_ERROR');
     }
-    
     const users = await response.json();
     
     if (!users || users.length === 0) {
@@ -892,31 +910,38 @@ export async function changePassword(currentPassword, newPassword) {
     // Determinar si es acudiente o usuario normal
     const isAcudiente = user.role === 'acudiente' || user.role === 'guardian';
     const table = isAcudiente ? CONFIG.ACUDIENTES_TABLE : CONFIG.USERS_TABLE;
-    const fields = isAcudiente ? CONFIG.ACUDIENTE_FIELDS.join(',') : CONFIG.USER_FIELDS.join(',');
+    const fields = isAcudiente ? CONFIG.ACUDIENTE_FIELDS.join(',') : getUsuarioSelectFields();
     
     Logger.log('Buscando en tabla:', table);
     
     const queryUrl = `${CONFIG.API_BASE}/${table}?id=eq.${user.id}&select=${fields}`;
     
-    const response = await fetch(queryUrl, {
+    let response = await fetch(queryUrl, {
       method: 'GET',
       headers: CONFIG.HEADERS,
       mode: 'cors',
       credentials: 'omit'
     });
-    
+    if (!response.ok && response.status === 400 && !isAcudiente) {
+      let body = {};
+      try { body = await response.json(); } catch (_) {}
+      if (isErrorColegioIdInexistente(body)) {
+        markBDSinColegioId();
+        const safeFields = getUsuarioSelectFields();
+        const retryUrl = `${CONFIG.API_BASE}/${table}?id=eq.${user.id}&select=${safeFields}`;
+        response = await fetch(retryUrl, { method: 'GET', headers: CONFIG.HEADERS, mode: 'cors', credentials: 'omit' });
+      }
+    }
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Sin detalles');
       Logger.error('Error al buscar usuario:', errorText);
       return errorResult('Error al verificar contraseña actual', 'VERIFY_ERROR');
     }
-    
     const users = await response.json();
     if (!users || users.length === 0) {
       Logger.error('Usuario no encontrado en tabla:', table);
       return errorResult('Usuario no encontrado', 'USER_NOT_FOUND');
     }
-    
     const userData = users[0];
     Logger.log('Usuario encontrado, verificando contraseña...');
     
@@ -1048,21 +1073,21 @@ export async function getEstudianteHijo(estudianteId) {
   }
   
   try {
-    const fields = CONFIG.USER_FIELDS.join(',');
-    const queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?id=eq.${estudianteId}&select=${fields}`;
-    
-    const response = await fetch(queryUrl, {
-      method: 'GET',
-      headers: CONFIG.HEADERS,
-      mode: 'cors',
-      credentials: 'omit'
-    });
-    
+    let queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?id=eq.${estudianteId}&select=${getUsuarioSelectFields()}`;
+    let response = await fetch(queryUrl, { method: 'GET', headers: CONFIG.HEADERS, mode: 'cors', credentials: 'omit' });
+    if (!response.ok && response.status === 400) {
+      let body = {};
+      try { body = await response.json(); } catch (_) {}
+      if (isErrorColegioIdInexistente(body)) {
+        markBDSinColegioId();
+        queryUrl = `${CONFIG.API_BASE}/${CONFIG.USERS_TABLE}?id=eq.${estudianteId}&select=${getUsuarioSelectFields()}`;
+        response = await fetch(queryUrl, { method: 'GET', headers: CONFIG.HEADERS, mode: 'cors', credentials: 'omit' });
+      }
+    }
     if (!response.ok) {
       Logger.error('Error al obtener estudiante hijo');
       return null;
     }
-    
     const estudiantes = await response.json();
     return estudiantes && estudiantes.length > 0 ? estudiantes[0] : null;
     
