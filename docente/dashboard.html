@@ -718,7 +718,7 @@
         </div>
       </div>
       
-      <!-- Alerta de revisiones pendientes -->
+      <!-- Alerta de revisiones pendientes - Creatividad -->
       <div id="alertaRevisionesPendientes" class="alert-pending hidden">
         <div class="alert-pending-content">
           <span class="alert-pending-icon">🔔</span>
@@ -729,6 +729,20 @@
         </div>
         <a href="../creatividad/docente-calificar.html" class="btn-action">
           Calificar Ahora →
+        </a>
+      </div>
+
+      <!-- Alerta de validaciones pendientes - Ejercicios Digitales -->
+      <div id="alertaEjerciciosPendientes" class="alert-pending hidden" style="background: linear-gradient(135deg, #38b2ac 0%, #319795 100%); box-shadow: 0 4px 12px rgba(56, 178, 172, 0.3);">
+        <div class="alert-pending-content">
+          <span class="alert-pending-icon">🎮</span>
+          <div class="alert-pending-text">
+            <strong><span id="contadorEjerciciosPendientes">0</span> registro(s) de puntaje por validar</strong>
+            <p>Ejercicios Digitales - Los estudiantes esperan aprobación</p>
+          </div>
+        </div>
+        <a href="../ejercicios/docente-validar.html" class="btn-action" style="color: #319795;">
+          Validar Puntajes →
         </a>
       </div>
       
@@ -750,6 +764,11 @@
           <span class="module-btn-icon">✏️</span>
           Calificar
           <span id="badgePendientes" class="module-badge hidden">0</span>
+        </a>
+        <a href="../ejercicios/docente-validar.html" class="module-btn ejercicios">
+          <span class="module-btn-icon">✅</span>
+          Validar Ejercicios
+          <span id="badgeEjerciciosPendientes" class="module-badge hidden">0</span>
         </a>
       </div>
       
@@ -1014,6 +1033,31 @@
         }
       } catch (error) {
         console.error('Error:', error);
+      }
+
+      // Verificar pendientes de Ejercicios Digitales
+      try {
+        const resp = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/resultados_juegos?estado_validacion=eq.pendiente&select=id`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        if (resp.ok) {
+          const pend = await resp.json();
+          if (pend && pend.length > 0) {
+            document.getElementById('alertaEjerciciosPendientes').classList.remove('hidden');
+            document.getElementById('contadorEjerciciosPendientes').textContent = pend.length;
+            const badge2 = document.getElementById('badgeEjerciciosPendientes');
+            badge2.classList.remove('hidden');
+            badge2.textContent = pend.length;
+          }
+        }
+      } catch (err) {
+        console.error('Error verificando ejercicios pendientes:', err);
       }
     }
     

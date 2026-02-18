@@ -302,6 +302,102 @@
       transition: width 0.3s;
     }
     
+    /* Overlay de espera docente */
+    .waiting-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 24px;
+    }
+    .waiting-overlay.active { display: flex; }
+    .waiting-icon {
+      width: 80px; height: 80px;
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top-color: #ed8936;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 24px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .waiting-overlay h2 {
+      color: #fbd38d;
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+    .waiting-overlay p {
+      color: #e2e8f0;
+      max-width: 400px;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    .waiting-game-info {
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-top: 20px;
+      display: inline-block;
+    }
+    .waiting-game-info .game-name { color: #38b2ac; font-weight: 600; font-size: 16px; }
+    .waiting-game-info .score-value { color: #48bb78; font-size: 28px; font-weight: 700; margin: 8px 0 4px; }
+    .waiting-game-info .score-label { color: #a0aec0; font-size: 13px; }
+
+    /* Resultado de rechazo */
+    .rejection-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 24px;
+    }
+    .rejection-overlay.active { display: flex; }
+    .rejection-box {
+      background: #2d2d44;
+      border: 2px solid #e53e3e;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 420px;
+    }
+    .rejection-box h2 { color: #fc8181; margin-bottom: 12px; }
+    .rejection-box p { color: #e2e8f0; line-height: 1.6; font-size: 15px; margin-bottom: 8px; }
+    .rejection-reason { color: #fbd38d; font-style: italic; font-size: 14px; margin: 12px 0; }
+    .btn-retry {
+      background: #ed8936;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    .btn-retry:hover { background: #dd6b20; }
+
+    .game-card.pending-validation {
+      border-color: #ed8936;
+      background: rgba(237, 137, 54, 0.1);
+    }
+    .result-pending {
+      background: rgba(237, 137, 54, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .result-pending .result-value { color: #ed8936; }
+    .result-pending .result-label { color: #fbd38d; }
+
     .hidden { display: none !important; }
   </style>
 </head>
@@ -351,7 +447,7 @@
       <p id="modalJuegoNombre" style="color: #a0aec0; margin-bottom: 16px;">-</p>
       
       <div class="warning-box">
-        <p><strong>Importante:</strong> Antes de registrar tu resultado, asegúrate de que el docente pueda verificar tu puntaje en la pantalla del juego.</p>
+        <p><strong>Importante:</strong> El docente debe verificar tu puntaje en la pantalla del juego antes de aprobarlo.</p>
       </div>
       
       <input type="hidden" id="registroJuegoId">
@@ -365,112 +461,110 @@
       
       <div class="modal-actions">
         <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-        <button class="btn-confirm" onclick="guardarResultado()">Confirmar</button>
+        <button class="btn-confirm" id="btnConfirmarRegistro">Confirmar</button>
       </div>
     </div>
   </div>
 
+  <!-- Overlay: Esperando aprobación del docente -->
+  <div id="waitingOverlay" class="waiting-overlay">
+    <div class="waiting-icon"></div>
+    <h2>Esperando aprobación del docente</h2>
+    <p>El docente debe verificar y aprobar tu registro de puntos. Por favor espera a que venga y verifique el puntaje que estás registrando.</p>
+    <div class="waiting-game-info">
+      <div class="game-name" id="waitingGameName">-</div>
+      <div class="score-value" id="waitingScore">-</div>
+      <div class="score-label">Puntaje registrado</div>
+    </div>
+  </div>
+
+  <!-- Overlay: Registro rechazado -->
+  <div id="rejectionOverlay" class="rejection-overlay">
+    <div class="rejection-box">
+      <h2>Registro no aprobado</h2>
+      <p>El docente no aprobó tu registro de puntos. Debes volver a registrar tu puntaje real.</p>
+      <p class="rejection-reason" id="rejectionReason"></p>
+      <button class="btn-retry" id="btnRetry">Entendido, volver a registrar</button>
+    </div>
+  </div>
+
   <script type="module">
-    import { getUser } from '../auth/auth.core.js';
+    import { getUser, logout } from '../auth/auth.core.js';
     import { CiclosEjerciciosAPI, JuegosAPI, SesionesEjerciciosAPI, ResultadosAPI, HABILIDADES, TIPOS_META } from './ejercicios.api.js';
     import { CONFIG } from '../config/supabase.config.js';
-    
+
     let cicloActual = null;
     let sesionActual = null;
     let juegosDelCiclo = [];
     let resultadosActuales = {};
     let usuarioActual = null;
-    
-    // Inicializar
+    let pollingInterval = null;
+    let pendingResultadoId = null;
+    let pendingJuegoId = null;
+
     async function init() {
       usuarioActual = getUser();
-      
-      if (!usuarioActual) {
-        window.location.href = '../index.html';
-        return;
-      }
-      
+      if (!usuarioActual) { window.location.href = '../index.html'; return; }
+
       try {
         const gradoUsuario = await obtenerGradoUsuario(usuarioActual);
-        
-        if (!gradoUsuario) {
-          mostrarEstado('noCycleState');
-          return;
-        }
-        
+        if (!gradoUsuario) { mostrarEstado('noCycleState'); return; }
+
         cicloActual = await CiclosEjerciciosAPI.obtenerActivoPorGrado(gradoUsuario);
-        
-        if (!cicloActual) {
-          mostrarEstado('noCycleState');
-          return;
-        }
-        
-        // Iniciar o recuperar sesión
+        if (!cicloActual) { mostrarEstado('noCycleState'); return; }
+
         sesionActual = await SesionesEjerciciosAPI.iniciar(cicloActual.id, usuarioActual.id);
-        
-        // Cargar juegos
         juegosDelCiclo = await JuegosAPI.listarPorCiclo(cicloActual.id);
-        
-        if (!juegosDelCiclo || juegosDelCiclo.length === 0) {
-          mostrarEstado('noCycleState');
-          return;
-        }
-        
-        // Cargar resultados existentes
+        if (!juegosDelCiclo || juegosDelCiclo.length === 0) { mostrarEstado('noCycleState'); return; }
+
         await cargarResultados();
-        
-        // Mostrar interfaz
+
+        // Si hay un resultado pendiente, reanudar polling
+        const pendiente = Object.values(resultadosActuales).find(r => r.estado_validacion === 'pendiente');
+        if (pendiente) {
+          const juego = juegosDelCiclo.find(j => j.id === pendiente.juego_id);
+          mostrarEsperaDocente(juego?.nombre || 'Juego', pendiente.resultado_obtenido, pendiente.id, pendiente.juego_id);
+        }
+
         document.getElementById('headerTitle').textContent = cicloActual.titulo;
         renderizarJuegos();
         actualizarProgreso();
         mostrarEstado('mainContent');
-        
       } catch (error) {
         console.error('Error inicializando:', error);
         mostrarEstado('noCycleState');
       }
     }
-    
+
     async function obtenerGradoUsuario(user) {
       let grado = user.grado;
-      
       if (!grado) {
         const response = await fetch(
           `${CONFIG.SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}&select=grado`,
-          {
-            headers: {
-              'apikey': CONFIG.SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-            }
-          }
+          { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
         );
-        
         if (response.ok) {
           const data = await response.json();
           if (data && data[0]) grado = data[0].grado;
         }
       }
-      
       return mapearGrado(grado);
     }
-    
+
     function mapearGrado(gradoRaw) {
       if (!gradoRaw) return null;
       const gradoStr = String(gradoRaw).toLowerCase().replace('°', '').trim();
       const mapa = {
-        '3': 'tercero', 'tercero': 'tercero',
-        '4': 'cuarto', 'cuarto': 'cuarto',
-        '5': 'quinto', 'quinto': 'quinto',
-        '6': 'sexto', 'sexto': 'sexto',
+        '3': 'tercero', 'tercero': 'tercero', '4': 'cuarto', 'cuarto': 'cuarto',
+        '5': 'quinto', 'quinto': 'quinto', '6': 'sexto', 'sexto': 'sexto',
         '7': 'septimo', 'séptimo': 'septimo', 'septimo': 'septimo',
-        '8': 'octavo', 'octavo': 'octavo',
-        '9': 'noveno', 'noveno': 'noveno',
+        '8': 'octavo', 'octavo': 'octavo', '9': 'noveno', 'noveno': 'noveno',
         '10': 'decimo', 'décimo': 'decimo', 'decimo': 'decimo',
         '11': 'undecimo', 'undécimo': 'undecimo', 'undecimo': 'undecimo'
       };
       return mapa[gradoStr] || gradoStr;
     }
-    
+
     function mostrarEstado(stateId) {
       ['loadingState', 'noCycleState', 'mainContent'].forEach(id => {
         const el = document.getElementById(id);
@@ -478,35 +572,54 @@
       });
       document.getElementById(stateId).classList.remove('hidden');
     }
-    
+
     async function cargarResultados() {
       try {
         const resultados = await ResultadosAPI.obtenerPorSesion(sesionActual.id);
         resultadosActuales = {};
         if (resultados) {
-          resultados.forEach(r => {
-            resultadosActuales[r.juego_id] = r;
-          });
+          resultados.forEach(r => { resultadosActuales[r.juego_id] = r; });
         }
       } catch (error) {
         console.error('Error cargando resultados:', error);
       }
     }
-    
+
     function renderizarJuegos() {
       const grid = document.getElementById('gamesGrid');
-      
       grid.innerHTML = juegosDelCiclo.map(juego => {
         const habilidad = HABILIDADES.find(h => h.value === juego.habilidad_estimulada)?.label || juego.habilidad_estimulada;
         const tipoMeta = TIPOS_META.find(t => t.value === juego.tipo_meta)?.label || juego.tipo_meta;
         const resultado = resultadosActuales[juego.id];
-        const completado = resultado && resultado.meta_alcanzada;
-        
+        const aprobado = resultado && resultado.estado_validacion === 'aprobado';
+        const pendiente = resultado && resultado.estado_validacion === 'pendiente';
+        const completado = aprobado && resultado.meta_alcanzada;
+
+        let cardClass = '';
+        if (completado) cardClass = 'completed';
+        else if (pendiente) cardClass = 'pending-validation';
+
+        let resultadoHtml = '';
+        if (resultado && aprobado) {
+          resultadoHtml = `
+            <div class="result-display">
+              <div class="result-value">${resultado.resultado_obtenido}</div>
+              <div class="result-label">Tu resultado (${resultado.meta_alcanzada ? 'Meta alcanzada' : 'Meta no alcanzada'})</div>
+            </div>`;
+        } else if (pendiente) {
+          resultadoHtml = `
+            <div class="result-pending">
+              <div class="result-value">${resultado.resultado_obtenido}</div>
+              <div class="result-label">Esperando aprobación del docente</div>
+            </div>`;
+        }
+
+        const botonesDeshabilitados = pendiente;
+
         return `
-          <div class="game-card ${completado ? 'completed' : ''}">
+          <div class="game-card ${cardClass}">
             <h3>${juego.nombre}</h3>
             <span class="game-skill">${habilidad}</span>
-            
             <div class="game-meta">
               <div class="game-meta-row">
                 <span>Meta:</span>
@@ -514,78 +627,118 @@
               </div>
               ${juego.instrucciones ? `<p style="margin-top: 8px; font-size: 13px; color: #a0aec0;">${juego.instrucciones}</p>` : ''}
             </div>
-            
-            ${resultado ? `
-              <div class="result-display">
-                <div class="result-value">${resultado.resultado_obtenido}</div>
-                <div class="result-label">Tu resultado (${resultado.meta_alcanzada ? 'Meta alcanzada' : 'Meta no alcanzada'})</div>
-              </div>
-            ` : ''}
-            
+            ${resultadoHtml}
             <div class="game-actions">
-              <button class="btn-play" onclick="abrirJuego('${juego.url_juego}')">Jugar</button>
-              <button class="btn-register" onclick="abrirRegistro('${juego.id}', '${juego.nombre}', ${juego.meta_objetivo}, '${juego.tipo_meta}')">
-                ${resultado ? 'Actualizar' : 'Registrar'}
+              <button class="btn-play" onclick="abrirJuego('${juego.url_juego}')" ${botonesDeshabilitados ? 'disabled style="opacity:0.5"' : ''}>Jugar</button>
+              <button class="btn-register" onclick="abrirRegistro('${juego.id}', '${juego.nombre}', ${juego.meta_objetivo}, '${juego.tipo_meta}')" ${botonesDeshabilitados ? 'disabled style="opacity:0.5"' : ''}>
+                ${resultado && aprobado ? 'Actualizar' : (pendiente ? 'Pendiente...' : 'Registrar')}
               </button>
             </div>
-          </div>
-        `;
+          </div>`;
       }).join('');
     }
-    
+
     function actualizarProgreso() {
       const total = juegosDelCiclo.length;
-      const completados = Object.values(resultadosActuales).filter(r => r.meta_alcanzada).length;
+      const completados = Object.values(resultadosActuales).filter(r => r.estado_validacion === 'aprobado' && r.meta_alcanzada).length;
       const porcentaje = total > 0 ? (completados / total) * 100 : 0;
-      
       document.getElementById('progressText').textContent = `${completados}/${total} completados`;
       document.getElementById('progressFill').style.width = `${porcentaje}%`;
     }
-    
-    // Abrir juego en nueva pestaña
-    window.abrirJuego = function(url) {
-      window.open(url, '_blank');
-    };
-    
-    // Abrir modal de registro
+
+    // --- Flujo de espera docente ---
+
+    function mostrarEsperaDocente(nombreJuego, puntaje, resultadoId, juegoId) {
+      document.getElementById('waitingGameName').textContent = nombreJuego;
+      document.getElementById('waitingScore').textContent = puntaje;
+      document.getElementById('waitingOverlay').classList.add('active');
+      pendingResultadoId = resultadoId;
+      pendingJuegoId = juegoId;
+      iniciarPolling(resultadoId);
+    }
+
+    function ocultarEspera() {
+      document.getElementById('waitingOverlay').classList.remove('active');
+      detenerPolling();
+    }
+
+    function iniciarPolling(resultadoId) {
+      detenerPolling();
+      pollingInterval = setInterval(async () => {
+        try {
+          const estado = await ResultadosAPI.consultarEstado(resultadoId);
+          if (!estado) return;
+
+          if (estado.estado_validacion === 'aprobado') {
+            ocultarEspera();
+            await cargarResultados();
+            renderizarJuegos();
+            actualizarProgreso();
+          } else if (estado.estado_validacion === 'rechazado') {
+            ocultarEspera();
+            mostrarRechazo(estado.comentario_docente);
+          }
+        } catch (err) {
+          console.error('Error polling:', err);
+        }
+      }, 3000);
+    }
+
+    function detenerPolling() {
+      if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+    }
+
+    function mostrarRechazo(comentario) {
+      const motivo = document.getElementById('rejectionReason');
+      motivo.textContent = comentario || '';
+      motivo.style.display = comentario ? 'block' : 'none';
+      document.getElementById('rejectionOverlay').classList.add('active');
+    }
+
+    document.getElementById('btnRetry').addEventListener('click', async () => {
+      document.getElementById('rejectionOverlay').classList.remove('active');
+      await cargarResultados();
+      renderizarJuegos();
+      actualizarProgreso();
+    });
+
+    // --- Acciones del usuario ---
+
+    window.abrirJuego = function(url) { window.open(url, '_blank'); };
+
     window.abrirRegistro = function(juegoId, nombre, meta, tipoMeta) {
       document.getElementById('registroJuegoId').value = juegoId;
       document.getElementById('registroMeta').value = meta;
       document.getElementById('registroTipoMeta').value = tipoMeta;
       document.getElementById('modalJuegoNombre').textContent = nombre;
-      
       const tipoLabel = TIPOS_META.find(t => t.value === tipoMeta)?.label || tipoMeta;
       document.getElementById('labelResultado').textContent = `Tu resultado (${tipoLabel}):`;
-      
-      // Si ya hay resultado, mostrarlo
-      const resultadoExistente = resultadosActuales[juegoId];
-      document.getElementById('inputResultado').value = resultadoExistente ? resultadoExistente.resultado_obtenido : '';
-      
+      const existente = resultadosActuales[juegoId];
+      document.getElementById('inputResultado').value = existente ? existente.resultado_obtenido : '';
       document.getElementById('modalRegistrar').classList.add('active');
     };
-    
-    // Cerrar modal
+
     window.cerrarModal = function() {
       document.getElementById('modalRegistrar').classList.remove('active');
     };
-    
-    // Guardar resultado
-    window.guardarResultado = async function() {
+
+    document.getElementById('btnConfirmarRegistro').addEventListener('click', async () => {
       const juegoId = document.getElementById('registroJuegoId').value;
       const meta = parseInt(document.getElementById('registroMeta').value);
       const tipoMeta = document.getElementById('registroTipoMeta').value;
       const resultado = parseInt(document.getElementById('inputResultado').value);
-      
-      if (isNaN(resultado) || resultado < 0) {
-        alert('Ingresa un resultado válido');
-        return;
-      }
-      
+
+      if (isNaN(resultado) || resultado < 0) { alert('Ingresa un resultado válido'); return; }
+
+      const btn = document.getElementById('btnConfirmarRegistro');
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+
       try {
         const metaAlcanzada = resultado >= meta;
         const porcentajeLogro = Math.min((resultado / meta) * 100, 100);
-        
-        await ResultadosAPI.registrar({
+
+        const res = await ResultadosAPI.registrar({
           sesion_id: sesionActual.id,
           juego_id: juegoId,
           estudiante_id: usuarioActual.id,
@@ -593,31 +746,51 @@
           meta_alcanzada: metaAlcanzada,
           porcentaje_logro: porcentajeLogro
         });
-        
-        // Recargar resultados
+
         await cargarResultados();
         renderizarJuegos();
         actualizarProgreso();
         cerrarModal();
-        
-        if (metaAlcanzada) {
-          alert('¡Excelente! Has alcanzado la meta.');
-        } else {
-          alert('Resultado guardado. ¡Sigue intentando para alcanzar la meta!');
+
+        const nuevoResultado = resultadosActuales[juegoId];
+        const juego = juegosDelCiclo.find(j => j.id === juegoId);
+
+        if (nuevoResultado && nuevoResultado.id) {
+          mostrarEsperaDocente(juego?.nombre || 'Juego', resultado, nuevoResultado.id, juegoId);
         }
-        
       } catch (error) {
         console.error('Error guardando resultado:', error);
         alert('Error: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Confirmar';
       }
-    };
-    
-    // Cerrar modal con Escape
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') cerrarModal();
     });
-    
-    // Iniciar
+
+    // --- Cierre de sesión: anular pendientes ---
+
+    const logoutOriginal = window.beforeunload;
+    window.addEventListener('beforeunload', async () => {
+      try {
+        await ResultadosAPI.anularPendientesDeEstudiante(usuarioActual.id);
+      } catch (_) {}
+    });
+
+    // Interceptar el botón "Volver" para anular pendientes
+    const btnBack = document.querySelector('.btn-back');
+    if (btnBack) {
+      btnBack.addEventListener('click', async (e) => {
+        e.preventDefault();
+        detenerPolling();
+        try {
+          await ResultadosAPI.anularPendientesDeEstudiante(usuarioActual.id);
+        } catch (_) {}
+        window.location.href = btnBack.getAttribute('href');
+      });
+    }
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
+
     init();
   </script>
 </body>

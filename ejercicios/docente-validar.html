@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Validar Ejercicios Digitales - Docente</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f7fafc;
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+      color: white;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header h1 { font-size: 16px; font-weight: 600; }
+
+    .btn-back {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .container { padding: 16px; max-width: 800px; margin: 0 auto; }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .stat-value { font-size: 32px; font-weight: 700; color: #38b2ac; }
+    .stat-label { color: #718096; font-size: 12px; margin-top: 4px; }
+
+    .section-title {
+      font-size: 16px;
+      color: #2d3748;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pending-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .pending-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-left: 4px solid #38b2ac;
+    }
+
+    .pending-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .pending-student { flex: 1; }
+    .pending-name { font-size: 16px; font-weight: 600; color: #1a202c; margin-bottom: 2px; }
+    .pending-code { font-size: 14px; color: #38b2ac; font-weight: 600; }
+
+    .pending-grado {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .game-info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #4a5568;
+    }
+
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ebf8ff;
+      border: 1px solid #90cdf4;
+      color: #2b6cb0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .score-meta {
+      font-size: 13px;
+      font-weight: 400;
+      color: #718096;
+    }
+
+    .pending-time {
+      font-size: 11px;
+      color: #a0aec0;
+      margin-top: 6px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn-approve {
+      flex: 1;
+      padding: 12px;
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-approve:hover { filter: brightness(1.1); }
+
+    .btn-reject {
+      flex: 1;
+      padding: 12px;
+      background: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-reject:hover { filter: brightness(1.1); }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #718096;
+      background: white;
+      border-radius: 12px;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+
+    /* Modal rechazo */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal.active { display: flex; }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .modal-header h2 { font-size: 18px; color: #2d3748; }
+
+    .btn-close {
+      background: #f7fafc;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #718096;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: #2d3748; font-size: 14px; }
+    .form-group textarea {
+      width: 100%; padding: 14px; border: 1px solid #e2e8f0;
+      border-radius: 10px; font-size: 15px; background: #f7fafc; resize: vertical;
+    }
+    .form-group textarea:focus { outline: none; border-color: #e53e3e; background: white; }
+
+    .form-actions { display: flex; gap: 12px; margin-top: 20px; }
+    .form-actions .btn {
+      flex: 1; padding: 14px; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .btn-secondary { background: #e2e8f0; color: #4a5568; }
+    .btn-danger { background: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%); color: white; }
+
+    .auto-refresh-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #ebf8ff; color: #2b6cb0; padding: 4px 10px;
+      border-radius: 12px; font-size: 11px; font-weight: 500;
+    }
+    .pulse-dot {
+      width: 6px; height: 6px; background: #38b2ac; border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .hidden { display: none !important; }
+
+    @media (min-width: 768px) {
+      .header { padding: 20px 24px; }
+      .header h1 { font-size: 22px; }
+      .container { padding: 24px; }
+      .modal { align-items: center; }
+      .modal-content { border-radius: 16px; max-width: 500px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Validar Ejercicios Digitales</h1>
+    <a href="../docente/dashboard.html" class="btn-back">← Volver</a>
+  </header>
+
+  <div class="container">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="pendientesCount">0</div>
+        <div class="stat-label">Pendientes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="aprobadosHoyCount">0</div>
+        <div class="stat-label">Aprobados Hoy</div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h3 class="section-title" style="margin-bottom: 0;">Registros pendientes de validación</h3>
+      <span class="auto-refresh-badge"><span class="pulse-dot"></span> Actualización automática</span>
+    </div>
+
+    <div class="pending-list" id="pendingList">
+      <div class="empty-state"><div class="empty-icon">⏳</div><p>Cargando...</p></div>
+    </div>
+  </div>
+
+  <!-- Modal: Motivo de rechazo -->
+  <div id="modalRechazo" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>No aprobar registro</h2>
+        <button class="btn-close" onclick="cerrarModalRechazo()">&times;</button>
+      </div>
+      <input type="hidden" id="rechazoResultadoId">
+      <p style="color: #718096; font-size: 14px; margin-bottom: 16px;">
+        El estudiante podrá volver a registrar su puntaje.
+      </p>
+      <div class="form-group">
+        <label>Motivo (opcional)</label>
+        <textarea id="rechazoMotivo" rows="3" placeholder="Ej: El puntaje en pantalla no coincide con el registrado..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="cerrarModalRechazo()">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmarRechazo">Confirmar Rechazo</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getUser } from '../auth/auth.core.js';
+    import { ResultadosAPI } from './ejercicios.api.js';
+    import { CONFIG } from '../config/supabase.config.js';
+
+    const user = getUser();
+    const userRole = (user?.role || user?.tipo_usuario || '').toLowerCase();
+    const rolesPermitidos = ['docente', 'admin', 'super_admin', 'administrador', 'rector'];
+    if (!user || !rolesPermitidos.includes(userRole)) {
+      alert('No tienes permisos para acceder a esta página');
+      window.location.href = '../index.html';
+    }
+
+    let refreshInterval = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarPendientes();
+      cargarAprobadosHoy();
+      refreshInterval = setInterval(() => { cargarPendientes(); cargarAprobadosHoy(); }, 5000);
+    });
+
+    async function cargarPendientes() {
+      const container = document.getElementById('pendingList');
+      try {
+        const pendientes = await ResultadosAPI.obtenerPendientes();
+        document.getElementById('pendientesCount').textContent = pendientes ? pendientes.length : 0;
+
+        if (!pendientes || pendientes.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">🎉</div>
+              <p><strong>¡Todo al día!</strong></p>
+              <p style="margin-top: 8px; font-size: 14px;">No hay registros pendientes de validación.</p>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = pendientes.map(r => {
+          const est = r.usuarios || {};
+          const juego = r.juegos_ejercicios || {};
+          const sesion = r.sesiones_ejercicios || {};
+          const ciclo = sesion?.ciclos_ejercicios || {};
+          const nombre = `${est.nombre || ''} ${est.apellidos || ''}`.trim();
+
+          let tiempoEspera = '';
+          if (r.fecha_registro) {
+            const diffMs = Date.now() - new Date(r.fecha_registro).getTime();
+            const mins = Math.floor(diffMs / 60000);
+            const hrs = Math.floor(mins / 60);
+            if (hrs > 0) tiempoEspera = `Hace ${hrs}h ${mins % 60}min`;
+            else if (mins > 0) tiempoEspera = `Hace ${mins} min`;
+            else tiempoEspera = 'Recién registrado';
+          }
+
+          return `
+            <div class="pending-card">
+              <div class="pending-header">
+                <div class="pending-student">
+                  <div class="pending-name">${nombre || 'Sin nombre'}</div>
+                  <div class="pending-code">${est.codigo_estudiante || '-'}</div>
+                </div>
+                <span class="pending-grado">${est.grado || ciclo.grado || '-'}</span>
+              </div>
+              <div class="game-info-row">
+                🎮 <strong>${juego.nombre || 'Juego'}</strong>
+                &nbsp;·&nbsp; Meta: ${juego.meta_objetivo || '-'} ${juego.tipo_meta || ''}
+              </div>
+              <div class="score-badge">
+                ${r.resultado_obtenido}
+                <span class="score-meta">/ ${juego.meta_objetivo || '?'} ${r.meta_alcanzada ? '✓ Meta alcanzada' : '✗ No alcanzada'}</span>
+              </div>
+              ${tiempoEspera ? `<div class="pending-time">⏱️ ${tiempoEspera}</div>` : ''}
+              <div class="action-buttons">
+                <button class="btn-approve" onclick="aprobarRegistro('${r.id}')">✓ Aprobar Registro</button>
+                <button class="btn-reject" onclick="abrirRechazo('${r.id}')">✗ No Aprobar</button>
+              </div>
+            </div>`;
+        }).join('');
+      } catch (error) {
+        console.error('Error cargando pendientes:', error);
+        container.innerHTML = `<div class="empty-state" style="color:#e53e3e;"><p>Error: ${error.message}</p></div>`;
+      }
+    }
+
+    async function cargarAprobadosHoy() {
+      try {
+        const hoy = new Date().toISOString().split('T')[0];
+        const response = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/resultados_juegos?estado_validacion=eq.aprobado&verificado_por_docente=eq.true&fecha_verificacion=gte.${hoy}&select=id`,
+          { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('aprobadosHoyCount').textContent = data.length;
+        }
+      } catch (_) {}
+    }
+
+    window.aprobarRegistro = async function(resultadoId) {
+      if (!confirm('¿Aprobar este registro de puntaje?')) return;
+      try {
+        await ResultadosAPI.aprobar(resultadoId, user.id);
+        cargarPendientes();
+        cargarAprobadosHoy();
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    };
+
+    window.abrirRechazo = function(resultadoId) {
+      document.getElementById('rechazoResultadoId').value = resultadoId;
+      document.getElementById('rechazoMotivo').value = '';
+      document.getElementById('modalRechazo').classList.add('active');
+    };
+
+    window.cerrarModalRechazo = function() {
+      document.getElementById('modalRechazo').classList.remove('active');
+    };
+
+    document.getElementById('btnConfirmarRechazo').addEventListener('click', async () => {
+      const resultadoId = document.getElementById('rechazoResultadoId').value;
+      const motivo = document.getElementById('rechazoMotivo').value.trim();
+      const btn = document.getElementById('btnConfirmarRechazo');
+      btn.disabled = true;
+      btn.textContent = 'Rechazando...';
+      try {
+        await ResultadosAPI.rechazar(resultadoId, user.id, motivo || null);
+        cerrarModalRechazo();
+        cargarPendientes();
+      } catch (error) {
+        alert('Error: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Confirmar Rechazo';
+      }
+    });
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModalRechazo(); });
+    document.getElementById('modalRechazo').addEventListener('click', (e) => {
+      if (e.target.id === 'modalRechazo') cerrarModalRechazo();
+    });
+  </script>
+</body>
+</html>

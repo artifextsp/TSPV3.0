@@ -278,30 +278,36 @@ export const SesionesEjerciciosAPI = {
 
 export const ResultadosAPI = {
   async registrar(datos) {
-    // Verificar si ya existe un resultado para este juego
     const existente = await apiRequest(
-      `${TABLES.RESULTADOS}?sesion_id=eq.${datos.sesion_id}&juego_id=eq.${datos.juego_id}&select=id`
+      `${TABLES.RESULTADOS}?sesion_id=eq.${datos.sesion_id}&juego_id=eq.${datos.juego_id}&select=id,estado_validacion`
     );
-    
+
+    const payload = {
+      resultado_obtenido: datos.resultado_obtenido,
+      meta_alcanzada: datos.meta_alcanzada,
+      porcentaje_logro: datos.porcentaje_logro,
+      estado_validacion: 'pendiente',
+      verificado_por_docente: false,
+      docente_verificador_id: null,
+      fecha_verificacion: null,
+      comentario_docente: null,
+      fecha_registro: new Date().toISOString()
+    };
+
     if (existente && existente.length > 0) {
-      // Actualizar existente
       return await apiRequest(`${TABLES.RESULTADOS}?id=eq.${existente[0].id}`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          resultado_obtenido: datos.resultado_obtenido,
-          meta_alcanzada: datos.meta_alcanzada,
-          porcentaje_logro: datos.porcentaje_logro,
-          fecha_registro: new Date().toISOString()
-        })
+        body: JSON.stringify(payload)
       });
     }
-    
-    // Crear nuevo
+
     return await apiRequest(TABLES.RESULTADOS, {
       method: 'POST',
       body: JSON.stringify({
-        ...datos,
-        fecha_registro: new Date().toISOString()
+        sesion_id: datos.sesion_id,
+        juego_id: datos.juego_id,
+        estudiante_id: datos.estudiante_id,
+        ...payload
       })
     });
   },
@@ -318,15 +324,72 @@ export const ResultadosAPI = {
     );
   },
 
-  async verificarPorDocente(resultadoId, docenteId) {
+  async consultarEstado(resultadoId) {
+    const r = await apiRequest(
+      `${TABLES.RESULTADOS}?id=eq.${resultadoId}&select=id,estado_validacion,comentario_docente`
+    );
+    return Array.isArray(r) && r.length > 0 ? r[0] : null;
+  },
+
+  async obtenerPendientes() {
+    return await apiRequest(
+      `${TABLES.RESULTADOS}?estado_validacion=eq.pendiente&select=*,juegos_ejercicios:juego_id(nombre,habilidad_estimulada,tipo_meta,meta_objetivo),sesiones_ejercicios:sesion_id(ciclo_id,ciclos_ejercicios:ciclo_id(titulo,grado)),usuarios:estudiante_id(id,nombre,apellidos,codigo_estudiante,grado)&order=fecha_registro.asc`
+    );
+  },
+
+  async contarPendientes() {
+    const r = await apiRequest(
+      `${TABLES.RESULTADOS}?estado_validacion=eq.pendiente&select=id`
+    );
+    return Array.isArray(r) ? r.length : 0;
+  },
+
+  async aprobar(resultadoId, docenteId) {
     return await apiRequest(`${TABLES.RESULTADOS}?id=eq.${resultadoId}`, {
       method: 'PATCH',
       body: JSON.stringify({
+        estado_validacion: 'aprobado',
         verificado_por_docente: true,
         docente_verificador_id: docenteId,
         fecha_verificacion: new Date().toISOString()
       })
     });
+  },
+
+  async rechazar(resultadoId, docenteId, comentario) {
+    return await apiRequest(`${TABLES.RESULTADOS}?id=eq.${resultadoId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        estado_validacion: 'rechazado',
+        verificado_por_docente: false,
+        docente_verificador_id: docenteId,
+        fecha_verificacion: new Date().toISOString(),
+        comentario_docente: comentario || 'El docente no aprobó el puntaje registrado.'
+      })
+    });
+  },
+
+  async anularPendientesDeEstudiante(estudianteId) {
+    const pendientes = await apiRequest(
+      `${TABLES.RESULTADOS}?estudiante_id=eq.${estudianteId}&estado_validacion=eq.pendiente&select=id`
+    );
+    if (!pendientes || pendientes.length === 0) return;
+    for (const p of pendientes) {
+      await apiRequest(`${TABLES.RESULTADOS}?id=eq.${p.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          resultado_obtenido: 0,
+          meta_alcanzada: false,
+          porcentaje_logro: 0,
+          estado_validacion: 'aprobado',
+          comentario_docente: 'Sesión cerrada sin validación. Puntaje asignado: 0.'
+        })
+      });
+    }
+  },
+
+  async verificarPorDocente(resultadoId, docenteId) {
+    return await this.aprobar(resultadoId, docenteId);
   }
 };
 
