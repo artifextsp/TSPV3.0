@@ -959,35 +959,59 @@ export const AcudientesAPI = {
   },
   
   /**
-   * Genera username de acudiente automático (ACU001, ACU002, etc.)
+   * Genera username de acudiente automático (ACU001, ACU002, ...).
+   * Usa máximo numérico real (no orden lexicográfico: ACU100 > ACU99).
    */
   async generarUsername() {
     try {
       const params = new URLSearchParams();
       params.append('select', 'username');
-      params.append('order', 'username.desc');
-      params.append('limit', '1');
-      
       const acudientes = await apiRequest(`${TABLES.ACUDIENTES}?${params.toString()}`);
-      
-      if (!acudientes || acudientes.length === 0) {
-        return 'ACU001';
-      }
-      
-      const ultimoUsername = acudientes[0].username;
-      if (ultimoUsername && ultimoUsername.match(/^ACU\d+$/i)) {
-        const match = ultimoUsername.match(/\d+/);
-        if (match) {
-          const numero = parseInt(match[0]) + 1;
-          return 'ACU' + String(numero).padStart(3, '0');
+      let maxNum = 0;
+      (acudientes || []).forEach(a => {
+        if (a.username && a.username.match(/^ACU\d+$/i)) {
+          const n = parseInt(a.username.replace(/\D/g, ''), 10);
+          if (!isNaN(n) && n > maxNum) maxNum = n;
         }
-      }
-      
-      return 'ACU001';
+      });
+      return 'ACU' + String(maxNum + 1).padStart(3, '0');
     } catch (error) {
       console.error('Error generando username de acudiente:', error);
       return 'ACU001';
     }
+  },
+
+  /**
+   * Comprueba si un username ya existe en acudientes.
+   */
+  async existeUsername(username) {
+    try {
+      const r = await apiRequest(
+        `${TABLES.ACUDIENTES}?username=eq.${encodeURIComponent(username)}&select=id`
+      );
+      return Array.isArray(r) && r.length > 0;
+    } catch (_) {
+      return false;
+    }
+  },
+
+  /**
+   * Obtiene el siguiente username disponible (no usado).
+   * Si el generado ya existe, incrementa hasta encontrar uno libre (máx. 50 intentos).
+   */
+  async generarUsernameDisponible() {
+    let candidato = await this.generarUsername();
+    let intentos = 0;
+    const maxIntentos = 50;
+    while (await this.existeUsername(candidato)) {
+      const match = candidato.match(/^ACU(\d+)$/i);
+      const num = match ? parseInt(match[1], 10) + 1 : 1;
+      candidato = 'ACU' + String(num).padStart(3, '0');
+      if (++intentos >= maxIntentos) {
+        throw new Error('No se pudo generar un usuario de acudiente único. Intenta de nuevo.');
+      }
+    }
+    return candidato;
   },
   
   /**
@@ -1014,9 +1038,9 @@ export const AcudientesAPI = {
       console.warn('No se pudo verificar acudiente duplicado, continuando:', error);
     }
     
-    // Generar username si no se proporciona
+    // Generar username disponible (evita duplicado por orden lexicográfico o concurrencia)
     if (!datos.username) {
-      datos.username = await this.generarUsername();
+      datos.username = await this.generarUsernameDisponible();
     }
     
     // Hash de contraseña por defecto (temporal123)
@@ -1028,28 +1052,30 @@ export const AcudientesAPI = {
     datos.activo = datos.activo !== undefined ? datos.activo : true;
     datos.primera_vez = datos.primera_vez !== undefined ? datos.primera_vez : true;
     
-    try {
-      return await apiRequest(`${TABLES.ACUDIENTES}`, {
-        method: 'POST',
-        body: JSON.stringify(datos)
-      });
-    } catch (error) {
-      // Manejar error de constraint
-      if (error.message && error.message.includes('23505')) {
-        if (error.message.includes('usuarios_email_key') || error.message.includes('email')) {
-          throw new Error(`El email "${datos.email}" ya está registrado. Por favor, usa un email diferente.`);
+    const maxReintentos = 3;
+    for (let intento = 0; intento < maxReintentos; intento++) {
+      try {
+        return await apiRequest(`${TABLES.ACUDIENTES}`, {
+          method: 'POST',
+          body: JSON.stringify(datos)
+        });
+      } catch (error) {
+        if (error.message && error.message.includes('23505')) {
+          if (error.message.includes('usuarios_email_key') || error.message.includes('email')) {
+            throw new Error(`El email "${datos.email}" ya está registrado. Por favor, usa un email diferente.`);
+          }
+          if (error.message.includes('username') && intento < maxReintentos - 1) {
+            datos.username = await this.generarUsernameDisponible();
+            continue;
+          }
+          if (error.message.includes('username')) {
+            throw new Error('El usuario de acudiente generado ya existe. Por favor, intenta guardar de nuevo.');
+          }
         }
-        if (error.message.includes('username')) {
-          // Regenerar username si hay conflicto
-          datos.username = await this.generarUsername();
-          return await apiRequest(`${TABLES.ACUDIENTES}`, {
-            method: 'POST',
-            body: JSON.stringify(datos)
-          });
-        }
+        throw error;
       }
-      throw error;
     }
+    throw new Error('No se pudo crear el acudiente. Intenta de nuevo.');
   },
   
   /**
